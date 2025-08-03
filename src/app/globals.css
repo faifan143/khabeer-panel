@@ -51,7 +51,7 @@
   --card-foreground: oklch(0.15 0.01 240);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.15 0.01 240);
-  --primary: #ee4349; /* System red color */
+  --primary: oklch(0.55 0.25 0); /* Red primary color */
   --primary-foreground: oklch(0.98 0.005 240);
   --secondary: oklch(0.95 0.02 240);
   --secondary-foreground: oklch(0.25 0.02 240);
@@ -62,23 +62,23 @@
   --destructive: oklch(0.65 0.25 25);
   --border: oklch(0.9 0.01 240);
   --input: oklch(0.9 0.01 240);
-  --ring: #ee4349; /* System red ring */
+  --ring: oklch(0.55 0.25 0); /* Red ring */
   --success: oklch(0.65 0.2 140);
   --warning: oklch(0.75 0.2 60);
   --info: oklch(0.65 0.2 220);
-  --chart-1: #ee4349; /* System red chart color */
+  --chart-1: oklch(0.55 0.25 0); /* Red chart color */
   --chart-2: oklch(0.65 0.2 140);
   --chart-3: oklch(0.65 0.2 60);
   --chart-4: oklch(0.65 0.2 320);
   --chart-5: oklch(0.65 0.2 180);
   --sidebar: oklch(0.12 0.02 240);
   --sidebar-foreground: oklch(0.95 0.01 240);
-  --sidebar-primary: #ee4349; /* System red sidebar primary */
+  --sidebar-primary: oklch(0.55 0.25 0); /* Red sidebar primary */
   --sidebar-primary-foreground: oklch(0.98 0.005 240);
   --sidebar-accent: oklch(0.18 0.02 240);
   --sidebar-accent-foreground: oklch(0.95 0.01 240);
   --sidebar-border: oklch(0.2 0.02 240);
-  --sidebar-ring: #ee4349; /* System red sidebar ring */
+  --sidebar-ring: oklch(0.55 0.25 0); /* Red sidebar ring */
 }
 
 .dark {
@@ -88,7 +88,7 @@
   --card-foreground: oklch(0.95 0.01 240);
   --popover: oklch(0.12 0.02 240);
   --popover-foreground: oklch(0.95 0.01 240);
-  --primary: #ee4349; /* System red primary for dark mode */
+  --primary: oklch(0.65 0.25 0); /* Red primary for dark mode */
   --primary-foreground: oklch(0.08 0.01 240);
   --secondary: oklch(0.18 0.02 240);
   --secondary-foreground: oklch(0.95 0.01 240);
@@ -99,23 +99,23 @@
   --destructive: oklch(0.65 0.25 25);
   --border: oklch(0.2 0.02 240);
   --input: oklch(0.2 0.02 240);
-  --ring: #ee4349; /* System red ring for dark mode */
+  --ring: oklch(0.65 0.25 0); /* Red ring for dark mode */
   --success: oklch(0.65 0.2 140);
   --warning: oklch(0.75 0.2 60);
   --info: oklch(0.65 0.2 220);
-  --chart-1: #ee4349; /* System red chart for dark mode */
+  --chart-1: oklch(0.65 0.25 0); /* Red chart for dark mode */
   --chart-2: oklch(0.65 0.2 140);
   --chart-3: oklch(0.65 0.2 60);
   --chart-4: oklch(0.65 0.2 320);
   --chart-5: oklch(0.65 0.2 180);
   --sidebar: oklch(0.05 0.01 240);
   --sidebar-foreground: oklch(0.9 0.01 240);
-  --sidebar-primary: #ee4349; /* System red sidebar primary for dark mode */
+  --sidebar-primary: oklch(0.65 0.25 0); /* Red sidebar primary for dark mode */
   --sidebar-primary-foreground: oklch(0.05 0.01 240);
   --sidebar-accent: oklch(0.1 0.02 240);
   --sidebar-accent-foreground: oklch(0.9 0.01 240);
   --sidebar-border: oklch(0.15 0.02 240);
-  --sidebar-ring: #ee4349; /* System red sidebar ring for dark mode */
+  --sidebar-ring: oklch(0.65 0.25 0); /* Red sidebar ring for dark mode */
 }
 
 @layer base {

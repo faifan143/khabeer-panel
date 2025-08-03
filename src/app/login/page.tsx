@@ -50,7 +50,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-[#ee4349] rounded-xl flex items-center justify-center">
+          <div className="mx-auto w-16 h-16 bg-red-500 rounded-xl flex items-center justify-center">
             <span className="text-white text-2xl font-bold">K</span>
           </div>
           <div>
@@ -106,7 +106,7 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-red-500 hover:bg-red-600 text-white"
               disabled={loginMutation.isPending}
             >
               {loginMutation.isPending ? (
