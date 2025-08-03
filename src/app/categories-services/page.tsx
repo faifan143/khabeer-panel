@@ -1,43 +1,37 @@
 "use client"
 
-import { AdminLayout } from "@/components/layout/admin-layout"
 import { ProtectedRoute } from "@/components/auth/protected-route"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { AdminLayout } from "@/components/layout/admin-layout"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
+import { useCategories, useCreateCategory, useCreateService, useDeleteCategory, useDeleteService, useServices, useUpdateCategory, useUpdateService } from "@/lib/api/hooks/useServices"
+import { Category, CreateCategoryDto, CreateServiceDto, Service, UpdateCategoryDto, UpdateServiceDto } from "@/lib/api/types"
+import { formatCurrency } from "@/lib/utils"
 import {
-    Plus,
+    CheckCircle,
+    DollarSign,
     Edit,
-    Trash2,
-    Search,
-    Image as ImageIcon,
     Filter,
     Grid,
     List,
     Package,
-    DollarSign,
-    TrendingUp,
+    Plus,
     RefreshCw,
-    CheckCircle,
-    XCircle,
-    AlertCircle,
-    Info,
-    BarChart3,
-    Users,
-    Activity
+    Search,
+    Trash2,
+    TrendingUp,
+    XCircle
 } from "lucide-react"
-import { useState, useMemo } from "react"
-import { useCategories, useServices, useCreateCategory, useUpdateCategory, useDeleteCategory, useCreateService, useUpdateService, useDeleteService } from "@/lib/api/hooks/useServices"
-import { Category, Service, CreateCategoryDto, UpdateCategoryDto, CreateServiceDto, UpdateServiceDto } from "@/lib/api/types"
-import { formatCurrency } from "@/lib/utils"
+import { useMemo, useState } from "react"
 import toast from "react-hot-toast"
 
 // Loading Skeleton Components
@@ -89,13 +83,13 @@ const StatCard = ({
     trend?: { value: number; isPositive: boolean }
     description?: string
 }) => (
-    <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50/50">
-        <CardContent className="p-6">
+    <Card className="group hover:shadow-md transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50/50">
+        <CardContent className="px-4">
             <div className="flex items-center justify-between">
                 <div className="flex-1">
-                    <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
+                    <p className="text-xs font-medium text-muted-foreground">{title}</p>
                     <div className="flex items-baseline space-x-2">
-                        <p className="text-2xl font-bold text-gray-900">{value}</p>
+                        <p className="text-base font-bold text-gray-900">{value}</p>
                         {trend && (
                             <div className={`flex items-center text-xs font-medium ${trend.isPositive ? 'text-green-600' : 'text-red-600'
                                 }`}>
@@ -105,11 +99,11 @@ const StatCard = ({
                         )}
                     </div>
                     {description && (
-                        <p className="text-xs text-muted-foreground mt-1">{description}</p>
+                        <p className="text-xs text-muted-foreground">{description}</p>
                     )}
                 </div>
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color} group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="h-6 w-6 text-white" />
+                <div className={`w-8 h-8 rounded-md flex items-center justify-center ${color} group-hover:scale-105 transition-transform duration-300`}>
+                    <Icon className="h-4 w-4 text-white" />
                 </div>
             </div>
         </CardContent>
@@ -621,7 +615,7 @@ export default function CategoriesServicesPage() {
                         {/* Categories Tab */}
                         <TabsContent value="categories" className="space-y-6">
                             {/* Enhanced Stats Display */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <StatCard
                                     title="Total Categories"
                                     value={categoryStats.total}
@@ -809,7 +803,7 @@ export default function CategoriesServicesPage() {
                         {/* Services Tab */}
                         <TabsContent value="services" className="space-y-6">
                             {/* Enhanced Stats Display */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <StatCard
                                     title="Total Services"
                                     value={serviceStats.total}
