@@ -1,9 +1,25 @@
+"use client"
+
 import { AdminLayout } from "@/components/layout/admin-layout"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Building2, Package, Calendar, DollarSign, TrendingUp } from "lucide-react"
+import { Users, Building2, Package, Calendar, DollarSign, TrendingUp, Sparkles, Star } from "lucide-react"
+import { useDashboardStats } from "@/lib/api/hooks/useAdmin"
+import { formatCurrency } from "@/lib/utils"
 
 export default function DashboardPage() {
+  const { data: dashboardStats, isLoading: dashboardLoading } = useDashboardStats()
+
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat().format(num)
+  }
+
+  // Add safety checks for data
+  const overview = dashboardStats?.overview || {}
+  const popularServices = dashboardStats?.popularServices || []
+  const topProviders = dashboardStats?.topProviders || []
+  const orderStats = dashboardStats?.orderStats
+
   return (
     <ProtectedRoute>
       <AdminLayout>
@@ -24,9 +40,11 @@ export default function DashboardPage() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">1,234</div>
+                <div className="text-2xl font-bold">
+                  {dashboardLoading ? "..." : formatNumber(overview.totalUsers || 0)}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +20.1% from last month
+                  Active users
                 </p>
               </CardContent>
             </Card>
@@ -37,9 +55,11 @@ export default function DashboardPage() {
                 <Building2 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">567</div>
+                <div className="text-2xl font-bold">
+                  {dashboardLoading ? "..." : formatNumber(overview.totalProviders || 0)}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +12.3% from last month
+                  Active providers
                 </p>
               </CardContent>
             </Card>
@@ -50,9 +70,11 @@ export default function DashboardPage() {
                 <Calendar className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">45</div>
+                <div className="text-2xl font-bold">
+                  {dashboardLoading ? "..." : formatNumber(orderStats?.today || 0)}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +5.2% from yesterday
+                  Today's orders
                 </p>
               </CardContent>
             </Card>
@@ -63,9 +85,11 @@ export default function DashboardPage() {
                 <Package className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">8,901</div>
+                <div className="text-2xl font-bold">
+                  {dashboardLoading ? "..." : formatNumber(overview.totalOrders || 0)}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +15.7% from last month
+                  All time orders
                 </p>
               </CardContent>
             </Card>
@@ -76,9 +100,11 @@ export default function DashboardPage() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$12,340</div>
+                <div className="text-2xl font-bold">
+                  {dashboardLoading ? "..." : formatCurrency(overview.totalCommission || 0)}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +8.9% from last month
+                  Total commission
                 </p>
               </CardContent>
             </Card>
@@ -89,9 +115,11 @@ export default function DashboardPage() {
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$45,678</div>
+                <div className="text-2xl font-bold">
+                  {dashboardLoading ? "..." : formatCurrency(overview.totalRevenue || 0)}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +12.4% from last month
+                  Total revenue
                 </p>
               </CardContent>
             </Card>
@@ -106,25 +134,37 @@ export default function DashboardPage() {
               </button>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-              {[
-                { name: "Cleaning", orders: 234, icon: "🧹" },
-                { name: "Plumbing", orders: 189, icon: "🔧" },
-                { name: "Painting", orders: 156, icon: "🎨" },
-                { name: "Delivery", orders: 123, icon: "📦" },
-                { name: "Moving", orders: 98, icon: "🚚" },
-              ].map((service) => (
-                <Card key={service.name} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="text-2xl">{service.icon}</div>
-                      <div>
-                        <p className="font-medium">{service.name}</p>
-                        <p className="text-sm text-muted-foreground">{service.orders} orders</p>
+              {dashboardLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <Card key={i} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="flex-1">
+                          <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                          <div className="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                popularServices.slice(0, 5).map((service) => (
+                  <Card key={service.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                          <Sparkles className="h-4 w-4 text-red-500" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{service.name}</p>
+                          <p className="text-sm text-muted-foreground">{service.orderCount} orders</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
 
@@ -137,29 +177,42 @@ export default function DashboardPage() {
               </button>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-              {[
-                { name: "Ahmed Hassan", orders: 89, rating: 4.8, icon: "👨‍🔧" },
-                { name: "Sarah Ali", orders: 76, rating: 4.9, icon: "👩‍🎨" },
-                { name: "Ali Mohammed", orders: 65, rating: 4.7, icon: "👨‍🚚" },
-                { name: "Fatima Ahmed", orders: 54, rating: 4.6, icon: "👩‍💼" },
-                { name: "Omar Khalil", orders: 43, rating: 4.5, icon: "👨‍🔧" },
-              ].map((provider) => (
-                <Card key={provider.name} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="text-2xl">{provider.icon}</div>
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{provider.name}</p>
-                        <p className="text-sm text-muted-foreground">{provider.orders} orders</p>
-                        <div className="flex items-center space-x-1">
-                          <span className="text-yellow-500">★</span>
-                          <span className="text-xs">{provider.rating}</span>
+              {dashboardLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <Card key={i} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+                        <div className="flex-1">
+                          <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                          <div className="h-3 bg-gray-200 rounded animate-pulse w-16 mb-1"></div>
+                          <div className="h-3 bg-gray-200 rounded animate-pulse w-12"></div>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                topProviders.slice(0, 5).map((provider) => (
+                  <Card key={provider.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                          <Star className="h-4 w-4 text-red-500" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{provider.name}</p>
+                          <p className="text-sm text-muted-foreground">{provider.orderCount} orders</p>
+                          <div className="flex items-center space-x-1">
+                            <span className="text-yellow-500">★</span>
+                            <span className="text-xs">{provider.rating.toFixed(1)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         </div>

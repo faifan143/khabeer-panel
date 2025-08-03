@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
@@ -23,7 +23,7 @@ type LoginFormData = yup.InferType<typeof loginSchema>
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
-  const { login } = useAuthStore()
+  const { login, isAuthenticated, isLoading, isInitialized } = useAuthStore()
 
   const {
     register,
@@ -35,15 +35,48 @@ export default function LoginPage() {
 
   const loginMutation = useLogin()
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isInitialized && isAuthenticated) {
+      console.log('User already authenticated, redirecting to dashboard')
+      router.push('/dashboard')
+    }
+  }, [isAuthenticated, isInitialized, router])
+
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const response = await loginMutation.mutateAsync(data)
-      login(response.user, response.token)
-      router.push("/dashboard")
+      console.log('Attempting login with:', data)
+      const result = await loginMutation.mutateAsync(data)
+      console.log('Login successful:', result)
+      // The useLogin hook handles the login and navigation
     } catch (err: any) {
-      // Error is already handled by the useLogin hook
       console.error('Login error:', err)
+      // Error is already handled by the useLogin hook
     }
+  }
+
+  // Show loading while checking authentication
+  if (isLoading || !isInitialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render login form if already authenticated
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Redirecting to dashboard...</span>
+        </div>
+      </div>
+    )
   }
 
   return (

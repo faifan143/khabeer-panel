@@ -1,9 +1,29 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 
+// Helper function to get auth token from localStorage
+const getAuthToken = (): string | null => {
+  try {
+    const authStorage = localStorage.getItem('auth-storage')
+    if (!authStorage) return null
+
+    const authData = JSON.parse(authStorage)
+    // Zustand persist stores data in state property
+    const token = authData.state?.token || authData.token
+
+    return token || null
+  } catch (error) {
+    console.error('Error accessing auth token:', error)
+    return null
+  }
+}
+
 // Create axios instance with default config
 const createAxiosInstance = (): AxiosInstance => {
+  const baseURL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api')
+  console.log('Axios base URL:', baseURL)
+
   const instance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL,
+    baseURL,
     timeout: 10000,
     headers: {
       'Content-Type': 'application/json',
@@ -14,9 +34,7 @@ const createAxiosInstance = (): AxiosInstance => {
   instance.interceptors.request.use(
     (config) => {
       // Add auth token if available
-      const token = localStorage.getItem('auth-storage')
-        ? JSON.parse(localStorage.getItem('auth-storage')!).state.token
-        : null
+      const token = getAuthToken()
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
       }
@@ -35,9 +53,15 @@ const createAxiosInstance = (): AxiosInstance => {
     (error) => {
       // Handle common errors
       if (error.response?.status === 401) {
-        // Unauthorized - redirect to login
-        localStorage.removeItem('auth-storage')
-        window.location.href = '/login'
+        // Unauthorized - clear auth storage and redirect to login
+        try {
+          localStorage.removeItem('auth-storage')
+          // Force a page reload to clear any in-memory state
+          window.location.href = '/login'
+        } catch (e) {
+          console.error('Error during logout:', e)
+          window.location.href = '/login'
+        }
       }
       return Promise.reject(error)
     }

@@ -12,10 +12,16 @@ export const useLogin = () => {
     mutationFn: (credentials: LoginDto) => AuthService.login(credentials),
     onSuccess: (data) => {
       // Store in Zustand store (which persists to localStorage)
-      login(data.user, data.token)
+      // Backend returns access_token, not token
+      login(data.user, data.access_token)
+
       // Invalidate and refetch user profile
       queryClient.invalidateQueries({ queryKey: ['profile'] })
       toast.success('Login successful!')
+
+      // Navigate to dashboard using window.location for full page reload
+      // This ensures the auth state is properly updated
+      window.location.href = '/dashboard'
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Login failed')
@@ -30,7 +36,7 @@ export const usePhoneLogin = () => {
   return useMutation({
     mutationFn: (phoneData: PhoneLoginDto) => AuthService.phoneLogin(phoneData),
     onSuccess: (data) => {
-      login(data.user, data.token)
+      login(data.user, data.access_token)
       queryClient.invalidateQueries({ queryKey: ['profile'] })
     },
   })
@@ -43,7 +49,7 @@ export const useRegister = () => {
   return useMutation({
     mutationFn: (userData: RegisterDto) => AuthService.register(userData),
     onSuccess: (data) => {
-      login(data.user, data.token)
+      login(data.user, data.access_token)
       queryClient.invalidateQueries({ queryKey: ['profile'] })
     },
   })
@@ -70,17 +76,24 @@ export const useLogout = () => {
   const { logout } = useAuthStore()
 
   return useMutation({
-    mutationFn: () => AuthService.logout(),
+    mutationFn: async () => {
+      // No backend logout endpoint, just return success
+      return { message: 'Logged out successfully' }
+    },
     onSuccess: () => {
       logout()
       queryClient.clear()
       toast.success('Logged out successfully')
+      // Redirect to login page using window.location for full page reload
+      window.location.href = '/login'
     },
     onError: () => {
-      // Even if logout API fails, clear local state
+      // Even if logout fails, clear local state
       logout()
       queryClient.clear()
       toast.success('Logged out successfully')
+      // Redirect to login page using window.location for full page reload
+      window.location.href = '/login'
     },
   })
 }

@@ -38,6 +38,19 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         await logoutMutation.mutateAsync()
     }
 
+    // Get user display name - backend only returns email, so use email prefix as name
+    const getUserDisplayName = () => {
+        if (!user?.email) return "Admin User"
+        return user.email.split('@')[0] || "Admin User"
+    }
+
+    // Get user initials for avatar
+    const getUserInitials = () => {
+        if (!user?.email) return "A"
+        const name = getUserDisplayName()
+        return name.charAt(0).toUpperCase()
+    }
+
     return (
         <div className="min-h-screen bg-slate-50">
             <Sidebar isCollapsed={isCollapsed} onCollapse={setIsCollapsed} />
@@ -119,7 +132,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                             {/* User Menu */}
                             <div className="flex items-center space-x-3">
                                 <div className="hidden md:block text-right">
-                                    <p className="text-sm font-medium">{user?.name || "Admin User"}</p>
+                                    <p className="text-sm font-medium">{getUserDisplayName()}</p>
                                     <p className="text-xs text-muted-foreground">{user?.email || "admin@khabeer.com"}</p>
                                 </div>
                                 <DropdownMenu>
@@ -127,7 +140,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                         <button className="flex items-center space-x-2 rounded-full p-1 hover:bg-accent transition-colors">
                                             <div className="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center">
                                                 <span className="text-white text-sm font-medium">
-                                                    {user?.name?.charAt(0) || "A"}
+                                                    {getUserInitials()}
                                                 </span>
                                             </div>
                                             <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,7 +151,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                     <DropdownMenuContent align="end" className="w-56">
                                         <DropdownMenuLabel>
                                             <div className="flex flex-col space-y-1">
-                                                <p className="text-sm font-medium leading-none">{user?.name || "Admin User"}</p>
+                                                <p className="text-sm font-medium leading-none">{getUserDisplayName()}</p>
                                                 <p className="text-xs leading-none text-muted-foreground">{user?.email || "admin@khabeer.com"}</p>
                                             </div>
                                         </DropdownMenuLabel>

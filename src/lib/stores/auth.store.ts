@@ -1,40 +1,51 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { User } from '@/lib/api/types'
+
+// Minimal user interface matching backend response
+interface AuthUser {
+  id: number
+  email: string
+  role: string
+}
 
 interface AuthState {
-  user: User | null
+  user: AuthUser | null
   token: string | null
   isAuthenticated: boolean
   isLoading: boolean
+  isInitialized: boolean
 }
 
 interface AuthActions {
-  login: (user: User, token: string) => void
+  login: (user: AuthUser, token: string) => void
   logout: () => void
   setLoading: (loading: boolean) => void
-  updateUser: (user: User) => void
+  updateUser: (user: AuthUser) => void
+  initialize: () => void
 }
 
 type AuthStore = AuthState & AuthActions
 
 export const useAuthStore = create<AuthStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       // State
       user: null,
       token: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true, // Start with loading true
+      isInitialized: false,
 
       // Actions
-      login: (user: User, token: string) =>
+      login: (user: AuthUser, token: string) => {
         set({
           user,
           token,
           isAuthenticated: true,
           isLoading: false,
-        }),
+          isInitialized: true,
+        })
+      },
 
       logout: () =>
         set({
@@ -42,6 +53,7 @@ export const useAuthStore = create<AuthStore>()(
           token: null,
           isAuthenticated: false,
           isLoading: false,
+          isInitialized: true,
         }),
 
       setLoading: (loading: boolean) =>
@@ -49,10 +61,28 @@ export const useAuthStore = create<AuthStore>()(
           isLoading: loading,
         }),
 
-      updateUser: (user: User) =>
+      updateUser: (user: AuthUser) =>
         set({
           user,
         }),
+
+      initialize: () => {
+        const state = get()
+        // If we have user and token, we're authenticated
+        if (state.user && state.token) {
+          set({
+            isAuthenticated: true,
+            isLoading: false,
+            isInitialized: true,
+          })
+        } else {
+          set({
+            isAuthenticated: false,
+            isLoading: false,
+            isInitialized: true,
+          })
+        }
+      },
     }),
     {
       name: 'auth-storage',
@@ -61,6 +91,12 @@ export const useAuthStore = create<AuthStore>()(
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        // When store is rehydrated from localStorage, initialize it
+        if (state) {
+          state.initialize()
+        }
+      },
     }
   )
 )

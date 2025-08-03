@@ -351,8 +351,12 @@ export interface RegisterDto {
 }
 
 export interface AuthResponse {
-  user: User
-  token: string
+  user: {
+    id: number
+    email: string
+    role: string
+  }
+  access_token: string
 }
 
 // API Response types

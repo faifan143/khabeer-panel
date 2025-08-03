@@ -23,12 +23,7 @@ export class AuthService {
   }
 
   static async getProfile(): Promise<User> {
-    const response = await api.get<User>('/auth/profile')
-    return response.data
-  }
-
-  static async logout(): Promise<{ message: string }> {
-    const response = await api.post<{ message: string }>('/auth/logout')
+    const response = await api.get<User>('/auth/me')
     return response.data
   }
 
