@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ServicesService } from '../services/services.service'
-import { 
-  Service, 
-  CreateServiceDto, 
-  UpdateServiceDto, 
-  Category, 
-  CreateCategoryDto, 
-  UpdateCategoryDto, 
-  PaginatedResponse 
+import {
+  Service,
+  CreateServiceDto,
+  UpdateServiceDto,
+  Category,
+  CreateCategoryDto,
+  UpdateCategoryDto,
+  PaginatedResponse
 } from '../types'
 
 // Services hooks
@@ -28,7 +28,7 @@ export const useService = (id: number) => {
 
 export const useCreateService = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (serviceData: CreateServiceDto) => ServicesService.createService(serviceData),
     onSuccess: () => {
@@ -39,9 +39,9 @@ export const useCreateService = () => {
 
 export const useUpdateService = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: ({ id, serviceData }: { id: number; serviceData: UpdateServiceDto }) => 
+    mutationFn: ({ id, serviceData }: { id: number; serviceData: UpdateServiceDto }) =>
       ServicesService.updateService(id, serviceData),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['services'] })
@@ -52,7 +52,7 @@ export const useUpdateService = () => {
 
 export const useDeleteService = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (id: number) => ServicesService.deleteService(id),
     onSuccess: () => {
@@ -102,7 +102,7 @@ export const useCategory = (id: number) => {
 
 export const useCreateCategory = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (categoryData: CreateCategoryDto) => ServicesService.createCategory(categoryData),
     onSuccess: () => {
@@ -113,9 +113,9 @@ export const useCreateCategory = () => {
 
 export const useUpdateCategory = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: ({ id, categoryData }: { id: number; categoryData: UpdateCategoryDto }) => 
+    mutationFn: ({ id, categoryData }: { id: number; categoryData: UpdateCategoryDto }) =>
       ServicesService.updateCategory(id, categoryData),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['categories'] })
@@ -126,7 +126,7 @@ export const useUpdateCategory = () => {
 
 export const useDeleteCategory = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (id: number) => ServicesService.deleteCategory(id),
     onSuccess: () => {
