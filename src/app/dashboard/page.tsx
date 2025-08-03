@@ -14,6 +14,18 @@ export default function DashboardPage() {
     return new Intl.NumberFormat().format(num)
   }
 
+  // Function to render currency with smaller OMR
+  const renderCurrency = (amount: number) => {
+    const currencyString = formatCurrency(amount)
+    const parts = currencyString.split(' OMR')
+    return (
+      <span>
+        {parts[0]}
+        <span className="text-sm text-muted-foreground ml-1">OMR</span>
+      </span>
+    )
+  }
+
   // Add safety checks for data
   const overview = dashboardStats?.overview || {}
   const popularServices = dashboardStats?.popularServices || []
@@ -101,7 +113,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {dashboardLoading ? "..." : formatCurrency(overview.totalCommission || 0)}
+                  {dashboardLoading ? "..." : renderCurrency(overview.totalCommission || 0)}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Total commission
@@ -116,7 +128,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {dashboardLoading ? "..." : formatCurrency(overview.totalRevenue || 0)}
+                  {dashboardLoading ? "..." : renderCurrency(overview.totalRevenue || 0)}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Total revenue
