@@ -2,6 +2,9 @@
 
 import * as React from "react"
 import { Sidebar } from "./sidebar"
+import { useAuthStore } from "@/lib/stores/auth.store"
+import { useLogout } from "@/lib/api/hooks/useAuth"
+import { LogOut } from "lucide-react"
 
 interface AdminLayoutProps {
     children: React.ReactNode
@@ -9,6 +12,18 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children }: AdminLayoutProps) {
     const [isCollapsed, setIsCollapsed] = React.useState(false)
+    const { user, logout } = useAuthStore()
+    const logoutMutation = useLogout()
+
+    const handleLogout = async () => {
+        try {
+            await logoutMutation.mutateAsync()
+            logout()
+        } catch (error) {
+            // Even if logout API fails, clear local state
+            logout()
+        }
+    }
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -88,21 +103,32 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                             {/* Divider */}
                             <div className="h-6 w-px bg-border"></div>
 
-                            {/* User Menu */}
-                            <div className="flex items-center space-x-3">
-                                <div className="hidden md:block text-right">
-                                    <p className="text-sm font-medium">Admin User</p>
-                                    <p className="text-xs text-muted-foreground">admin@khabeer.com</p>
-                                </div>
-                                <button className="flex items-center space-x-2 rounded-full p-1 hover:bg-accent transition-colors">
-                                    <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
-                                        <span className="text-white text-sm font-medium">A</span>
-                                    </div>
-                                    <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
-                            </div>
+                                                         {/* User Menu */}
+                             <div className="flex items-center space-x-3">
+                                 <div className="hidden md:block text-right">
+                                     <p className="text-sm font-medium">{user?.name || "Admin User"}</p>
+                                     <p className="text-xs text-muted-foreground">{user?.email || "admin@khabeer.com"}</p>
+                                 </div>
+                                 <div className="flex items-center space-x-2">
+                                     <button 
+                                         onClick={handleLogout}
+                                         className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                                         title="Logout"
+                                     >
+                                         <LogOut className="h-4 w-4" />
+                                     </button>
+                                     <button className="flex items-center space-x-2 rounded-full p-1 hover:bg-accent transition-colors">
+                                         <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
+                                             <span className="text-white text-sm font-medium">
+                                                 {user?.name?.charAt(0) || "A"}
+                                             </span>
+                                         </div>
+                                         <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                         </svg>
+                                     </button>
+                                 </div>
+                             </div>
                         </div>
                     </div>
                 </header>
