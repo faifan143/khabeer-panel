@@ -30,7 +30,8 @@ export const useCreateService = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (serviceData: CreateServiceDto) => ServicesService.createService(serviceData),
+    mutationFn: ({ serviceData, imageFile }: { serviceData: CreateServiceDto; imageFile?: File }) => 
+      ServicesService.createService(serviceData, imageFile),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['services'] })
     },
@@ -41,8 +42,8 @@ export const useUpdateService = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, serviceData }: { id: number; serviceData: UpdateServiceDto }) =>
-      ServicesService.updateService(id, serviceData),
+    mutationFn: ({ id, serviceData, imageFile }: { id: number; serviceData: UpdateServiceDto; imageFile?: File }) =>
+      ServicesService.updateService(id, serviceData, imageFile),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['services'] })
       queryClient.invalidateQueries({ queryKey: ['services', id] })
@@ -104,7 +105,8 @@ export const useCreateCategory = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (categoryData: CreateCategoryDto) => ServicesService.createCategory(categoryData),
+    mutationFn: ({ categoryData, imageFile }: { categoryData: CreateCategoryDto; imageFile?: File }) => 
+      ServicesService.createCategory(categoryData, imageFile),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] })
     },
@@ -115,8 +117,8 @@ export const useUpdateCategory = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, categoryData }: { id: number; categoryData: UpdateCategoryDto }) =>
-      ServicesService.updateCategory(id, categoryData),
+    mutationFn: ({ id, categoryData, imageFile }: { id: number; categoryData: UpdateCategoryDto; imageFile?: File }) =>
+      ServicesService.updateCategory(id, categoryData, imageFile),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['categories'] })
       queryClient.invalidateQueries({ queryKey: ['categories', id] })

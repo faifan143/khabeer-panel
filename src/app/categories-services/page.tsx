@@ -29,6 +29,7 @@ import {
     Search,
     Trash2,
     TrendingUp,
+    Upload,
     XCircle
 } from "lucide-react"
 import { useMemo, useState } from "react"
@@ -119,6 +120,8 @@ export default function CategoriesServicesPage() {
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
     const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false)
     const [filterStatus, setFilterStatus] = useState<string>("all")
+    const [categoryImageFile, setCategoryImageFile] = useState<File | null>(null)
+    const [serviceImageFile, setServiceImageFile] = useState<File | null>(null)
 
     // Categories hooks
     const { data: categories = [], isLoading: categoriesLoading, refetch: refetchCategories } = useCategories()
@@ -138,9 +141,9 @@ export default function CategoriesServicesPage() {
     // Computed statistics
     const categoryStats = useMemo(() => ({
         total: categories.length,
-        active: categories.filter(c => c.state === 'active').length,
-        inactive: categories.filter(c => c.state === 'inactive').length,
-        activePercentage: categories.length > 0 ? Math.round((categories.filter(c => c.state === 'active').length / categories.length) * 100) : 0
+        withState: categories.filter(c => c.state && c.state.trim() !== '').length,
+        withoutState: categories.filter(c => !c.state || c.state.trim() === '').length,
+        statePercentage: categories.length > 0 ? Math.round((categories.filter(c => c.state && c.state.trim() !== '').length / categories.length) * 100) : 0
     }), [categories])
 
     const serviceStats = useMemo(() => {
@@ -161,11 +164,14 @@ export default function CategoriesServicesPage() {
     const filteredCategories = useMemo(() => {
         let filtered = categories.filter(category =>
             category.titleEn.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            category.titleAr.includes(searchTerm)
+            category.titleAr.includes(searchTerm) ||
+            category.state.toLowerCase().includes(searchTerm.toLowerCase())
         )
 
         if (filterStatus !== "all") {
-            filtered = filtered.filter(category => category.state === filterStatus)
+            filtered = filtered.filter(category =>
+                filterStatus === "withState" ? (category.state && category.state.trim() !== '') : (!category.state || category.state.trim() === '')
+            )
         }
 
         return filtered
@@ -191,7 +197,7 @@ export default function CategoriesServicesPage() {
         titleEn: "",
         titleAr: "",
         image: "",
-        state: "active"
+        state: ""
     })
 
     // Service form state
@@ -209,9 +215,10 @@ export default function CategoriesServicesPage() {
             titleEn: "",
             titleAr: "",
             image: "",
-            state: "active"
+            state: ""
         })
         setSelectedCategory(null)
+        setCategoryImageFile(null)
     }
 
     const resetServiceForm = () => {
@@ -224,6 +231,7 @@ export default function CategoriesServicesPage() {
             categoryId: undefined
         })
         setSelectedService(null)
+        setServiceImageFile(null)
     }
 
     const handleCategorySubmit = async (e: React.FormEvent) => {
@@ -232,11 +240,15 @@ export default function CategoriesServicesPage() {
             if (selectedCategory) {
                 await updateCategoryMutation.mutateAsync({
                     id: selectedCategory.id,
-                    categoryData: categoryForm as UpdateCategoryDto
+                    categoryData: categoryForm as UpdateCategoryDto,
+                    imageFile: categoryImageFile || undefined
                 })
                 toast.success("Category updated successfully!")
             } else {
-                await createCategoryMutation.mutateAsync(categoryForm)
+                await createCategoryMutation.mutateAsync({
+                    categoryData: categoryForm,
+                    imageFile: categoryImageFile || undefined
+                })
                 toast.success("Category created successfully!")
             }
             setIsCategoryDialogOpen(false)
@@ -253,11 +265,15 @@ export default function CategoriesServicesPage() {
             if (selectedService) {
                 await updateServiceMutation.mutateAsync({
                     id: selectedService.id,
-                    serviceData: serviceForm as UpdateServiceDto
+                    serviceData: serviceForm as UpdateServiceDto,
+                    imageFile: serviceImageFile || undefined
                 })
                 toast.success("Service updated successfully!")
             } else {
-                await createServiceMutation.mutateAsync(serviceForm)
+                await createServiceMutation.mutateAsync({
+                    serviceData: serviceForm,
+                    imageFile: serviceImageFile || undefined
+                })
                 toast.success("Service created successfully!")
             }
             setIsServiceDialogOpen(false)
@@ -276,6 +292,7 @@ export default function CategoriesServicesPage() {
             image: category.image,
             state: category.state
         })
+        setCategoryImageFile(null)
         setIsCategoryDialogOpen(true)
     }
 
@@ -289,6 +306,7 @@ export default function CategoriesServicesPage() {
             image: service.image,
             categoryId: service.categoryId
         })
+        setServiceImageFile(null)
         setIsServiceDialogOpen(true)
     }
 
@@ -309,6 +327,27 @@ export default function CategoriesServicesPage() {
             refetchServices()
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to delete service")
+        }
+    }
+
+    const handleImageUpload = (file: File, type: 'category' | 'service') => {
+        const maxSize = 5 * 1024 * 1024 // 5MB
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
+
+        if (file.size > maxSize) {
+            toast.error('Image size must be less than 5MB')
+            return
+        }
+
+        if (!allowedTypes.includes(file.type)) {
+            toast.error('Please upload a valid image file (JPEG, PNG, GIF)')
+            return
+        }
+
+        if (type === 'category') {
+            setCategoryImageFile(file)
+        } else {
+            setServiceImageFile(file)
         }
     }
 
@@ -390,8 +429,8 @@ export default function CategoriesServicesPage() {
                                         <SelectItem value="all">All</SelectItem>
                                         {activeTab === "categories" ? (
                                             <>
-                                                <SelectItem value="active">Active</SelectItem>
-                                                <SelectItem value="inactive">Inactive</SelectItem>
+                                                <SelectItem value="withState">With State</SelectItem>
+                                                <SelectItem value="withoutState">Without State</SelectItem>
                                             </>
                                         ) : (
                                             <>
@@ -464,28 +503,40 @@ export default function CategoriesServicesPage() {
                                                     </div>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label htmlFor="image" className="text-sm font-medium">Image URL</Label>
-                                                    <Input
-                                                        id="image"
-                                                        value={categoryForm.image}
-                                                        onChange={(e) => setCategoryForm({ ...categoryForm, image: e.target.value })}
-                                                        placeholder="https://example.com/image.jpg"
-                                                    />
+                                                    <Label htmlFor="categoryImage" className="text-sm font-medium">Category Image</Label>
+                                                    <div className="flex items-center space-x-2">
+                                                        <Input
+                                                            id="categoryImage"
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0]
+                                                                if (file) handleImageUpload(file, 'category')
+                                                            }}
+                                                            className="flex-1"
+                                                        />
+                                                        <Upload className="h-4 w-4 text-muted-foreground" />
+                                                    </div>
+                                                    {categoryImageFile && (
+                                                        <p className="text-xs text-green-600">
+                                                            Selected: {categoryImageFile.name}
+                                                        </p>
+                                                    )}
+                                                    {selectedCategory?.image && !categoryImageFile && (
+                                                        <p className="text-xs text-muted-foreground">
+                                                            Current image: {selectedCategory.image}
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label htmlFor="state" className="text-sm font-medium">Status</Label>
-                                                    <Select
+                                                    <Label htmlFor="state" className="text-sm font-medium">State</Label>
+                                                    <Input
+                                                        id="state"
                                                         value={categoryForm.state}
-                                                        onValueChange={(value) => setCategoryForm({ ...categoryForm, state: value })}
-                                                    >
-                                                        <SelectTrigger>
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="active">Active</SelectItem>
-                                                            <SelectItem value="inactive">Inactive</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
+                                                        onChange={(e) => setCategoryForm({ ...categoryForm, state: e.target.value })}
+                                                        placeholder="Enter state (e.g., New York, Texas, California)"
+                                                        required
+                                                    />
                                                 </div>
                                                 <DialogFooter>
                                                     <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>
@@ -585,13 +636,30 @@ export default function CategoriesServicesPage() {
                                                     </Select>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label htmlFor="serviceImage" className="text-sm font-medium">Image URL</Label>
-                                                    <Input
-                                                        id="serviceImage"
-                                                        value={serviceForm.image}
-                                                        onChange={(e) => setServiceForm({ ...serviceForm, image: e.target.value })}
-                                                        placeholder="https://example.com/image.jpg"
-                                                    />
+                                                    <Label htmlFor="serviceImage" className="text-sm font-medium">Service Image</Label>
+                                                    <div className="flex items-center space-x-2">
+                                                        <Input
+                                                            id="serviceImage"
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0]
+                                                                if (file) handleImageUpload(file, 'service')
+                                                            }}
+                                                            className="flex-1"
+                                                        />
+                                                        <Upload className="h-4 w-4 text-muted-foreground" />
+                                                    </div>
+                                                    {serviceImageFile && (
+                                                        <p className="text-xs text-green-600">
+                                                            Selected: {serviceImageFile.name}
+                                                        </p>
+                                                    )}
+                                                    {selectedService?.image && !serviceImageFile && (
+                                                        <p className="text-xs text-muted-foreground">
+                                                            Current image: {selectedService.image}
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 <DialogFooter>
                                                     <Button type="button" variant="outline" onClick={() => setIsServiceDialogOpen(false)}>
@@ -621,21 +689,21 @@ export default function CategoriesServicesPage() {
                                     value={categoryStats.total}
                                     icon={Package}
                                     color="bg-gradient-to-br from-blue-500 to-indigo-600"
-                                    description={`${categoryStats.activePercentage}% are active`}
+                                    description={`${categoryStats.statePercentage}% have state info`}
                                 />
                                 <StatCard
-                                    title="Active Categories"
-                                    value={categoryStats.active}
+                                    title="With State"
+                                    value={categoryStats.withState}
                                     icon={CheckCircle}
                                     color="bg-gradient-to-br from-green-500 to-emerald-600"
-                                    description="Currently available"
+                                    description="Categories with location"
                                 />
                                 <StatCard
-                                    title="Inactive Categories"
-                                    value={categoryStats.inactive}
+                                    title="Without State"
+                                    value={categoryStats.withoutState}
                                     icon={XCircle}
                                     color="bg-gradient-to-br from-orange-500 to-red-600"
-                                    description="Temporarily disabled"
+                                    description="Missing location info"
                                 />
                             </div>
 
@@ -654,26 +722,31 @@ export default function CategoriesServicesPage() {
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex items-center space-x-4 flex-1">
                                                         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                                                            <Package className="h-6 w-6 text-white" />
+                                                            {category.image ? (
+                                                                <img src={category.image} alt={category.titleEn} className="w-8 h-8 rounded object-cover" />
+                                                            ) : (
+                                                                <Package className="h-6 w-6 text-white" />
+                                                            )}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <h3 className="font-semibold text-gray-900 truncate">{category.titleEn}</h3>
                                                             <p className="text-sm text-muted-foreground truncate mt-1">{category.titleAr}</p>
                                                             <div className="flex items-center mt-3">
-                                                                <Badge
-                                                                    variant={category.state === "active" ? "default" : "secondary"}
-                                                                    className={`text-xs px-3 py-1 ${category.state === "active"
-                                                                        ? "bg-green-100 text-green-800 hover:bg-green-200"
-                                                                        : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                                                                        }`}
-                                                                >
-                                                                    {category.state === "active" ? (
-                                                                        <CheckCircle className="h-3 w-3 mr-1" />
-                                                                    ) : (
-                                                                        <XCircle className="h-3 w-3 mr-1" />
-                                                                    )}
-                                                                    {category.state}
-                                                                </Badge>
+                                                                {category.state && category.state.trim() !== '' ? (
+                                                                    <Badge
+                                                                        variant="outline"
+                                                                        className="text-xs px-3 py-1 bg-blue-50 text-blue-700 border-blue-200"
+                                                                    >
+                                                                        📍 {category.state}
+                                                                    </Badge>
+                                                                ) : (
+                                                                    <Badge
+                                                                        variant="secondary"
+                                                                        className="text-xs px-3 py-1 bg-gray-100 text-gray-600"
+                                                                    >
+                                                                        No location
+                                                                    </Badge>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -722,7 +795,7 @@ export default function CategoriesServicesPage() {
                                         <TableHeader>
                                             <TableRow className="bg-gray-50">
                                                 <TableHead className="font-semibold">Category</TableHead>
-                                                <TableHead className="font-semibold">Status</TableHead>
+                                                <TableHead className="font-semibold">State</TableHead>
                                                 <TableHead className="font-semibold text-right">Actions</TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -732,7 +805,11 @@ export default function CategoriesServicesPage() {
                                                     <TableCell>
                                                         <div className="flex items-center space-x-3">
                                                             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                                                                <Package className="h-5 w-5 text-white" />
+                                                                {category.image ? (
+                                                                    <img src={category.image} alt={category.titleEn} className="w-8 h-8 rounded object-cover" />
+                                                                ) : (
+                                                                    <Package className="h-5 w-5 text-white" />
+                                                                )}
                                                             </div>
                                                             <div>
                                                                 <div className="font-semibold text-gray-900">{category.titleEn}</div>
@@ -741,20 +818,21 @@ export default function CategoriesServicesPage() {
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge
-                                                            variant={category.state === "active" ? "default" : "secondary"}
-                                                            className={`${category.state === "active"
-                                                                ? "bg-green-100 text-green-800 hover:bg-green-200"
-                                                                : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                                                                }`}
-                                                        >
-                                                            {category.state === "active" ? (
-                                                                <CheckCircle className="h-3 w-3 mr-1" />
-                                                            ) : (
-                                                                <XCircle className="h-3 w-3 mr-1" />
-                                                            )}
-                                                            {category.state}
-                                                        </Badge>
+                                                        {category.state && category.state.trim() !== '' ? (
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="bg-blue-50 text-blue-700 border-blue-200"
+                                                            >
+                                                                📍 {category.state}
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className="bg-gray-100 text-gray-600"
+                                                            >
+                                                                No location
+                                                            </Badge>
+                                                        )}
                                                     </TableCell>
                                                     <TableCell className="text-right">
                                                         <div className="flex items-center justify-end space-x-2">

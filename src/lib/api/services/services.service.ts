@@ -13,13 +13,49 @@ export class ServicesService {
     return response.data
   }
 
-  static async createService(serviceData: CreateServiceDto): Promise<Service> {
-    const response = await api.post<Service>('/services', serviceData)
+  static async createService(serviceData: CreateServiceDto, imageFile?: File): Promise<Service> {
+    const formData = new FormData()
+
+    // Add all service data to formData (excluding image if we have a file)
+    Object.entries(serviceData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && (key !== 'image' || !imageFile)) {
+        formData.append(key, value.toString())
+      }
+    })
+
+    // Add image file if provided
+    if (imageFile) {
+      formData.append('image', imageFile)
+    }
+
+    const response = await api.post<Service>('/services', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     return response.data
   }
 
-  static async updateService(id: number, serviceData: UpdateServiceDto): Promise<Service> {
-    const response = await api.put<Service>(`/services/${id}`, serviceData)
+  static async updateService(id: number, serviceData: UpdateServiceDto, imageFile?: File): Promise<Service> {
+    const formData = new FormData()
+
+    // Add all service data to formData (excluding image if we have a file)
+    Object.entries(serviceData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && (key !== 'image' || !imageFile)) {
+        formData.append(key, value.toString())
+      }
+    })
+
+    // Add image file if provided
+    if (imageFile) {
+      formData.append('image', imageFile)
+    }
+
+    const response = await api.put<Service>(`/services/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     return response.data
   }
 
@@ -54,13 +90,49 @@ export class ServicesService {
     return response.data
   }
 
-  static async createCategory(categoryData: CreateCategoryDto): Promise<Category> {
-    const response = await api.post<Category>('/categories', categoryData)
+  static async createCategory(categoryData: CreateCategoryDto, imageFile?: File): Promise<Category> {
+    const formData = new FormData()
+
+    // Add all category data to formData (excluding image if we have a file)
+    Object.entries(categoryData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && (key !== 'image' || !imageFile)) {
+        formData.append(key, value.toString())
+      }
+    })
+
+    // Add image file if provided
+    if (imageFile) {
+      formData.append('image', imageFile)
+    }
+
+    const response = await api.post<Category>('/categories', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     return response.data
   }
 
-  static async updateCategory(id: number, categoryData: UpdateCategoryDto): Promise<Category> {
-    const response = await api.put<Category>(`/categories/${id}`, categoryData)
+  static async updateCategory(id: number, categoryData: UpdateCategoryDto, imageFile?: File): Promise<Category> {
+    const formData = new FormData()
+
+    // Add all category data to formData (excluding image if we have a file)
+    Object.entries(categoryData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && (key !== 'image' || !imageFile)) {
+        formData.append(key, value.toString())
+      }
+    })
+
+    // Add image file if provided
+    if (imageFile) {
+      formData.append('image', imageFile)
+    }
+
+    const response = await api.put<Category>(`/categories/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     return response.data
   }
 
