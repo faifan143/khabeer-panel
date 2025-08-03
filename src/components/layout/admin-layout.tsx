@@ -5,6 +5,17 @@ import { Sidebar } from "./sidebar"
 import { useAuthStore } from "@/lib/stores/auth.store"
 import { useLogout } from "@/lib/api/hooks/useAuth"
 import { LogOut } from "lucide-react"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface AdminLayoutProps {
     children: React.ReactNode
@@ -16,13 +27,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     const logoutMutation = useLogout()
 
     const handleLogout = async () => {
-        try {
-            await logoutMutation.mutateAsync()
-            logout()
-        } catch (error) {
-            // Even if logout API fails, clear local state
-            logout()
-        }
+        await logoutMutation.mutateAsync()
     }
 
     return (
@@ -85,7 +90,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                         d="M15 17h5l-5 5v-5zM10.5 3.75a6 6 0 00-6 6v3.75a6 6 0 0012 0V9.75a6 6 0 00-6-6z"
                                     />
                                 </svg>
-                                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500"></span>
+                                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-[#ee4349]"></span>
                             </button>
 
                             {/* Help */}
@@ -103,32 +108,52 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                             {/* Divider */}
                             <div className="h-6 w-px bg-border"></div>
 
-                                                         {/* User Menu */}
-                             <div className="flex items-center space-x-3">
-                                 <div className="hidden md:block text-right">
-                                     <p className="text-sm font-medium">{user?.name || "Admin User"}</p>
-                                     <p className="text-xs text-muted-foreground">{user?.email || "admin@khabeer.com"}</p>
-                                 </div>
-                                 <div className="flex items-center space-x-2">
-                                     <button 
-                                         onClick={handleLogout}
-                                         className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-                                         title="Logout"
-                                     >
-                                         <LogOut className="h-4 w-4" />
-                                     </button>
-                                     <button className="flex items-center space-x-2 rounded-full p-1 hover:bg-accent transition-colors">
-                                         <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
-                                             <span className="text-white text-sm font-medium">
-                                                 {user?.name?.charAt(0) || "A"}
-                                             </span>
-                                         </div>
-                                         <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                         </svg>
-                                     </button>
-                                 </div>
-                             </div>
+                            {/* User Menu */}
+                            <div className="flex items-center space-x-3">
+                                <div className="hidden md:block text-right">
+                                    <p className="text-sm font-medium">{user?.name || "Admin User"}</p>
+                                    <p className="text-xs text-muted-foreground">{user?.email || "admin@khabeer.com"}</p>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <button
+                                                className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                                                title="Logout"
+                                            >
+                                                <LogOut className="h-4 w-4" />
+                                            </button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Are you sure you want to logout? You will need to sign in again to access the admin panel.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    onClick={handleLogout}
+                                                    className="bg-[#ee4349] hover:bg-[#d63a40] text-white"
+                                                >
+                                                    Logout
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                    <button className="flex items-center space-x-2 rounded-full p-1 hover:bg-accent transition-colors">
+                                        <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+                                            <span className="text-white text-sm font-medium">
+                                                {user?.name?.charAt(0) || "A"}
+                                            </span>
+                                        </div>
+                                        <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </header>

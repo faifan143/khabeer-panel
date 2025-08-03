@@ -8,10 +8,10 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useLogin } from "@/lib/api/hooks/useAuth"
 import { useAuthStore } from "@/lib/stores/auth.store"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
+import toast from "react-hot-toast"
 
 const loginSchema = yup.object({
   email: yup.string().email("Please enter a valid email").required("Email is required"),
@@ -22,10 +22,9 @@ type LoginFormData = yup.InferType<typeof loginSchema>
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState("")
   const router = useRouter()
   const { login } = useAuthStore()
-  
+
   const {
     register,
     handleSubmit,
@@ -37,14 +36,13 @@ export default function LoginPage() {
   const loginMutation = useLogin()
 
   const onSubmit = async (data: LoginFormData) => {
-    setError("")
-    
     try {
       const response = await loginMutation.mutateAsync(data)
       login(response.user, response.token)
       router.push("/dashboard")
     } catch (err: any) {
-      setError(err.response?.data?.message || "Login failed. Please try again.")
+      // Error is already handled by the useLogin hook
+      console.error('Login error:', err)
     }
   }
 
@@ -52,7 +50,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center">
+          <div className="mx-auto w-16 h-16 bg-[#ee4349] rounded-xl flex items-center justify-center">
             <span className="text-white text-2xl font-bold">K</span>
           </div>
           <div>
@@ -62,14 +60,8 @@ export default function LoginPage() {
             </CardDescription>
           </div>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
@@ -86,7 +78,7 @@ export default function LoginPage() {
                 <p className="text-sm text-red-500">{errors.email.message}</p>
               )}
             </div>
-            
+
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium">
                 Password
@@ -98,7 +90,7 @@ export default function LoginPage() {
                   placeholder="Enter your password"
                   {...register("password")}
                   className={errors.password ? "border-red-500" : ""}
-              />
+                />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
@@ -111,7 +103,7 @@ export default function LoginPage() {
                 <p className="text-sm text-red-500">{errors.password.message}</p>
               )}
             </div>
-            
+
             <Button
               type="submit"
               className="w-full"
@@ -127,7 +119,7 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
-          
+
           <div className="text-center text-sm text-gray-600">
             <p>Demo Credentials:</p>
             <p className="font-mono text-xs mt-1">

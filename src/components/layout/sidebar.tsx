@@ -127,7 +127,7 @@ export function Sidebar({ className, isCollapsed = false, onCollapse }: SidebarP
                             <div className="flex items-center space-x-2">
                                 <button
                                     onClick={() => onCollapse?.(!isCollapsed)}
-                                    className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors cursor-pointer"
+                                    className="w-8 h-8 bg-[#ee4349] rounded-lg flex items-center justify-center hover:bg-[#d63a40] transition-colors cursor-pointer"
                                 >
                                     <span className="text-white font-bold text-sm">K</span>
                                 </button>
@@ -137,7 +137,7 @@ export function Sidebar({ className, isCollapsed = false, onCollapse }: SidebarP
                         {isCollapsed && (
                             <button
                                 onClick={() => onCollapse?.(!isCollapsed)}
-                                className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mx-auto flex-shrink-0 hover:bg-blue-700 transition-colors cursor-pointer"
+                                className="w-8 h-8 bg-[#ee4349] rounded-lg flex items-center justify-center mx-auto flex-shrink-0 hover:bg-[#d63a40] transition-colors cursor-pointer"
                             >
                                 <span className="text-white font-bold text-sm leading-none">K</span>
                             </button>
@@ -156,7 +156,7 @@ export function Sidebar({ className, isCollapsed = false, onCollapse }: SidebarP
                                         className={cn(
                                             "group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
                                             isActive
-                                                ? "bg-blue-600 text-white shadow-lg"
+                                                ? "bg-[#ee4349] text-white shadow-lg"
                                                 : "text-slate-300 hover:bg-slate-700 hover:text-white",
                                             isCollapsed && "justify-center"
                                         )}
@@ -206,7 +206,7 @@ function MobileSidebar() {
             {/* Mobile Header */}
             <div className="flex items-center h-16 px-4 border-b border-slate-700">
                 <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <div className="w-8 h-8 bg-[#ee4349] rounded-lg flex items-center justify-center">
                         <span className="text-white font-bold text-sm">K</span>
                     </div>
                     <span className="text-white font-semibold text-lg">Khabeer Admin</span>
@@ -225,7 +225,7 @@ function MobileSidebar() {
                                 className={cn(
                                     "group flex items-center rounded-lg px-3 py-3 text-sm font-medium transition-all duration-200",
                                     isActive
-                                        ? "bg-blue-600 text-white shadow-lg"
+                                        ? "bg-[#ee4349] text-white shadow-lg"
                                         : "text-slate-300 hover:bg-slate-700 hover:text-white"
                                 )}
                             >

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AuthService } from '../services/auth.service'
 import { LoginDto, PhoneLoginDto, RegisterDto, User } from '../types'
 import { useAuthStore } from '@/lib/stores/auth.store'
+import toast from 'react-hot-toast'
 
 export const useLogin = () => {
   const queryClient = useQueryClient()
@@ -14,6 +15,10 @@ export const useLogin = () => {
       login(data.user, data.token)
       // Invalidate and refetch user profile
       queryClient.invalidateQueries({ queryKey: ['profile'] })
+      toast.success('Login successful!')
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Login failed')
     },
   })
 }
@@ -69,6 +74,13 @@ export const useLogout = () => {
     onSuccess: () => {
       logout()
       queryClient.clear()
+      toast.success('Logged out successfully')
+    },
+    onError: () => {
+      // Even if logout API fails, clear local state
+      logout()
+      queryClient.clear()
+      toast.success('Logged out successfully')
     },
   })
 }

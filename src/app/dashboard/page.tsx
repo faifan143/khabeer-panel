@@ -101,7 +101,7 @@ export default function DashboardPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Top Services</h2>
-              <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+              <button className="text-sm text-primary hover:text-primary/80 font-medium">
                 Show All
               </button>
             </div>
@@ -132,7 +132,7 @@ export default function DashboardPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Top Providers</h2>
-              <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+              <button className="text-sm text-primary hover:text-primary/80 font-medium">
                 Show All
               </button>
             </div>
@@ -162,8 +162,8 @@ export default function DashboardPage() {
               ))}
             </div>
           </div>
-                 </div>
-       </AdminLayout>
-     </ProtectedRoute>
-   )
- }
+        </div>
+      </AdminLayout>
+    </ProtectedRoute>
+  )
+}
