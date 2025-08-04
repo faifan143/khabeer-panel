@@ -369,7 +369,7 @@ export default function IncomePage() {
                       </TableHeader>
                       <TableBody>
                         {/* Invoices */}
-                        {sortData(filteredInvoices.slice(0, 5), sortField, sortDirection).map((invoice) => (
+                        {sortData(filteredInvoices, sortField, sortDirection).map((invoice) => (
                           <TableRow key={`invoice-${invoice.invoiceId}`} className="hover:bg-green-50">
                             <TableCell>
                               <Badge variant="default" className="bg-green-600 text-xs">Invoice</Badge>
@@ -400,7 +400,7 @@ export default function IncomePage() {
                         ))}
 
                         {/* Orders */}
-                        {sortData(filteredAllOrders.slice(0, 5), sortField, sortDirection).map((order) => (
+                        {sortData(filteredAllOrders, sortField, sortDirection).map((order) => (
                           <TableRow key={`order-${order.orderId}`} className="hover:bg-blue-50">
                             <TableCell>
                               <Badge variant="outline" className="border-blue-600 text-blue-600 text-xs">Order</Badge>
@@ -438,7 +438,7 @@ export default function IncomePage() {
                         ))}
 
                         {/* Offers */}
-                        {sortData(filteredOffers.slice(0, 5), sortField, sortDirection).map((offer) => (
+                        {sortData(filteredOffers, sortField, sortDirection).map((offer) => (
                           <TableRow key={`offer-${offer.id}`} className="hover:bg-purple-50">
                             <TableCell>
                               <Badge variant="secondary" className="bg-purple-600 text-xs">Offer</Badge>
