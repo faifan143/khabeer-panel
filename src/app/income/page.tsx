@@ -840,7 +840,7 @@ export default function IncomePage() {
                           </TableRow>
                         ) : (
                           sortData(filteredOffers, sortField, sortDirection).map((offer) => (
-                              <TableRow key={offer.id} className="hover:bg-purple-50">
+                            <TableRow key={offer.id} className="hover:bg-purple-50">
                               <TableCell>
                                 <div className="flex items-center gap-1">
                                   <div className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center">
