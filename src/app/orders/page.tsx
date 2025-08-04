@@ -2,27 +2,23 @@
 
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { AdminLayout } from "@/components/layout/admin-layout"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { useDashboardStats, useAdminOrders, useAdminUpdateOrderStatus, useAdminCancelOrder, useAdminCompleteOrder } from "@/lib/api/hooks/useAdmin"
+import { useAdminAcceptOrder, useAdminCancelOrder, useAdminCompleteOrder, useAdminOrders, useAdminRejectOrder, useAdminUpdateOrderStatus, useDashboardStats } from "@/lib/api/hooks/useAdmin"
 import { Order } from "@/lib/api/types"
 import { formatCurrency } from "@/lib/utils"
 import {
-    AlertCircle,
-    Calendar,
     CheckCircle,
     Clock,
     DollarSign,
-    Edit,
     Eye,
     Filter,
     MapPin,
@@ -30,7 +26,6 @@ import {
     RefreshCw,
     Search,
     Truck,
-    User,
     XCircle,
     Zap
 } from "lucide-react"
@@ -140,6 +135,10 @@ export default function OrdersManagementPage() {
     const [cancelReason, setCancelReason] = useState("")
     const [statusFilter, setStatusFilter] = useState<string>("all")
     const [dateFilter, setDateFilter] = useState<string>("all")
+    const [isAcceptDialogOpen, setIsAcceptDialogOpen] = useState(false)
+    const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
+    const [acceptNotes, setAcceptNotes] = useState("")
+    const [rejectReason, setRejectReason] = useState("")
 
     // Admin Orders hooks - using admin privileges
     const { data: ordersResponse, isLoading: ordersLoading, refetch: refetchOrders } = useAdminOrders(1, 1000) // Increased limit to get all orders
@@ -149,6 +148,8 @@ export default function OrdersManagementPage() {
     const updateStatusMutation = useAdminUpdateOrderStatus()
     const cancelOrderMutation = useAdminCancelOrder()
     const completeOrderMutation = useAdminCompleteOrder()
+    const acceptOrderMutation = useAdminAcceptOrder()
+    const rejectOrderMutation = useAdminRejectOrder()
 
     // Extract data from response
     const orders = (Array.isArray(ordersResponse) ? ordersResponse : ordersResponse?.data) as Order[] || []
@@ -279,6 +280,32 @@ export default function OrdersManagementPage() {
         }
     }
 
+    const handleOrderAccept = async (orderId: number) => {
+        try {
+            await acceptOrderMutation.mutateAsync({ id: orderId, notes: acceptNotes })
+            toast.success("Order accepted successfully")
+            setIsAcceptDialogOpen(false)
+            setSelectedOrder(null)
+            setAcceptNotes("")
+            refetchOrders()
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to accept order")
+        }
+    }
+
+    const handleOrderReject = async (orderId: number) => {
+        try {
+            await rejectOrderMutation.mutateAsync({ id: orderId, reason: rejectReason })
+            toast.success("Order rejected successfully")
+            setIsRejectDialogOpen(false)
+            setSelectedOrder(null)
+            setRejectReason("")
+            refetchOrders()
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Failed to reject order")
+        }
+    }
+
     const renderCurrency = (amount: number) => {
         const currencyString = formatCurrency(amount)
         const parts = currencyString.split(' OMR')
@@ -322,6 +349,15 @@ export default function OrdersManagementPage() {
                                 >
                                     <RefreshCw className="h-4 w-4" />
                                     <span>Refresh</span>
+                                </Button>
+                                <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() => setActiveTab("pending")}
+                                    className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
+                                >
+                                    <CheckCircle className="h-4 w-4" />
+                                    <span>Manage Pending Orders</span>
                                 </Button>
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -548,9 +584,10 @@ export default function OrdersManagementPage() {
                                                                 size="sm"
                                                                 onClick={() => {
                                                                     setSelectedOrder(order)
-                                                                    setIsStatusDialogOpen(true)
+                                                                    setIsAcceptDialogOpen(true)
                                                                 }}
                                                                 className="h-8 w-8 p-0 hover:bg-green-100"
+                                                                title="Accept Order"
                                                             >
                                                                 <CheckCircle className="h-4 w-4" />
                                                             </Button>
@@ -559,9 +596,10 @@ export default function OrdersManagementPage() {
                                                                 size="sm"
                                                                 onClick={() => {
                                                                     setSelectedOrder(order)
-                                                                    setIsCancelDialogOpen(true)
+                                                                    setIsRejectDialogOpen(true)
                                                                 }}
                                                                 className="h-8 w-8 p-0 hover:bg-red-100"
+                                                                title="Reject Order"
                                                             >
                                                                 <XCircle className="h-4 w-4" />
                                                             </Button>
@@ -660,9 +698,10 @@ export default function OrdersManagementPage() {
                                                                         size="sm"
                                                                         onClick={() => {
                                                                             setSelectedOrder(order)
-                                                                            setIsStatusDialogOpen(true)
+                                                                            setIsAcceptDialogOpen(true)
                                                                         }}
                                                                         className="h-8 w-8 p-0 hover:bg-green-100"
+                                                                        title="Accept Order"
                                                                     >
                                                                         <CheckCircle className="h-4 w-4" />
                                                                     </Button>
@@ -671,9 +710,10 @@ export default function OrdersManagementPage() {
                                                                         size="sm"
                                                                         onClick={() => {
                                                                             setSelectedOrder(order)
-                                                                            setIsCancelDialogOpen(true)
+                                                                            setIsRejectDialogOpen(true)
                                                                         }}
                                                                         className="h-8 w-8 p-0 hover:bg-red-100"
+                                                                        title="Reject Order"
                                                                     >
                                                                         <XCircle className="h-4 w-4" />
                                                                     </Button>
@@ -714,19 +754,19 @@ export default function OrdersManagementPage() {
 
                     {/* Order Details Dialog */}
                     <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
-                        <DialogContent className="sm:max-w-[600px]">
-                            <DialogHeader>
+                        <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] max-h-[90vh] w-full overflow-hidden">
+                            <DialogHeader className="flex-shrink-0">
                                 <DialogTitle className="text-xl">Order Details</DialogTitle>
                                 <DialogDescription>
                                     Complete information about this order
                                 </DialogDescription>
                             </DialogHeader>
                             {selectedOrder && (
-                                <div className="space-y-6">
-                                    <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-140px)] pr-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium">Booking ID</Label>
-                                            <div className="text-sm font-mono bg-gray-100 p-2 rounded">#{selectedOrder.bookingId}</div>
+                                            <div className="text-sm font-mono bg-gray-100 p-2 rounded break-all">#{selectedOrder.bookingId}</div>
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium">Status</Label>
@@ -746,13 +786,13 @@ export default function OrdersManagementPage() {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <Label className="text-sm font-medium">Customer</Label>
                                                 <div className="mt-1 p-3 bg-gray-50 rounded-lg">
                                                     <div className="font-semibold">{selectedOrder.user?.name}</div>
                                                     <div className="text-sm text-muted-foreground">{selectedOrder.user?.phone}</div>
-                                                    <div className="text-sm text-muted-foreground">{selectedOrder.user?.email}</div>
+                                                    <div className="text-sm text-muted-foreground break-all">{selectedOrder.user?.email}</div>
                                                 </div>
                                             </div>
                                             <div>
@@ -760,7 +800,7 @@ export default function OrdersManagementPage() {
                                                 <div className="mt-1 p-3 bg-gray-50 rounded-lg">
                                                     <div className="font-semibold">{selectedOrder.provider?.name}</div>
                                                     <div className="text-sm text-muted-foreground">{selectedOrder.provider?.phone}</div>
-                                                    <div className="text-sm text-muted-foreground">{selectedOrder.provider?.email}</div>
+                                                    <div className="text-sm text-muted-foreground break-all">{selectedOrder.provider?.email}</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -780,7 +820,7 @@ export default function OrdersManagementPage() {
                                             </div>
                                         )}
 
-                                        <div className="grid grid-cols-3 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                             <div>
                                                 <Label className="text-sm font-medium">Quantity</Label>
                                                 <div className="mt-1 text-lg font-semibold">{selectedOrder.quantity}</div>
@@ -795,7 +835,7 @@ export default function OrdersManagementPage() {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
                                                 <Label className="text-sm font-medium">Order Date</Label>
                                                 <div className="mt-1 text-sm">{formatDate(selectedOrder.orderDate)}</div>
@@ -810,7 +850,7 @@ export default function OrdersManagementPage() {
                                     </div>
                                 </div>
                             )}
-                            <DialogFooter>
+                            <DialogFooter className="flex-shrink-0 pt-4 border-t">
                                 <Button variant="outline" onClick={() => setIsOrderDialogOpen(false)}>
                                     Close
                                 </Button>
@@ -852,6 +892,80 @@ export default function OrdersManagementPage() {
                             <DialogFooter>
                                 <Button variant="outline" onClick={() => setIsStatusDialogOpen(false)}>
                                     Cancel
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* Accept Order Dialog */}
+                    <Dialog open={isAcceptDialogOpen} onOpenChange={setIsAcceptDialogOpen}>
+                        <DialogContent className="sm:max-w-[500px]">
+                            <DialogHeader>
+                                <DialogTitle>Accept Order</DialogTitle>
+                                <DialogDescription>
+                                    Are you sure you want to accept order #{selectedOrder?.bookingId}? This will move the order to accepted status.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="acceptNotes" className="text-sm font-medium">Admin Notes (Optional)</Label>
+                                    <Textarea
+                                        id="acceptNotes"
+                                        value={acceptNotes}
+                                        onChange={(e) => setAcceptNotes(e.target.value)}
+                                        placeholder="Enter any notes about accepting this order..."
+                                        rows={3}
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsAcceptDialogOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="default"
+                                    onClick={() => handleOrderAccept(selectedOrder!.id)}
+                                    disabled={acceptOrderMutation.isPending}
+                                    className="bg-green-600 hover:bg-green-700"
+                                >
+                                    Accept Order
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* Reject Order Dialog */}
+                    <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+                        <DialogContent className="sm:max-w-[500px]">
+                            <DialogHeader>
+                                <DialogTitle>Reject Order</DialogTitle>
+                                <DialogDescription>
+                                    Are you sure you want to reject order #{selectedOrder?.bookingId}? This action cannot be undone.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="rejectReason" className="text-sm font-medium">Rejection Reason (Required)</Label>
+                                    <Textarea
+                                        id="rejectReason"
+                                        value={rejectReason}
+                                        onChange={(e) => setRejectReason(e.target.value)}
+                                        placeholder="Enter reason for rejecting this order..."
+                                        rows={3}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
+                                    Keep Order
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => handleOrderReject(selectedOrder!.id)}
+                                    disabled={rejectOrderMutation.isPending || !rejectReason.trim()}
+                                >
+                                    Reject Order
                                 </Button>
                             </DialogFooter>
                         </DialogContent>

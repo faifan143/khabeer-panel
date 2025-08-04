@@ -62,6 +62,45 @@ export const useUserStats = () => {
   })
 }
 
+// Admin User Management hooks
+export const useUserReport = (startDate?: string, endDate?: string) => {
+  return useQuery({
+    queryKey: ['admin', 'user-report', startDate, endDate],
+    queryFn: () => adminService.getUserReport(startDate, endDate),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+export const useAdminActivateUser = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.activateUser(id),
+    onSuccess: () => {
+      // Invalidate all user-related queries
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'user-report'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'user-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] })
+    },
+  })
+}
+
+export const useAdminDeactivateUser = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.deactivateUser(id),
+    onSuccess: () => {
+      // Invalidate all user-related queries
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'user-report'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'user-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] })
+    },
+  })
+}
+
 // Admin Orders hooks
 export const useAdminOrders = (page: number = 1, limit: number = 1000) => {
   return useQuery({
@@ -104,6 +143,189 @@ export const useAdminCompleteOrder = () => {
     mutationFn: (id: number) => adminService.completeOrder(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] })
+    },
+  })
+}
+
+export const useAdminAcceptOrder = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: number; notes?: string }) => adminService.acceptOrder(id, notes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] })
+    },
+  })
+}
+
+export const useAdminRejectOrder = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason: string }) => adminService.rejectOrder(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] })
+    },
+  })
+}
+
+// Admin Provider Management hooks
+export const useAdminProviders = () => {
+  return useQuery({
+    queryKey: ['admin', 'providers'],
+    queryFn: adminService.getAllProviders,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+export const useAdminUnverifiedProviders = () => {
+  return useQuery({
+    queryKey: ['admin', 'providers', 'unverified'],
+    queryFn: adminService.getUnverifiedProviders,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  })
+}
+
+export const useAdminActivateProvider = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.activateProvider(id),
+    onSuccess: () => {
+      // Invalidate all provider-related queries
+      queryClient.invalidateQueries({ queryKey: ['providers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'providers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'provider-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] })
+    },
+  })
+}
+
+export const useAdminDeactivateProvider = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.deactivateProvider(id),
+    onSuccess: () => {
+      // Invalidate all provider-related queries
+      queryClient.invalidateQueries({ queryKey: ['providers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'providers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'provider-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] })
+    },
+  })
+}
+
+export const useAdminVerifyProvider = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.verifyProvider(id),
+    onSuccess: () => {
+      // Invalidate all provider-related queries
+      queryClient.invalidateQueries({ queryKey: ['providers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'providers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'provider-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] })
+    },
+  })
+}
+
+export const useAdminUnverifyProvider = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.unverifyProvider(id),
+    onSuccess: () => {
+      // Invalidate all provider-related queries
+      queryClient.invalidateQueries({ queryKey: ['providers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'providers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'provider-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] })
+    },
+  })
+}
+
+// Admin Verification Management hooks
+export const useAdminPendingVerifications = () => {
+  return useQuery({
+    queryKey: ['admin', 'verifications', 'pending'],
+    queryFn: adminService.getPendingVerifications,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  })
+}
+
+export const useAdminApproveVerification = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes?: string }) =>
+      adminService.approveVerification(id, notes),
+    onSuccess: () => {
+      // Invalidate all provider-related queries
+      queryClient.invalidateQueries({ queryKey: ['providers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'verifications'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'providers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'provider-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] })
+    },
+  })
+}
+
+export const useAdminRejectVerification = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: string; notes: string }) =>
+      adminService.rejectVerification(id, notes),
+    onSuccess: () => {
+      // Invalidate all provider-related queries
+      queryClient.invalidateQueries({ queryKey: ['providers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'verifications'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'providers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'provider-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] })
+    },
+  })
+}
+
+// Admin Join Requests Management hooks
+export const useAdminPendingJoinRequests = () => {
+  return useQuery({
+    queryKey: ['admin', 'join-requests', 'pending'],
+    queryFn: adminService.getPendingJoinRequests,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  })
+}
+
+export const useAdminApproveJoinRequest = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: number; notes?: string }) =>
+      adminService.approveJoinRequest(id, notes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'join-requests'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'providers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'provider-stats'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] })
+    },
+  })
+}
+
+export const useAdminRejectJoinRequest = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, notes }: { id: number; notes: string }) =>
+      adminService.rejectJoinRequest(id, notes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'join-requests'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'providers'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'provider-stats'] })
       queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] })
     },
   })

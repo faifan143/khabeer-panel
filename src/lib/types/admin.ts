@@ -95,4 +95,23 @@ export interface OrderStats {
     status: string
     count: number
   }>
+}
+
+export interface UserStats {
+  total: number
+  active: number
+  inactive: number
+}
+
+export interface UserReport {
+  userId: number
+  name: string
+  email: string
+  phone: string
+  role: string
+  isActive: boolean
+  createdAt: string
+  completedOrders: number
+  totalSpent: number
+  ratingsGiven: number
 } 

@@ -70,5 +70,100 @@ export const adminService = {
   completeOrder: async (id: number) => {
     const response = await api.put(`/admin/orders/${id}/complete`)
     return response.data
+  },
+
+  // Accept order with admin privileges
+  acceptOrder: async (id: number, notes?: string) => {
+    const response = await api.put(`/admin/orders/${id}/accept`, { notes })
+    return response.data
+  },
+
+  // Reject order with admin privileges
+  rejectOrder: async (id: number, reason: string) => {
+    const response = await api.put(`/admin/orders/${id}/reject`, { reason })
+    return response.data
+  },
+
+  // Provider Management Functions
+  getAllProviders: async () => {
+    const response = await api.get('/admin/providers')
+    return response.data
+  },
+
+  getUnverifiedProviders: async () => {
+    const response = await api.get('/admin/providers/unverified')
+    return response.data
+  },
+
+  activateProvider: async (id: number) => {
+    const response = await api.put(`/admin/providers/${id}/activate`)
+    return response.data
+  },
+
+  deactivateProvider: async (id: number) => {
+    const response = await api.put(`/admin/providers/${id}/deactivate`)
+    return response.data
+  },
+
+  verifyProvider: async (id: number) => {
+    const response = await api.put(`/admin/providers/${id}/verify`)
+    return response.data
+  },
+
+  unverifyProvider: async (id: number) => {
+    const response = await api.put(`/admin/providers/${id}/unverify`)
+    return response.data
+  },
+
+  // Verification Management
+  getPendingVerifications: async () => {
+    const response = await api.get('/admin/verifications/pending')
+    return response.data
+  },
+
+  approveVerification: async (id: string, notes?: string) => {
+    const response = await api.put(`/admin/verifications/${id}/approve`, { notes })
+    return response.data
+  },
+
+  rejectVerification: async (id: string, notes: string) => {
+    const response = await api.put(`/admin/verifications/${id}/reject`, { notes })
+    return response.data
+  },
+
+  // Join Requests Management
+  getPendingJoinRequests: async () => {
+    const response = await api.get('/admin/join-requests/pending')
+    return response.data
+  },
+
+  approveJoinRequest: async (id: number, notes?: string) => {
+    const response = await api.put(`/admin/join-requests/${id}/approve`, { notes })
+    return response.data
+  },
+
+  rejectJoinRequest: async (id: number, notes: string) => {
+    const response = await api.put(`/admin/join-requests/${id}/reject`, { notes })
+    return response.data
+  },
+
+  // User Management Functions
+  getUserReport: async (startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams()
+    if (startDate) params.append('startDate', startDate)
+    if (endDate) params.append('endDate', endDate)
+
+    const response = await api.get(`/admin/reports/users?${params.toString()}`)
+    return response.data
+  },
+
+  activateUser: async (id: number) => {
+    const response = await api.put(`/admin/users/${id}/activate`)
+    return response.data
+  },
+
+  deactivateUser: async (id: number) => {
+    const response = await api.put(`/admin/users/${id}/deactivate`)
+    return response.data
   }
 }
