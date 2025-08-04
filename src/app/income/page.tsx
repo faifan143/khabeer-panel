@@ -1,31 +1,30 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { AdminLayout } from "@/components/layout/admin-layout"
 import { ProtectedRoute } from "@/components/auth/protected-route"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { AdminLayout } from "@/components/layout/admin-layout"
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { FinanceService, type FinancialSummary, type InvoiceData, type OfferData } from '@/lib/api/services/finance.service'
+import { showError } from '@/lib/utils/toast'
 import {
-  DollarSign,
-  TrendingUp,
-  FileText,
-  Gift,
-  Users,
+  BarChart3,
   Calendar,
-  Search,
-  Filter,
+  CreditCard,
+  DollarSign,
   Download,
   Eye,
-  Star,
-  Package
+  Filter,
+  Gift,
+  Search,
+  ShoppingCart,
+  TrendingUp,
+  Users
 } from 'lucide-react'
-import { FinanceService, type InvoiceData, type OfferData, type FinancialSummary } from '@/lib/api/services/finance.service'
-import { showError } from '@/lib/utils/toast'
+import { useEffect, useState } from 'react'
 
 export default function IncomePage() {
   const [financialSummary, setFinancialSummary] = useState<FinancialSummary | null>(null)
@@ -36,11 +35,13 @@ export default function IncomePage() {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
-  const [activeTab, setActiveTab] = useState('all-data')
+  const [activeTab, setActiveTab] = useState('overview')
+  const [sortField, setSortField] = useState('')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
   useEffect(() => {
     loadFinancialData()
-  }, []) // Only run on mount
+  }, [])
 
   const loadFinancialData = async () => {
     try {
@@ -119,760 +120,788 @@ export default function IncomePage() {
     })
   }
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      paid: { variant: 'default' as const, label: 'Paid' },
-      pending: { variant: 'secondary' as const, label: 'Pending' },
-      failed: { variant: 'destructive' as const, label: 'Failed' },
-      refunded: { variant: 'outline' as const, label: 'Refunded' }
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDirection('asc')
     }
+  }
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending
-    return <Badge variant={config.variant}>{config.label}</Badge>
+  const sortData = (data: any[], field: string, direction: 'asc' | 'desc') => {
+    if (!field) return data
+
+    return [...data].sort((a, b) => {
+      let aValue = a[field]
+      let bValue = b[field]
+
+      // Handle nested objects
+      if (field.includes('.')) {
+        const [obj, prop] = field.split('.')
+        aValue = a[obj]?.[prop]
+        bValue = b[obj]?.[prop]
+      }
+
+      // Handle date fields
+      if (field.includes('Date') || field.includes('date')) {
+        aValue = new Date(aValue || 0).getTime()
+        bValue = new Date(bValue || 0).getTime()
+      }
+
+      // Handle numeric fields
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return direction === 'asc' ? aValue - bValue : bValue - aValue
+      }
+
+      // Handle string fields
+      aValue = String(aValue || '').toLowerCase()
+      bValue = String(bValue || '').toLowerCase()
+
+      if (direction === 'asc') {
+        return aValue.localeCompare(bValue)
+      } else {
+        return bValue.localeCompare(aValue)
+      }
+    })
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading financial data...</div>
-      </div>
+      <ProtectedRoute>
+        <AdminLayout>
+          <div className="flex items-center justify-center h-32">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
+              <div className="text-sm text-muted-foreground">Loading...</div>
+            </div>
+          </div>
+        </AdminLayout>
+      </ProtectedRoute>
     )
   }
 
   if (!financialSummary) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="text-lg font-medium mb-2">No financial data available</div>
-          <div className="text-muted-foreground">Try refreshing the page or check your connection</div>
-        </div>
-      </div>
+      <ProtectedRoute>
+        <AdminLayout>
+          <div className="flex items-center justify-center h-32">
+            <div className="text-center">
+              <div className="text-sm font-medium mb-1">No financial data available</div>
+              <div className="text-xs text-muted-foreground">Try refreshing the page</div>
+            </div>
+          </div>
+        </AdminLayout>
+      </ProtectedRoute>
     )
   }
 
   return (
     <ProtectedRoute>
       <AdminLayout>
-        <div className="space-y-6">
-          {/* Header */}
+        <div className="space-y-4">
+          {/* Compact Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Income & Finance</h1>
-              <p className="text-muted-foreground">
-                Monitor revenue, commissions, discounts, and financial performance
-              </p>
+              <h1 className="text-2xl font-bold">Income & Finance</h1>
+              <p className="text-sm text-muted-foreground">Monitor revenue, commissions, and financial performance</p>
             </div>
-            <Button onClick={loadFinancialData} variant="outline">
-              <Calendar className="mr-2 h-4 w-4" />
-              Refresh Data
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button onClick={loadFinancialData} variant="outline" size="sm">
+                <Calendar className="mr-1 h-4 w-4" />
+                Refresh
+              </Button>
+              <Button variant="default" size="sm">
+                <Download className="mr-1 h-4 w-4" />
+                Export
+              </Button>
+            </div>
           </div>
 
-          {/* Financial Summary Cards */}
-          {financialSummary && (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatCurrency(financialSummary.totalRevenue)}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {financialSummary.totalTransactions} transactions
-                  </p>
-                </CardContent>
-              </Card>
+          {/* Compact Metrics Cards */}
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="border-l-4 border-l-green-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                  <DollarSign className="h-3 w-3 text-green-600" />
+                  Total Revenue
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-xl font-bold text-green-600">{formatCurrency(financialSummary.totalRevenue)}</div>
+                <p className="text-xs text-muted-foreground">{financialSummary.totalTransactions} transactions</p>
+              </CardContent>
+            </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Net Income</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatCurrency(financialSummary.netIncome)}</div>
-                  <p className="text-xs text-muted-foreground">
-                    After commissions & discounts
-                  </p>
-                </CardContent>
-              </Card>
+            <Card className="border-l-4 border-l-blue-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3 text-blue-600" />
+                  Net Income
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-xl font-bold text-blue-600">{formatCurrency(financialSummary.netIncome)}</div>
+                <p className="text-xs text-muted-foreground">After commissions</p>
+              </CardContent>
+            </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Commission</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatCurrency(financialSummary.totalCommission)}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Provider commissions
-                  </p>
-                </CardContent>
-              </Card>
+            <Card className="border-l-4 border-l-orange-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                  <Users className="h-3 w-3 text-orange-600" />
+                  Commission
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-xl font-bold text-orange-600">{formatCurrency(financialSummary.totalCommission)}</div>
+                <p className="text-xs text-muted-foreground">Provider share</p>
+              </CardContent>
+            </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Discounts</CardTitle>
-                  <Gift className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatCurrency(financialSummary.totalDiscounts)}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {financialSummary.activeOffers} active offers
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+            <Card className="border-l-4 border-l-purple-500">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                  <Gift className="h-3 w-3 text-purple-600" />
+                  Discounts
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-xl font-bold text-purple-600">{formatCurrency(financialSummary.totalDiscounts)}</div>
+                <p className="text-xs text-muted-foreground">{financialSummary.activeOffers} active offers</p>
+              </CardContent>
+            </Card>
+          </div>
 
-          {/* Filters */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Filters & Search</CardTitle>
-              <CardDescription>Filter and search through financial data</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-4">
-                <div className="space-y-2">
-                  <Label htmlFor="search">Search</Label>
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="search"
-                      placeholder="Search invoices, offers..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-8"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="endDate">End Date</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>&nbsp;</Label>
-                  <Button onClick={handleApplyFilters} className="w-full">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Apply Filters
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Tabs for Comprehensive Data View */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="all-data" className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                All Financial Data ({invoices.length + allOrders.length + offers.length})
+
+          {/* Compact Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3">
+            <TabsList className="grid w-full grid-cols-4 h-9">
+              <TabsTrigger value="overview" className="flex items-center gap-1 text-xs">
+                <BarChart3 className="h-3 w-3" />
+                Overview
               </TabsTrigger>
-              <TabsTrigger value="invoices" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
+              <TabsTrigger value="invoices" className="flex items-center gap-1 text-xs">
+                <CreditCard className="h-3 w-3" />
                 Invoices ({invoices.length})
               </TabsTrigger>
-              <TabsTrigger value="orders" className="flex items-center gap-2">
-                <Package className="h-4 w-4" />
-                All Orders ({allOrders.length})
+              <TabsTrigger value="orders" className="flex items-center gap-1 text-xs">
+                <ShoppingCart className="h-3 w-3" />
+                Orders ({allOrders.length})
               </TabsTrigger>
-              <TabsTrigger value="offers" className="flex items-center gap-2">
-                <Gift className="h-4 w-4" />
+              <TabsTrigger value="offers" className="flex items-center gap-1 text-xs">
+                <Gift className="h-3 w-3" />
                 Offers ({offers.length})
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="all-data" className="space-y-4">
-              {/* Summary Cards for All Data */}
-              <div className="grid gap-4 md:grid-cols-4">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Items</CardTitle>
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{invoices.length + allOrders.length + offers.length}</div>
-                    <p className="text-xs text-muted-foreground">
-                      Invoices: {invoices.length} | Orders: {allOrders.length} | Offers: {offers.length}
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{formatCurrency(financialSummary?.totalRevenue || 0)}</div>
-                    <p className="text-xs text-muted-foreground">
-                      From {invoices.length} paid invoices
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Pending Orders</CardTitle>
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {allOrders.filter(order => order.status !== 'completed').length}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {allOrders.filter(order => order.status === 'pending').length} pending
-                    </p>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Active Offers</CardTitle>
-                    <Gift className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{offers.filter(offer => offer.isActive).length}</div>
-                    <p className="text-xs text-muted-foreground">
-                      {offers.length} total offers
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-3">
               <Card>
-                <CardHeader>
-                  <CardTitle>Complete Financial Overview</CardTitle>
-                  <CardDescription>
-                    Comprehensive view of all invoices, orders, and offers with detailed financial breakdown
-                  </CardDescription>
+                <CardHeader className=" flex items-center justify-between pb-3">
+                  <CardTitle className="text-sm">Recent Financial Activity</CardTitle>
+                  <div className="relative max-w-xs">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8 h-8 text-sm"
+                    />
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Type</TableHead>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Provider</TableHead>
-                        <TableHead>Service</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Total Amount</TableHead>
-                        <TableHead>Discount</TableHead>
-                        <TableHead>Commission</TableHead>
-                        <TableHead>Net Amount</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Payment Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {/* Invoices Data */}
-                      {filteredInvoices.map((invoice) => (
-                        <TableRow key={`invoice-${invoice.invoiceId}`} className="bg-green-50">
-                          <TableCell>
-                            <Badge variant="default" className="bg-green-600">Invoice</Badge>
-                          </TableCell>
-                          <TableCell className="font-medium">#{invoice.invoiceId}</TableCell>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">{invoice.user.name}</div>
-                              <div className="text-sm text-muted-foreground">{invoice.user.email}</div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">{invoice.provider.name}</div>
-                              <div className="text-sm text-muted-foreground">{invoice.provider.phone}</div>
-                            </div>
-                          </TableCell>
-                          <TableCell>{invoice.service.title}</TableCell>
-                          <TableCell>
-                            <Badge variant="default">Paid</Badge>
-                          </TableCell>
-                          <TableCell className="font-medium">{formatCurrency(invoice.totalAmount)}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-green-600">
-                              -{formatCurrency(invoice.discount)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-orange-600">
-                            -{formatCurrency(invoice.commission)}
-                          </TableCell>
-                          <TableCell className="font-bold">
-                            {formatCurrency(invoice.netAmount - invoice.commission)}
-                          </TableCell>
-                          <TableCell>{formatDate(invoice.paymentDate)}</TableCell>
-                          <TableCell>
-                            <Badge variant="default">PAID</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="ghost" size="sm">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-
-                      {/* All Orders Data */}
-                      {filteredAllOrders.map((order) => (
-                        <TableRow key={`order-${order.orderId}`} className="bg-blue-50">
-                          <TableCell>
-                            <Badge variant="outline" className="border-blue-600 text-blue-600">Order</Badge>
-                          </TableCell>
-                          <TableCell className="font-medium">#{order.orderId}</TableCell>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">{order.user?.name || 'N/A'}</div>
-                              <div className="text-sm text-muted-foreground">{order.user?.email || 'N/A'}</div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">{order.provider?.name || 'N/A'}</div>
-                              <div className="text-sm text-muted-foreground">{order.provider?.phone || 'N/A'}</div>
-                            </div>
-                          </TableCell>
-                          <TableCell>{order.service?.title || 'N/A'}</TableCell>
-                          <TableCell>
-                            <Badge variant={
-                              order.status === 'completed' ? 'default' :
-                                order.status === 'pending' ? 'secondary' :
-                                  order.status === 'in_progress' ? 'outline' :
-                                    'destructive'
-                            }>
-                              {order.status?.replace('_', ' ').toUpperCase() || 'N/A'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="font-medium">{formatCurrency(order.totalAmount || 0)}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-green-600">
-                              -{formatCurrency(order.discount || 0)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-orange-600">
-                            -{formatCurrency(order.commissionAmount || 0)}
-                          </TableCell>
-                          <TableCell className="font-bold">
-                            {formatCurrency((order.totalAmount || 0) - (order.commissionAmount || 0))}
-                          </TableCell>
-                          <TableCell>{formatDate(order.orderDate || order.createdAt)}</TableCell>
-                          <TableCell>
-                            <Badge variant={
-                              order.invoice?.paymentStatus === 'paid' ? 'default' :
-                                order.invoice?.paymentStatus === 'pending' ? 'secondary' :
-                                  order.invoice?.paymentStatus === 'failed' ? 'destructive' :
-                                    'outline'
-                            }>
-                              {order.invoice?.paymentStatus?.toUpperCase() || 'NO INVOICE'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="ghost" size="sm">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-
-                      {/* Offers Data */}
-                      {filteredOffers.map((offer) => (
-                        <TableRow key={`offer-${offer.id}`} className="bg-purple-50">
-                          <TableCell>
-                            <Badge variant="secondary" className="bg-purple-600">Offer</Badge>
-                          </TableCell>
-                          <TableCell className="font-medium">#{offer.id}</TableCell>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">-</div>
-                              <div className="text-sm text-muted-foreground">Offer</div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">{offer.provider.name}</div>
-                              {offer.provider.isVerified && (
-                                <Badge variant="secondary" className="text-xs">Verified</Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>{offer.service.title}</TableCell>
-                          <TableCell>
-                            {offer.isActive ? (
-                              <Badge variant="default">Active</Badge>
-                            ) : (
-                              <Badge variant="secondary">Expired</Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="font-medium">{formatCurrency(offer.originalPrice)}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-green-600">
-                              -{formatCurrency(offer.discountAmount)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-orange-600">-</TableCell>
-                          <TableCell className="font-bold text-green-600">
-                            {formatCurrency(offer.offerPrice)}
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              <div>{formatDate(offer.startDate)}</div>
-                              <div className="text-muted-foreground">to {formatDate(offer.endDate)}</div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">OFFER</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="ghost" size="sm">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-
-                      {/* Empty State */}
-                      {filteredInvoices.length === 0 && filteredAllOrders.length === 0 && filteredOffers.length === 0 && (
+                <CardContent className="pt-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
                         <TableRow>
-                          <TableCell colSpan={13} className="text-center py-8">
-                            <div className="text-muted-foreground">No financial data found</div>
-                          </TableCell>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('type')}
+                          >
+                            Type {sortField === 'type' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('id')}
+                          >
+                            ID {sortField === 'id' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('user.name')}
+                          >
+                            Customer {sortField === 'user.name' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('provider.name')}
+                          >
+                            Provider {sortField === 'provider.name' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('service.title')}
+                          >
+                            Service {sortField === 'service.title' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('status')}
+                          >
+                            Status {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('amount')}
+                          >
+                            Amount {sortField === 'amount' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('date')}
+                          >
+                            Date {sortField === 'date' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead className="text-xs">Actions</TableHead>
                         </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="invoices" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Invoices</CardTitle>
-                  <CardDescription>
-                    Detailed view of all invoices with payment status and financial breakdown
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Invoice ID</TableHead>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Provider</TableHead>
-                        <TableHead>Service</TableHead>
-                        <TableHead>Total Amount</TableHead>
-                        <TableHead>Discount</TableHead>
-                        <TableHead>Commission</TableHead>
-                        <TableHead>Net Amount</TableHead>
-                        <TableHead>Payment Date</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredInvoices.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={10} className="text-center py-8">
-                            <div className="text-muted-foreground">No invoices found</div>
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredInvoices.map((invoice) => (
-                          <TableRow key={invoice.invoiceId}>
-                            <TableCell className="font-medium">#{invoice.invoiceId}</TableCell>
+                      </TableHeader>
+                      <TableBody>
+                        {/* Invoices */}
+                        {sortData(filteredInvoices.slice(0, 5), sortField, sortDirection).map((invoice) => (
+                          <TableRow key={`invoice-${invoice.invoiceId}`} className="hover:bg-green-50">
                             <TableCell>
-                              <div>
-                                <div className="font-medium">{invoice.user.name}</div>
-                                <div className="text-sm text-muted-foreground">{invoice.user.email}</div>
-                              </div>
+                              <Badge variant="default" className="bg-green-600 text-xs">Invoice</Badge>
+                            </TableCell>
+                            <TableCell className="font-medium text-xs">#{invoice.invoiceId}</TableCell>
+                            <TableCell>
+                              <div className="font-medium text-xs">{invoice.user.name}</div>
+                              <div className="text-xs text-muted-foreground">{invoice.user.email}</div>
                             </TableCell>
                             <TableCell>
-                              <div>
-                                <div className="font-medium">{invoice.provider.name}</div>
-                                <div className="text-sm text-muted-foreground">{invoice.provider.phone}</div>
-                              </div>
+                              <div className="font-medium text-xs">{invoice.provider.name}</div>
+                              <div className="text-xs text-muted-foreground">{invoice.provider.phone}</div>
                             </TableCell>
-                            <TableCell>{invoice.service.title}</TableCell>
-                            <TableCell className="font-medium">{formatCurrency(invoice.totalAmount)}</TableCell>
+                            <TableCell className="text-xs">{invoice.service.title}</TableCell>
                             <TableCell>
-                              <Badge variant="outline" className="text-green-600">
-                                -{formatCurrency(invoice.discount)}
-                              </Badge>
+                              <Badge variant="default" className="text-xs">Paid</Badge>
                             </TableCell>
-                            <TableCell className="text-orange-600">
-                              -{formatCurrency(invoice.commission)}
-                            </TableCell>
-                            <TableCell className="font-bold">
+                            <TableCell className="font-bold text-green-600 text-xs">
                               {formatCurrency(invoice.netAmount - invoice.commission)}
                             </TableCell>
-                            <TableCell>{formatDate(invoice.paymentDate)}</TableCell>
+                            <TableCell className="text-xs">{formatDate(invoice.paymentDate)}</TableCell>
                             <TableCell>
-                              <Button variant="ghost" size="sm">
-                                <Eye className="h-4 w-4" />
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                <Eye className="h-3 w-3" />
                               </Button>
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                        ))}
 
-            <TabsContent value="orders" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>All Orders</CardTitle>
-                  <CardDescription>
-                    Complete view of all orders with their status and financial details
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Order ID</TableHead>
-                        <TableHead>Customer</TableHead>
-                        <TableHead>Provider</TableHead>
-                        <TableHead>Service</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Total Amount</TableHead>
-                        <TableHead>Commission</TableHead>
-                        <TableHead>Order Date</TableHead>
-                        <TableHead>Payment Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredAllOrders.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={10} className="text-center py-8">
-                            <div className="text-muted-foreground">No orders found</div>
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredAllOrders.map((order) => (
-                          <TableRow key={order.orderId}>
-                            <TableCell className="font-medium">#{order.orderId}</TableCell>
+                        {/* Orders */}
+                        {sortData(filteredAllOrders.slice(0, 5), sortField, sortDirection).map((order) => (
+                          <TableRow key={`order-${order.orderId}`} className="hover:bg-blue-50">
                             <TableCell>
-                              <div>
-                                <div className="font-medium">{order.user?.name || 'N/A'}</div>
-                                <div className="text-sm text-muted-foreground">{order.user?.email || 'N/A'}</div>
-                              </div>
+                              <Badge variant="outline" className="border-blue-600 text-blue-600 text-xs">Order</Badge>
+                            </TableCell>
+                            <TableCell className="font-medium text-xs">#{order.orderId}</TableCell>
+                            <TableCell>
+                              <div className="font-medium text-xs">{order.user?.name || 'N/A'}</div>
+                              <div className="text-xs text-muted-foreground">{order.user?.email || 'N/A'}</div>
                             </TableCell>
                             <TableCell>
-                              <div>
-                                <div className="font-medium">{order.provider?.name || 'N/A'}</div>
-                                <div className="text-sm text-muted-foreground">{order.provider?.phone || 'N/A'}</div>
-                              </div>
+                              <div className="font-medium text-xs">{order.provider?.name || 'N/A'}</div>
+                              <div className="text-xs text-muted-foreground">{order.provider?.phone || 'N/A'}</div>
                             </TableCell>
-                            <TableCell>{order.service?.title || 'N/A'}</TableCell>
+                            <TableCell className="text-xs">{order.service?.title || 'N/A'}</TableCell>
                             <TableCell>
                               <Badge variant={
                                 order.status === 'completed' ? 'default' :
                                   order.status === 'pending' ? 'secondary' :
                                     order.status === 'in_progress' ? 'outline' :
                                       'destructive'
-                              }>
+                              } className="text-xs">
                                 {order.status?.replace('_', ' ').toUpperCase() || 'N/A'}
                               </Badge>
                             </TableCell>
-                            <TableCell className="font-medium">{formatCurrency(order.totalAmount || 0)}</TableCell>
-                            <TableCell className="text-orange-600">
-                              -{formatCurrency(order.commissionAmount || 0)}
+                            <TableCell className="font-bold text-xs">
+                              {formatCurrency(order.totalAmount || 0)}
                             </TableCell>
-                            <TableCell>{formatDate(order.orderDate)}</TableCell>
+                            <TableCell className="text-xs">{formatDate(order.orderDate || order.createdAt)}</TableCell>
                             <TableCell>
-                              <Badge variant={
-                                order.invoice?.paymentStatus === 'paid' ? 'default' :
-                                  order.invoice?.paymentStatus === 'pending' ? 'secondary' :
-                                    order.invoice?.paymentStatus === 'failed' ? 'destructive' :
-                                      'outline'
-                              }>
-                                {order.invoice?.paymentStatus?.toUpperCase() || 'NO INVOICE'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Button variant="ghost" size="sm">
-                                <Eye className="h-4 w-4" />
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                <Eye className="h-3 w-3" />
                               </Button>
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
+                        ))}
+
+                        {/* Offers */}
+                        {sortData(filteredOffers.slice(0, 5), sortField, sortDirection).map((offer) => (
+                          <TableRow key={`offer-${offer.id}`} className="hover:bg-purple-50">
+                            <TableCell>
+                              <Badge variant="secondary" className="bg-purple-600 text-xs">Offer</Badge>
+                            </TableCell>
+                            <TableCell className="font-medium text-xs">#{offer.id}</TableCell>
+                            <TableCell>
+                              <div className="font-medium text-xs">-</div>
+                              <div className="text-xs text-muted-foreground">Offer</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium text-xs">{offer.provider.name}</div>
+                              {offer.provider.isVerified && (
+                                <Badge variant="secondary" className="text-xs">Verified</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-xs">{offer.service.title}</TableCell>
+                            <TableCell>
+                              {offer.isActive ? (
+                                <Badge variant="default" className="text-xs">Active</Badge>
+                              ) : (
+                                <Badge variant="secondary" className="text-xs">Expired</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="font-bold text-green-600 text-xs">
+                              {formatCurrency(offer.offerPrice)}
+                            </TableCell>
+                            <TableCell className="text-xs">{formatDate(offer.startDate)}</TableCell>
+                            <TableCell>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+
+                        {/* Empty State */}
+                        {filteredInvoices.length === 0 && filteredAllOrders.length === 0 && filteredOffers.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={9} className="text-center py-4">
+                              <div className="text-muted-foreground text-sm">No financial data found</div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="offers" className="space-y-4">
+            {/* Invoices Tab */}
+            <TabsContent value="invoices" className="space-y-3">
               <Card>
-                <CardHeader>
-                  <CardTitle>Offers & Discounts</CardTitle>
-                  <CardDescription>
-                    Active and expired offers with discount details
-                  </CardDescription>
+                <CardHeader className=" flex items-center justify-between pb-3">
+                  <CardTitle className="text-sm flex items-center gap-1">
+                    <CreditCard className="h-4 w-4" />
+                    Invoices
+                  </CardTitle>
+                  <div className="relative max-w-xs">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search invoices..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8 h-8 text-sm"
+                    />
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Provider</TableHead>
-                        <TableHead>Service</TableHead>
-                        <TableHead>Original Price</TableHead>
-                        <TableHead>Offer Price</TableHead>
-                        <TableHead>Discount</TableHead>
-                        <TableHead>Discount %</TableHead>
-                        <TableHead>Valid Period</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredOffers.length === 0 ? (
+                <CardContent className="pt-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
                         <TableRow>
-                          <TableCell colSpan={9} className="text-center py-8">
-                            <div className="text-muted-foreground">No offers found</div>
-                          </TableCell>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('invoiceId')}
+                          >
+                            Invoice ID {sortField === 'invoiceId' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('user.name')}
+                          >
+                            Customer {sortField === 'user.name' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('provider.name')}
+                          >
+                            Provider {sortField === 'provider.name' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('service.title')}
+                          >
+                            Service {sortField === 'service.title' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('totalAmount')}
+                          >
+                            Total {sortField === 'totalAmount' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('discount')}
+                          >
+                            Discount {sortField === 'discount' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('commission')}
+                          >
+                            Commission {sortField === 'commission' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('netAmount')}
+                          >
+                            Net {sortField === 'netAmount' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('paymentDate')}
+                          >
+                            Date {sortField === 'paymentDate' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead className="text-xs">Actions</TableHead>
                         </TableRow>
-                      ) : (
-                        filteredOffers.map((offer) => (
-                          <TableRow key={offer.id}>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center">
-                                  <span className="text-sm font-medium">
-                                    {offer.provider.name.charAt(0)}
-                                  </span>
-                                </div>
-                                <div>
-                                  <div className="font-medium">{offer.provider.name}</div>
-                                  {offer.provider.isVerified && (
-                                    <Badge variant="secondary" className="text-xs">Verified</Badge>
-                                  )}
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium">{offer.service.title}</div>
-                                <div className="text-sm text-muted-foreground line-clamp-1">
-                                  {offer.service.description}
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="font-medium">{formatCurrency(offer.originalPrice)}</TableCell>
-                            <TableCell className="font-medium text-green-600">{formatCurrency(offer.offerPrice)}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="text-green-600">
-                                -{formatCurrency(offer.discountAmount)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="secondary">
-                                {offer.discountPercentage.toFixed(1)}%
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">
-                                <div>{formatDate(offer.startDate)}</div>
-                                <div className="text-muted-foreground">to {formatDate(offer.endDate)}</div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {offer.isActive ? (
-                                <Badge variant="default">Active</Badge>
-                              ) : (
-                                <Badge variant="secondary">Expired</Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <Button variant="ghost" size="sm">
-                                <Eye className="h-4 w-4" />
-                              </Button>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredInvoices.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={10} className="text-center py-4">
+                              <div className="text-muted-foreground text-sm">No invoices found</div>
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
+                        ) : (
+                          sortData(filteredInvoices, sortField, sortDirection).map((invoice) => (
+                            <TableRow key={invoice.invoiceId} className="hover:bg-green-50">
+                              <TableCell className="font-medium text-xs">#{invoice.invoiceId}</TableCell>
+                              <TableCell>
+                                <div className="font-medium text-xs">{invoice.user.name}</div>
+                                <div className="text-xs text-muted-foreground">{invoice.user.email}</div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="font-medium text-xs">{invoice.provider.name}</div>
+                                <div className="text-xs text-muted-foreground">{invoice.provider.phone}</div>
+                              </TableCell>
+                              <TableCell className="text-xs">{invoice.service.title}</TableCell>
+                              <TableCell className="font-medium text-xs">{formatCurrency(invoice.totalAmount)}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-green-600 text-xs">
+                                  -{formatCurrency(invoice.discount)}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-orange-600 text-xs">
+                                -{formatCurrency(invoice.commission)}
+                              </TableCell>
+                              <TableCell className="font-bold text-green-600 text-xs">
+                                {formatCurrency(invoice.netAmount - invoice.commission)}
+                              </TableCell>
+                              <TableCell className="text-xs">{formatDate(invoice.paymentDate)}</TableCell>
+                              <TableCell>
+                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Orders Tab */}
+            <TabsContent value="orders" className="space-y-3">
+              <Card>
+                <CardHeader className=" flex items-center justify-between pb-3">
+                  <CardTitle className="text-sm flex items-center gap-1">
+                    <ShoppingCart className="h-4 w-4" />
+                    All Orders
+                  </CardTitle>
+                  <div className="relative max-w-xs">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search orders..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8 h-8 text-sm"
+                    />
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('orderId')}
+                          >
+                            Order ID {sortField === 'orderId' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('user.name')}
+                          >
+                            Customer {sortField === 'user.name' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('provider.name')}
+                          >
+                            Provider {sortField === 'provider.name' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('service.title')}
+                          >
+                            Service {sortField === 'service.title' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('status')}
+                          >
+                            Status {sortField === 'status' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('totalAmount')}
+                          >
+                            Amount {sortField === 'totalAmount' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('commissionAmount')}
+                          >
+                            Commission {sortField === 'commissionAmount' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('orderDate')}
+                          >
+                            Date {sortField === 'orderDate' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('invoice.paymentStatus')}
+                          >
+                            Payment {sortField === 'invoice.paymentStatus' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead className="text-xs">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredAllOrders.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={10} className="text-center py-4">
+                              <div className="text-muted-foreground text-sm">No orders found</div>
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          sortData(filteredAllOrders, sortField, sortDirection).map((order) => (
+                            <TableRow key={order.orderId} className="hover:bg-blue-50">
+                              <TableCell className="font-medium text-xs">#{order.orderId}</TableCell>
+                              <TableCell>
+                                <div className="font-medium text-xs">{order.user?.name || 'N/A'}</div>
+                                <div className="text-xs text-muted-foreground">{order.user?.email || 'N/A'}</div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="font-medium text-xs">{order.provider?.name || 'N/A'}</div>
+                                <div className="text-xs text-muted-foreground">{order.provider?.phone || 'N/A'}</div>
+                              </TableCell>
+                              <TableCell className="text-xs">{order.service?.title || 'N/A'}</TableCell>
+                              <TableCell>
+                                <Badge variant={
+                                  order.status === 'completed' ? 'default' :
+                                    order.status === 'pending' ? 'secondary' :
+                                      order.status === 'in_progress' ? 'outline' :
+                                        'destructive'
+                                } className="text-xs">
+                                  {order.status?.replace('_', ' ').toUpperCase() || 'N/A'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="font-medium text-xs">{formatCurrency(order.totalAmount || 0)}</TableCell>
+                              <TableCell className="text-orange-600 text-xs">
+                                -{formatCurrency(order.commissionAmount || 0)}
+                              </TableCell>
+                              <TableCell className="text-xs">{formatDate(order.orderDate)}</TableCell>
+                              <TableCell>
+                                <Badge variant={
+                                  order.invoice?.paymentStatus === 'paid' ? 'default' :
+                                    order.invoice?.paymentStatus === 'pending' ? 'secondary' :
+                                      order.invoice?.paymentStatus === 'failed' ? 'destructive' :
+                                        'outline'
+                                } className="text-xs">
+                                  {order.invoice?.paymentStatus?.toUpperCase() || 'NO INVOICE'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Offers Tab */}
+            <TabsContent value="offers" className="space-y-3">
+              <Card>
+                <CardHeader className=" flex items-center justify-between pb-3">
+                  <CardTitle className="text-sm flex items-center gap-1">
+                    <Gift className="h-4 w-4" />
+                    Offers & Discounts
+                  </CardTitle>
+                  <div className="relative max-w-xs">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search offers..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8 h-8 text-sm"
+                    />
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('provider.name')}
+                          >
+                            Provider {sortField === 'provider.name' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('service.title')}
+                          >
+                            Service {sortField === 'service.title' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('originalPrice')}
+                          >
+                            Original {sortField === 'originalPrice' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('offerPrice')}
+                          >
+                            Offer {sortField === 'offerPrice' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('discountAmount')}
+                          >
+                            Discount {sortField === 'discountAmount' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('discountPercentage')}
+                          >
+                            % {sortField === 'discountPercentage' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('startDate')}
+                          >
+                            Valid Period {sortField === 'startDate' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead
+                            className="text-xs cursor-pointer hover:bg-slate-50 select-none"
+                            onClick={() => handleSort('isActive')}
+                          >
+                            Status {sortField === 'isActive' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </TableHead>
+                          <TableHead className="text-xs">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredOffers.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={9} className="text-center py-4">
+                              <div className="text-muted-foreground text-sm">No offers found</div>
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          sortData(filteredOffers, sortField, sortDirection).map((offer) => (
+                            <TableRow key={offer.id} className="hover:bg-purple-50">
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <div className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center">
+                                    <span className="text-xs font-medium">
+                                      {offer.provider.name.charAt(0)}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-xs">{offer.provider.name}</div>
+                                    {offer.provider.isVerified && (
+                                      <Badge variant="secondary" className="text-xs">Verified</Badge>
+                                    )}
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="font-medium text-xs">{offer.service.title}</div>
+                                <div className="text-xs text-muted-foreground line-clamp-1">
+                                  {offer.service.description}
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-medium text-xs">{formatCurrency(offer.originalPrice)}</TableCell>
+                              <TableCell className="font-medium text-green-600 text-xs">{formatCurrency(offer.offerPrice)}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-green-600 text-xs">
+                                  -{formatCurrency(offer.discountAmount)}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="secondary" className="text-xs">
+                                  {offer.discountPercentage.toFixed(1)}%
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-xs">
+                                  <div>{formatDate(offer.startDate)}</div>
+                                  <div className="text-muted-foreground">to {formatDate(offer.endDate)}</div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {offer.isActive ? (
+                                  <Badge variant="default" className="text-xs">Active</Badge>
+                                ) : (
+                                  <Badge variant="secondary" className="text-xs">Expired</Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
-
-          {/* Financial Summary Footer */}
-          {financialSummary && (
-            <Card className="bg-gradient-to-r from-slate-50 to-slate-100 border-2 border-slate-200">
-              <CardHeader>
-                <CardTitle className="text-xl">Financial Summary</CardTitle>
-                <CardDescription>
-                  Complete overview of platform financial performance
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
-                      {formatCurrency(financialSummary.totalRevenue)}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Total Revenue</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {formatCurrency(financialSummary.totalCommission)}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Total Commissions</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-600">
-                      {formatCurrency(financialSummary.totalDiscounts)}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Total Discounts</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {formatCurrency(financialSummary.netIncome)}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Net Income</div>
-                  </div>
-                </div>
-
-                <div className="mt-6 pt-6 border-t border-slate-200">
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <div className="text-center">
-                      <div className="text-lg font-semibold">{financialSummary.totalInvoices}</div>
-                      <div className="text-sm text-muted-foreground">Total Invoices</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-semibold">{financialSummary.totalOffers}</div>
-                      <div className="text-sm text-muted-foreground">Total Offers</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-semibold">{financialSummary.activeOffers}</div>
-                      <div className="text-sm text-muted-foreground">Active Offers</div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </AdminLayout>
     </ProtectedRoute>
