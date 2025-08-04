@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminService } from '../services/admin.service'
 
 export const useDashboardStats = () => {
@@ -59,5 +59,52 @@ export const useUserStats = () => {
     queryKey: ['admin', 'user-stats'],
     queryFn: adminService.getUserStats,
     staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+// Admin Orders hooks
+export const useAdminOrders = (page: number = 1, limit: number = 1000) => {
+  return useQuery({
+    queryKey: ['admin', 'orders', page, limit],
+    queryFn: () => adminService.getAllOrders(page, limit),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  })
+}
+
+export const useAdminUpdateOrderStatus = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) =>
+      adminService.updateOrderStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] })
+    },
+  })
+}
+
+export const useAdminCancelOrder = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason?: string }) =>
+      adminService.cancelOrder(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] })
+    },
+  })
+}
+
+export const useAdminCompleteOrder = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.completeOrder(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'dashboard-stats'] })
+    },
   })
 }

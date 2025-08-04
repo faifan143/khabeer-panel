@@ -46,5 +46,29 @@ export const adminService = {
 
     const response = await api.get(`/admin/revenue?${params.toString()}`)
     return response.data
+  },
+
+  // Get all orders with admin privileges
+  getAllOrders: async (page: number = 1, limit: number = 1000) => {
+    const response = await api.get(`/admin/orders?page=${page}&limit=${limit}`)
+    return response.data
+  },
+
+  // Update order status with admin privileges
+  updateOrderStatus: async (id: number, status: string) => {
+    const response = await api.put(`/admin/orders/${id}/status`, { status })
+    return response.data
+  },
+
+  // Cancel order with admin privileges
+  cancelOrder: async (id: number, reason?: string) => {
+    const response = await api.put(`/admin/orders/${id}/cancel`, { reason })
+    return response.data
+  },
+
+  // Complete order with admin privileges
+  completeOrder: async (id: number) => {
+    const response = await api.put(`/admin/orders/${id}/complete`)
+    return response.data
   }
 }

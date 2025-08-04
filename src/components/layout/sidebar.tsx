@@ -47,12 +47,12 @@ const navigationItems = [
         icon: Package,
         description: "All orders and tracking"
     },
-    {
-        title: "Daily Orders",
-        href: "/daily-orders",
-        icon: Calendar,
-        description: "Today's orders and real-time tracking"
-    },
+    // {
+    //     title: "Daily Orders",
+    //     href: "/daily-orders",
+    //     icon: Calendar,
+    //     description: "Today's orders and real-time tracking"
+    // },
     {
         title: "Provider Verification",
         href: "/provider-verification",

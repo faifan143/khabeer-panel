@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useCategories, useCreateCategory, useCreateService, useDeleteCategory, useDeleteService, useServices, useUpdateCategory, useUpdateService } from "@/lib/api/hooks/useServices"
 import { Category, CreateCategoryDto, CreateServiceDto, Service, UpdateCategoryDto, UpdateServiceDto } from "@/lib/api/types"
 import { formatCurrency } from "@/lib/utils"
+import { getCategoryImageUrl, getServiceImageUrl } from "@/lib/utils/image"
 import {
     CheckCircle,
     DollarSign,
@@ -196,7 +197,6 @@ export default function CategoriesServicesPage() {
     const [categoryForm, setCategoryForm] = useState<CreateCategoryDto>({
         titleEn: "",
         titleAr: "",
-        image: "",
         state: ""
     })
 
@@ -206,7 +206,6 @@ export default function CategoriesServicesPage() {
         description: "",
         commission: 0,
         whatsapp: "",
-        image: "",
         categoryId: undefined
     })
 
@@ -214,7 +213,6 @@ export default function CategoriesServicesPage() {
         setCategoryForm({
             titleEn: "",
             titleAr: "",
-            image: "",
             state: ""
         })
         setSelectedCategory(null)
@@ -227,7 +225,6 @@ export default function CategoriesServicesPage() {
             description: "",
             commission: 0,
             whatsapp: "",
-            image: "",
             categoryId: undefined
         })
         setSelectedService(null)
@@ -289,7 +286,6 @@ export default function CategoriesServicesPage() {
         setCategoryForm({
             titleEn: category.titleEn,
             titleAr: category.titleAr,
-            image: category.image,
             state: category.state
         })
         setCategoryImageFile(null)
@@ -303,7 +299,6 @@ export default function CategoriesServicesPage() {
             description: service.description,
             commission: service.commission,
             whatsapp: service.whatsapp,
-            image: service.image,
             categoryId: service.categoryId
         })
         setServiceImageFile(null)
@@ -313,8 +308,9 @@ export default function CategoriesServicesPage() {
     const handleCategoryDelete = async (id: number) => {
         try {
             await deleteCategoryMutation.mutateAsync(id)
-            toast.success("Category deleted successfully!")
+            toast.success("Category and all related data deleted successfully!")
             refetchCategories()
+            refetchServices() // Also refetch services since some might be deleted
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to delete category")
         }
@@ -323,7 +319,7 @@ export default function CategoriesServicesPage() {
     const handleServiceDelete = async (id: number) => {
         try {
             await deleteServiceMutation.mutateAsync(id)
-            toast.success("Service deleted successfully!")
+            toast.success("Service and all related data deleted successfully!")
             refetchServices()
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to delete service")
@@ -530,13 +526,26 @@ export default function CategoriesServicesPage() {
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label htmlFor="state" className="text-sm font-medium">State</Label>
-                                                    <Input
-                                                        id="state"
+                                                    <Select
                                                         value={categoryForm.state}
-                                                        onChange={(e) => setCategoryForm({ ...categoryForm, state: e.target.value })}
-                                                        placeholder="Enter state (e.g., New York, Texas, California)"
-                                                        required
-                                                    />
+                                                        onValueChange={(value) => setCategoryForm({ ...categoryForm, state: value })}
+                                                    >
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select a state" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="Muscat">Muscat - مسقط</SelectItem>
+                                                            <SelectItem value="Dhofar">Dhofar - ظفار</SelectItem>
+                                                            <SelectItem value="Musandam">Musandam - مسندم</SelectItem>
+                                                            <SelectItem value="Buraimi">Buraimi - البريمي</SelectItem>
+                                                            <SelectItem value="Dakhiliyah">Dakhiliyah - الداخلية</SelectItem>
+                                                            <SelectItem value="North Al Batinah">North Al Batinah - شمال الباطنة</SelectItem>
+                                                            <SelectItem value="South Al Batinah">South Al Batinah - جنوب الباطنة</SelectItem>
+                                                            <SelectItem value="North Al Sharqiyah">North Al Sharqiyah - شمال الشرقية</SelectItem>
+                                                            <SelectItem value="South Al Sharqiyah">South Al Sharqiyah - جنوب الشرقية</SelectItem>
+                                                            <SelectItem value="Al Wusta">Al Wusta - الوسطى</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
                                                 <DialogFooter>
                                                     <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>
@@ -627,7 +636,7 @@ export default function CategoriesServicesPage() {
                                                             <SelectValue placeholder="Select a category (optional)" />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            {categories.filter(c => c.state === 'active').map((category) => (
+                                                            {categories.map((category) => (
                                                                 <SelectItem key={category.id} value={category.id.toString()}>
                                                                     {category.titleEn}
                                                                 </SelectItem>
@@ -716,126 +725,46 @@ export default function CategoriesServicesPage() {
                                 </div>
                             ) : viewMode === "grid" ? (
                                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                    {filteredCategories.map((category) => (
-                                        <Card key={category.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50/50 hover:from-blue-50/50 hover:to-indigo-50/50">
-                                            <CardContent className="p-6">
-                                                <div className="flex items-start justify-between">
-                                                    <div className="flex items-center space-x-4 flex-1">
-                                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                                                            {category.image ? (
-                                                                <img src={category.image} alt={category.titleEn} className="w-8 h-8 rounded object-cover" />
-                                                            ) : (
-                                                                <Package className="h-6 w-6 text-white" />
-                                                            )}
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <h3 className="font-semibold text-gray-900 truncate">{category.titleEn}</h3>
-                                                            <p className="text-sm text-muted-foreground truncate mt-1">{category.titleAr}</p>
-                                                            <div className="flex items-center mt-3">
-                                                                {category.state && category.state.trim() !== '' ? (
-                                                                    <Badge
-                                                                        variant="outline"
-                                                                        className="text-xs px-3 py-1 bg-blue-50 text-blue-700 border-blue-200"
-                                                                    >
-                                                                        📍 {category.state}
-                                                                    </Badge>
-                                                                ) : (
-                                                                    <Badge
-                                                                        variant="secondary"
-                                                                        className="text-xs px-3 py-1 bg-gray-100 text-gray-600"
-                                                                    >
-                                                                        No location
-                                                                    </Badge>
-                                                                )}
+                                    {filteredCategories.map((category) => {
+                                        console.log(getCategoryImageUrl(category.image));
+
+                                        return (
+                                            <Card key={category.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50/50 hover:from-blue-50/50 hover:to-indigo-50/50">
+                                                <CardContent className="p-6">
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex items-center space-x-4 flex-1">
+                                                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+                                                                {
+                                                                    category.image && getCategoryImageUrl(category.image) ? (
+                                                                        <img src={getCategoryImageUrl(category.image)} alt={category.titleEn} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        <Package className="h-6 w-6 text-white" />
+                                                                    )
+                                                                }
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <h3 className="font-semibold text-gray-900 truncate">{category.titleEn}</h3>
+                                                                <p className="text-sm text-muted-foreground truncate mt-1">{category.titleAr}</p>
+                                                                <div className="flex items-center mt-3">
+                                                                    {category.state && category.state.trim() !== '' ? (
+                                                                        <Badge
+                                                                            variant="outline"
+                                                                            className="text-xs px-3 py-1 bg-blue-50 text-blue-700 border-blue-200"
+                                                                        >
+                                                                            📍 {category.state}
+                                                                        </Badge>
+                                                                    ) : (
+                                                                        <Badge
+                                                                            variant="secondary"
+                                                                            className="text-xs px-3 py-1 bg-gray-100 text-gray-600"
+                                                                        >
+                                                                            No location
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleCategoryEdit(category)}
-                                                            className="h-8 w-8 p-0 hover:bg-blue-100"
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-red-100">
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>Delete Category</AlertDialogTitle>
-                                                                    <AlertDialogDescription>
-                                                                        Are you sure you want to delete "{category.titleEn}"? This action cannot be undone and will affect all associated services.
-                                                                    </AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                    <AlertDialogAction
-                                                                        onClick={() => handleCategoryDelete(category.id)}
-                                                                        className="bg-red-600 hover:bg-red-700"
-                                                                    >
-                                                                        Delete Category
-                                                                    </AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                    </div>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    ))}
-                                </div>
-                            ) : (
-                                <Card className="border-0 shadow-lg">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow className="bg-gray-50">
-                                                <TableHead className="font-semibold">Category</TableHead>
-                                                <TableHead className="font-semibold">State</TableHead>
-                                                <TableHead className="font-semibold text-right">Actions</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {filteredCategories.map((category) => (
-                                                <TableRow key={category.id} className="hover:bg-gray-50/50">
-                                                    <TableCell>
-                                                        <div className="flex items-center space-x-3">
-                                                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                                                                {category.image ? (
-                                                                    <img src={category.image} alt={category.titleEn} className="w-8 h-8 rounded object-cover" />
-                                                                ) : (
-                                                                    <Package className="h-5 w-5 text-white" />
-                                                                )}
-                                                            </div>
-                                                            <div>
-                                                                <div className="font-semibold text-gray-900">{category.titleEn}</div>
-                                                                <div className="text-sm text-muted-foreground">{category.titleAr}</div>
-                                                            </div>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {category.state && category.state.trim() !== '' ? (
-                                                            <Badge
-                                                                variant="outline"
-                                                                className="bg-blue-50 text-blue-700 border-blue-200"
-                                                            >
-                                                                📍 {category.state}
-                                                            </Badge>
-                                                        ) : (
-                                                            <Badge
-                                                                variant="secondary"
-                                                                className="bg-gray-100 text-gray-600"
-                                                            >
-                                                                No location
-                                                            </Badge>
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <div className="flex items-center justify-end space-x-2">
+                                                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
@@ -854,7 +783,10 @@ export default function CategoriesServicesPage() {
                                                                     <AlertDialogHeader>
                                                                         <AlertDialogTitle>Delete Category</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            Are you sure you want to delete "{category.titleEn}"? This action cannot be undone and will affect all associated services.
+                                                                            Are you sure you want to delete "{category.titleEn}"? This action cannot be undone and will permanently delete:
+                                                                            <br />• All services in this category
+                                                                            <br />• All invoices and orders related to those services
+                                                                            <br />• All provider services and offers
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
@@ -869,9 +801,102 @@ export default function CategoriesServicesPage() {
                                                                 </AlertDialogContent>
                                                             </AlertDialog>
                                                         </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        )
+                                    })}
+                                </div>
+                            ) : (
+                                <Card className="border-0 shadow-lg">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="bg-gray-50">
+                                                <TableHead className="font-semibold">Category</TableHead>
+                                                <TableHead className="font-semibold">State</TableHead>
+                                                <TableHead className="font-semibold text-right">Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {filteredCategories.map((category) => {
+                                                console.log(getCategoryImageUrl(category.image));
+
+                                                return (
+                                                    <TableRow key={category.id} className="hover:bg-gray-50/50">
+                                                        <TableCell>
+                                                            <div className="flex items-center space-x-3">
+                                                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center overflow-hidden">
+                                                                    {category.image ? (
+                                                                        <img src={getCategoryImageUrl(category.image)} alt={category.titleEn} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        <Package className="h-5 w-5 text-white" />
+                                                                    )}
+                                                                </div>
+                                                                <div>
+                                                                    <div className="font-semibold text-gray-900">{category.titleEn}</div>
+                                                                    <div className="text-sm text-muted-foreground">{category.titleAr}</div>
+                                                                </div>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {category.state && category.state.trim() !== '' ? (
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className="bg-blue-50 text-blue-700 border-blue-200"
+                                                                >
+                                                                    📍 {category.state}
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge
+                                                                    variant="secondary"
+                                                                    className="bg-gray-100 text-gray-600"
+                                                                >
+                                                                    No location
+                                                                </Badge>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <div className="flex items-center justify-end space-x-2">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => handleCategoryEdit(category)}
+                                                                    className="h-8 w-8 p-0 hover:bg-blue-100"
+                                                                >
+                                                                    <Edit className="h-4 w-4" />
+                                                                </Button>
+                                                                <AlertDialog>
+                                                                    <AlertDialogTrigger asChild>
+                                                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-red-100">
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </AlertDialogTrigger>
+                                                                    <AlertDialogContent>
+                                                                        <AlertDialogHeader>
+                                                                            <AlertDialogTitle>Delete Category</AlertDialogTitle>
+                                                                            <AlertDialogDescription>
+                                                                                Are you sure you want to delete "{category.titleEn}"? This action cannot be undone and will permanently delete:
+                                                                                <br />• All services in this category
+                                                                                <br />• All invoices and orders related to those services
+                                                                                <br />• All provider services and offers
+                                                                            </AlertDialogDescription>
+                                                                        </AlertDialogHeader>
+                                                                        <AlertDialogFooter>
+                                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                            <AlertDialogAction
+                                                                                onClick={() => handleCategoryDelete(category.id)}
+                                                                                className="bg-red-600 hover:bg-red-700"
+                                                                            >
+                                                                                Delete Category
+                                                                            </AlertDialogAction>
+                                                                        </AlertDialogFooter>
+                                                                    </AlertDialogContent>
+                                                                </AlertDialog>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )
+                                            })}
                                         </TableBody>
                                     </Table>
                                 </Card>
@@ -926,9 +951,9 @@ export default function CategoriesServicesPage() {
                                             <CardContent className="p-6">
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex items-start space-x-4 flex-1">
-                                                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                                                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
                                                             {service.image ? (
-                                                                <img src={service.image} alt={service.title} className="w-8 h-8 rounded object-cover" />
+                                                                <img src={getServiceImageUrl(service.image)} alt={service.title} className="w-full h-full object-cover" />
                                                             ) : (
                                                                 <Package className="h-6 w-6 text-white" />
                                                             )}
@@ -969,7 +994,9 @@ export default function CategoriesServicesPage() {
                                                                 <AlertDialogHeader>
                                                                     <AlertDialogTitle>Delete Service</AlertDialogTitle>
                                                                     <AlertDialogDescription>
-                                                                        Are you sure you want to delete "{service.title}"? This action cannot be undone.
+                                                                        Are you sure you want to delete "{service.title}"? This action cannot be undone and will permanently delete:
+                                                                        <br />• All invoices and orders related to this service
+                                                                        <br />• All provider services and offers
                                                                     </AlertDialogDescription>
                                                                 </AlertDialogHeader>
                                                                 <AlertDialogFooter>
@@ -1006,9 +1033,9 @@ export default function CategoriesServicesPage() {
                                                 <TableRow key={service.id} className="hover:bg-gray-50/50">
                                                     <TableCell>
                                                         <div className="flex items-center space-x-3">
-                                                            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                                                            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center overflow-hidden">
                                                                 {service.image ? (
-                                                                    <img src={service.image} alt={service.title} className="w-8 h-8 rounded object-cover" />
+                                                                    <img src={getServiceImageUrl(service.image)} alt={service.title} className="w-full h-full object-cover" />
                                                                 ) : (
                                                                     <Package className="h-5 w-5 text-white" />
                                                                 )}
@@ -1056,7 +1083,9 @@ export default function CategoriesServicesPage() {
                                                                     <AlertDialogHeader>
                                                                         <AlertDialogTitle>Delete Service</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            Are you sure you want to delete "{service.title}"? This action cannot be undone.
+                                                                            Are you sure you want to delete "{service.title}"? This action cannot be undone and will permanently delete:
+                                                                            <br />• All invoices and orders related to this service
+                                                                            <br />• All provider services and offers
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>

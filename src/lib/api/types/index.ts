@@ -95,14 +95,12 @@ export interface Category extends BaseEntity {
 }
 
 export interface CreateCategoryDto {
-  image: string
   titleAr: string
   titleEn: string
   state: string
 }
 
 export interface UpdateCategoryDto {
-  image?: string
   titleAr?: string
   titleEn?: string
   state?: string
@@ -120,7 +118,6 @@ export interface Service extends BaseEntity {
 }
 
 export interface CreateServiceDto {
-  image: string
   title: string
   description: string
   commission: number
@@ -129,7 +126,6 @@ export interface CreateServiceDto {
 }
 
 export interface UpdateServiceDto {
-  image?: string
   title?: string
   description?: string
   commission?: number

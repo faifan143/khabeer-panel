@@ -19,7 +19,7 @@ const getAuthToken = (): string | null => {
 
 // Create axios instance with default config
 const createAxiosInstance = (): AxiosInstance => {
-  const baseURL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api')
+  const baseURL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api')
   console.log('Axios base URL:', baseURL)
 
   const instance = axios.create({
