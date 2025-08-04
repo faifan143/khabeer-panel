@@ -15,3 +15,6 @@ export { OrdersService } from './orders.service'
 
 // Service service
 export { ServicesService } from './services.service'
+
+// Finance service
+export { FinanceService } from './finance.service'
