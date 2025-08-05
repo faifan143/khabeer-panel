@@ -20,6 +20,7 @@ docker rm khabeer-panel 2>nul
 
 REM Build and start
 echo [INFO] Building and starting Khabeer Panel...
+docker-compose down 2>nul
 docker-compose up --build -d
 
 REM Wait and check health

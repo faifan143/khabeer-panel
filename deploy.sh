@@ -38,6 +38,7 @@ docker rm khabeer-panel 2>/dev/null || true
 
 # Build and start
 print_status "Building and starting Khabeer Panel..."
+docker-compose down 2>/dev/null || true
 docker-compose up --build -d
 
 # Wait and check health
