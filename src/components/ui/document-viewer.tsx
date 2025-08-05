@@ -1,16 +1,16 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { 
-  File, 
-  FileText, 
-  Image, 
-  Download, 
-  Eye, 
+import {
+  File,
+  FileText,
+  Image,
+  Download,
+  Eye,
   X,
   Calendar,
   User
@@ -44,6 +44,16 @@ export function DocumentViewer({
 }: DocumentViewerProps) {
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null)
   const [isViewerOpen, setIsViewerOpen] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Don't render anything until we're on the client
+  if (!isClient) {
+    return null
+  }
 
   const getFileIcon = (type: string) => {
     if (type.startsWith('image/')) return <Image className="h-5 w-5" />
@@ -207,7 +217,7 @@ export function DocumentViewer({
               <span>{selectedDocument?.name}</span>
             </DialogTitle>
           </DialogHeader>
-          
+
           {selectedDocument && (
             <div className="flex-1 overflow-hidden">
               {selectedDocument.type.startsWith('image/') ? (
@@ -229,7 +239,7 @@ export function DocumentViewer({
               )}
             </div>
           )}
-          
+
           <div className="flex items-center justify-between pt-4 border-t">
             <div className="text-sm text-gray-500">
               {selectedDocument && (

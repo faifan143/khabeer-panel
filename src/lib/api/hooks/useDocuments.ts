@@ -11,22 +11,22 @@ export const useProviderDocuments = (providerId: number) => {
 }
 
 export const useUploadDocuments = () => {
-  const queryClient = useQueryClient()
-  
   return useMutation({
-    mutationFn: (files: File[]) => DocumentsService.uploadDocuments(files),
-    onSuccess: (data, variables, context) => {
-      toast.success(`Successfully uploaded ${data.documents.length} document${data.documents.length !== 1 ? 's' : ''}`)
+    mutationFn: ({ files, onProgress }: { files: File[], onProgress?: (progress: { [key: string]: number }) => void }) =>
+      DocumentsService.uploadDocuments(files, onProgress),
+    onSuccess: () => {
+      toast.success('Documents uploaded successfully')
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to upload documents')
-    },
+    onError: (error) => {
+      console.error('Upload error:', error)
+      toast.error('Failed to upload documents')
+    }
   })
 }
 
 export const useAddDocumentsToProvider = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: ({ providerId, documents }: { providerId: number; documents: string[] }) =>
       DocumentsService.addDocumentsToProvider(providerId, documents),
@@ -43,7 +43,7 @@ export const useAddDocumentsToProvider = () => {
 
 export const useRemoveDocumentFromProvider = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: ({ providerId, documentUrl }: { providerId: number; documentUrl: string }) =>
       DocumentsService.removeDocumentFromProvider(providerId, documentUrl),
@@ -60,7 +60,7 @@ export const useRemoveDocumentFromProvider = () => {
 
 export const useApproveProviderVerification = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: ({ providerId, adminNotes }: { providerId: number; adminNotes?: string }) =>
       DocumentsService.approveProviderVerification(providerId, adminNotes),
@@ -78,7 +78,7 @@ export const useApproveProviderVerification = () => {
 
 export const useRejectProviderVerification = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: ({ providerId, adminNotes }: { providerId: number; adminNotes: string }) =>
       DocumentsService.rejectProviderVerification(providerId, adminNotes),

@@ -83,35 +83,15 @@ export function DocumentManagementDialog({
       setUploadProgress(initialProgress)
       setUploadStatus(initialStatus)
 
-      // Start progress simulation
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          const newProgress = { ...prev }
-          let allComplete = true
-
-          Object.keys(newProgress).forEach(fileName => {
-            if (newProgress[fileName] < 90) { // Stop at 90% until upload completes
-              newProgress[fileName] = Math.min(newProgress[fileName] + 10, 90)
-              allComplete = false
-            }
-          })
-
-          return newProgress
-        })
-      }, 200)
-
-      // First upload the files
-      const uploadResult = await uploadDocumentsMutation.mutateAsync(selectedFiles)
-
-      // Complete the progress
-      setUploadProgress(prev => {
-        const newProgress = { ...prev }
-        Object.keys(newProgress).forEach(fileName => {
-          newProgress[fileName] = 100
-        })
-        return newProgress
+      // Upload files with real progress tracking
+      const uploadResult = await uploadDocumentsMutation.mutateAsync({
+        files: selectedFiles,
+        onProgress: (progress) => {
+          setUploadProgress(progress)
+        }
       })
 
+      // Set completion status
       setUploadStatus(prev => {
         const newStatus = { ...prev }
         Object.keys(newStatus).forEach(fileName => {
@@ -119,8 +99,6 @@ export function DocumentManagementDialog({
         })
         return newStatus
       })
-
-      clearInterval(progressInterval)
 
       // Then add them to the provider
       if (provider) {
@@ -353,12 +331,13 @@ export function DocumentManagementDialog({
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center justify-end space-x-2 pt-4 border-t">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4 border-t">
                       {documentsData?.verificationStatus === 'pending' ? (
                         <>
                           <Button
                             variant="outline"
                             onClick={() => setAdminNotes('')}
+                            className="flex-1 sm:flex-none"
                           >
                             Clear
                           </Button>
@@ -366,38 +345,40 @@ export function DocumentManagementDialog({
                             variant="destructive"
                             onClick={handleRejectVerification}
                             disabled={rejectVerificationMutation.isPending}
+                            className="flex-1 sm:flex-none"
                           >
                             {rejectVerificationMutation.isPending ? (
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center justify-center space-x-2">
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                                 <span>Rejecting...</span>
                               </div>
                             ) : (
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center justify-center space-x-2">
                                 <XCircle className="h-4 w-4" />
-                                <span>Reject Verification</span>
+                                <span>Reject</span>
                               </div>
                             )}
                           </Button>
                           <Button
                             onClick={handleApproveVerification}
                             disabled={approveVerificationMutation.isPending}
+                            className="flex-1 sm:flex-none"
                           >
                             {approveVerificationMutation.isPending ? (
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center justify-center space-x-2">
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                                 <span>Approving...</span>
                               </div>
                             ) : (
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center justify-center space-x-2">
                                 <CheckCircle className="h-4 w-4" />
-                                <span>Approve Verification</span>
+                                <span>Approve</span>
                               </div>
                             )}
                           </Button>
                         </>
                       ) : (
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-500 text-center sm:text-left">
                           Verification has already been {documentsData?.verificationStatus}
                         </div>
                       )}
