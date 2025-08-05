@@ -140,31 +140,29 @@ export default function UsersManagementPage() {
                         </Card>
                     </div>
 
-                    {/* Filters and Search */}
+
+                    {/* Users Table */}
                     <Card>
-                        <CardHeader>
-                            <CardTitle>Filters & Search</CardTitle>
-                            <CardDescription>
-                                Filter and search through user accounts
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Search</label>
-                                    <div className="relative">
-                                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            placeholder="Search by name, email, or phone..."
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="pl-10"
-                                        />
-                                    </div>
+                        <CardHeader className="flex items-center justify-between">
+                            <div>
+                                <CardTitle>Users ({filteredUsers.length})</CardTitle>
+                                <CardDescription>
+                                    Detailed view of all users with their activity and engagement metrics
+                                </CardDescription>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search by name, email, or phone..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="pl-10"
+                                    />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Status</label>
                                     <Select value={statusFilter} onValueChange={setStatusFilter}>
                                         <SelectTrigger>
                                             <SelectValue placeholder="Filter by status" />
@@ -177,34 +175,7 @@ export default function UsersManagementPage() {
                                     </Select>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Start Date</label>
-                                    <Input
-                                        type="date"
-                                        value={startDate}
-                                        onChange={(e) => setStartDate(e.target.value)}
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">End Date</label>
-                                    <Input
-                                        type="date"
-                                        value={endDate}
-                                        onChange={(e) => setEndDate(e.target.value)}
-                                    />
-                                </div>
                             </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Users Table */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Users ({filteredUsers.length})</CardTitle>
-                            <CardDescription>
-                                Detailed view of all users with their activity and engagement metrics
-                            </CardDescription>
                         </CardHeader>
                         <CardContent>
                             {reportLoading ? (
