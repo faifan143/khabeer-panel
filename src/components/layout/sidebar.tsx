@@ -110,7 +110,7 @@ export function Sidebar({ className, isCollapsed = false, onCollapse }: SidebarP
                     </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="p-0 w-80 max-w-[85vw] border-r-0">
-                    <div className="h-full overflow-hidden">
+                    <div className="h-full overflow-y-auto">
                         <MobileSidebar onLinkClick={() => setIsMobileOpen(false)} onLogoClick={() => setIsMobileOpen(false)} />
                     </div>
                 </SheetContent>
@@ -233,9 +233,9 @@ function MobileSidebar({ onLinkClick, onLogoClick }: { onLinkClick: () => void, 
     const pathname = usePathname()
 
     return (
-        <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-2xl">
+        <div className="flex flex-col min-h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-2xl">
             {/* Enhanced Mobile Header */}
-            <div className="flex items-center justify-between h-16 p-6 border-b border-slate-700/50 bg-slate-800/50 backdrop-blur-sm">
+            <div className="flex items-center justify-between h-16 px-6 border-b border-slate-700/50 bg-slate-800/50 backdrop-blur-sm flex-shrink-0">
                 <div className="flex items-center space-x-3">
                     <button
                         onClick={onLogoClick}
@@ -253,59 +253,61 @@ function MobileSidebar({ onLinkClick, onLogoClick }: { onLinkClick: () => void, 
             </div>
 
             {/* Enhanced Mobile Navigation */}
-            <ScrollArea className="flex-1 px-4 py-6">
-                <nav className="space-y-3">
-                    {navigationItems.map((item) => {
-                        const isActive = pathname === item.href
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                onClick={onLinkClick}
-                                className={cn(
-                                    "group flex items-center rounded-xl px-4 py-4 text-sm font-medium transition-all duration-300 relative overflow-hidden",
-                                    isActive
-                                        ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/25"
-                                        : "text-slate-300 hover:bg-slate-700/50 hover:text-white hover:shadow-md"
-                                )}
-                            >
-                                {/* Active indicator */}
-                                {isActive && (
-                                    <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-red-600/20 rounded-xl" />
-                                )}
-
-                                <div className="relative z-10 flex items-center w-full">
-                                    <div className={cn(
-                                        "p-2 rounded-lg transition-all duration-200",
+            <div className="flex-1 overflow-y-auto">
+                <div className="px-4 py-6">
+                    <nav className="space-y-3">
+                        {navigationItems.map((item) => {
+                            const isActive = pathname === item.href
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    onClick={onLinkClick}
+                                    className={cn(
+                                        "group flex items-center rounded-xl px-4 py-4 text-sm font-medium transition-all duration-300 relative overflow-hidden",
                                         isActive
-                                            ? "bg-white/20 text-white"
-                                            : "bg-slate-700/50 text-slate-400 group-hover:bg-slate-600/50 group-hover:text-white"
-                                    )}>
-                                        <item.icon className="h-5 w-5" />
-                                    </div>
-                                    <div className="flex-1 ml-4">
-                                        <span className="block font-semibold">{item.title}</span>
-                                        <span className={cn(
-                                            "text-xs mt-0.5 block transition-colors",
-                                            isActive
-                                                ? "text-white/80"
-                                                : "text-slate-400 group-hover:text-slate-300"
-                                        )}>
-                                            {item.description}
-                                        </span>
-                                    </div>
-                                    {isActive && (
-                                        <div className="w-2 h-2 bg-white rounded-full ml-auto" />
+                                            ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/25"
+                                            : "text-slate-300 hover:bg-slate-700/50 hover:text-white hover:shadow-md"
                                     )}
-                                </div>
-                            </Link>
-                        )
-                    })}
-                </nav>
-            </ScrollArea>
+                                >
+                                    {/* Active indicator */}
+                                    {isActive && (
+                                        <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-red-600/20 rounded-xl" />
+                                    )}
+
+                                    <div className="relative z-10 flex items-center w-full">
+                                        <div className={cn(
+                                            "p-2 rounded-lg transition-all duration-200",
+                                            isActive
+                                                ? "bg-white/20 text-white"
+                                                : "bg-slate-700/50 text-slate-400 group-hover:bg-slate-600/50 group-hover:text-white"
+                                        )}>
+                                            <item.icon className="h-5 w-5" />
+                                        </div>
+                                        <div className="flex-1 ml-4">
+                                            <span className="block font-semibold">{item.title}</span>
+                                            <span className={cn(
+                                                "text-xs mt-0.5 block transition-colors",
+                                                isActive
+                                                    ? "text-white/80"
+                                                    : "text-slate-400 group-hover:text-slate-300"
+                                            )}>
+                                                {item.description}
+                                            </span>
+                                        </div>
+                                        {isActive && (
+                                            <div className="w-2 h-2 bg-white rounded-full ml-auto" />
+                                        )}
+                                    </div>
+                                </Link>
+                            )
+                        })}
+                    </nav>
+                </div>
+            </div>
 
             {/* Enhanced Mobile Footer */}
-            <div className="p-6 border-t border-slate-700/50 bg-slate-800/30 backdrop-blur-sm">
+            <div className="p-6 border-t border-slate-700/50 bg-slate-800/30 backdrop-blur-sm flex-shrink-0">
                 <div className="flex items-center space-x-4">
                     <div className="w-10 h-10 bg-gradient-to-br from-slate-600 to-slate-700 rounded-xl flex items-center justify-center shadow-lg">
                         <span className="text-white font-semibold text-sm">A</span>
