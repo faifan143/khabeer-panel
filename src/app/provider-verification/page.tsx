@@ -17,6 +17,7 @@ import { useProviders, useProviderServices, useProviderOrders, useProviderRating
 import { useProviderStats, useAdminActivateProvider, useAdminDeactivateProvider, useAdminVerifyProvider, useAdminUnverifyProvider } from "@/lib/api/hooks/useAdmin"
 import { Provider, ProviderVerification, ProviderJoinRequest } from "@/lib/api/types"
 import { formatCurrency } from "@/lib/utils"
+import { DocumentManagementDialog } from "@/components/documents/document-management-dialog"
 import {
     AlertCircle,
     CheckCircle,
@@ -41,7 +42,8 @@ import {
     UserX,
     ShieldCheck,
     ShieldX,
-    Calendar
+    Calendar,
+    FileText
 } from "lucide-react"
 import { useMemo, useState } from "react"
 import toast from "react-hot-toast"
@@ -129,6 +131,7 @@ export default function ProvidersManagementPage() {
     const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null)
     const [isProviderDialogOpen, setIsProviderDialogOpen] = useState(false)
     const [isVerificationDialogOpen, setIsVerificationDialogOpen] = useState(false)
+    const [isDocumentDialogOpen, setIsDocumentDialogOpen] = useState(false)
     const [verificationNotes, setVerificationNotes] = useState("")
     const [statusFilter, setStatusFilter] = useState<string>("all")
     const [verificationFilter, setVerificationFilter] = useState<string>("all")
@@ -480,6 +483,17 @@ export default function ProvidersManagementPage() {
                                                     >
                                                         <Eye className="h-4 w-4" />
                                                     </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            setSelectedProvider(provider)
+                                                            setIsDocumentDialogOpen(true)
+                                                        }}
+                                                        className="h-8 w-8 p-0 hover:bg-purple-100"
+                                                    >
+                                                        <FileText className="h-4 w-4" />
+                                                    </Button>
                                                     {!provider.isActive ? (
                                                         <AlertDialog>
                                                             <AlertDialogTrigger asChild>
@@ -670,6 +684,17 @@ export default function ProvidersManagementPage() {
                                                                 className="h-8 w-8 p-0 hover:bg-blue-100"
                                                             >
                                                                 <Eye className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => {
+                                                                    setSelectedProvider(provider)
+                                                                    setIsDocumentDialogOpen(true)
+                                                                }}
+                                                                className="h-8 w-8 p-0 hover:bg-purple-100"
+                                                            >
+                                                                <FileText className="h-4 w-4" />
                                                             </Button>
                                                             {!provider.isActive ? (
                                                                 <AlertDialog>
@@ -1008,6 +1033,13 @@ export default function ProvidersManagementPage() {
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
+
+                    {/* Document Management Dialog */}
+                    <DocumentManagementDialog
+                        provider={selectedProvider}
+                        isOpen={isDocumentDialogOpen}
+                        onClose={() => setIsDocumentDialogOpen(false)}
+                    />
                 </div>
             </AdminLayout>
         </ProtectedRoute>
