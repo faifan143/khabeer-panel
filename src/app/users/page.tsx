@@ -1,29 +1,27 @@
 "use client"
 
-import { useState } from "react"
-import { AdminLayout } from "@/components/layout/admin-layout"
 import { ProtectedRoute } from "@/components/auth/protected-route"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { AdminLayout } from "@/components/layout/admin-layout"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Users, Search, Filter, Download, Eye, UserCheck, UserX, Calendar, DollarSign, Star, Package } from "lucide-react"
-import { useUserStats, useUserReport, useAdminActivateUser, useAdminDeactivateUser } from "@/lib/api/hooks/useAdmin"
-import { formatCurrency } from "@/lib/utils"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useAdminActivateUser, useAdminDeactivateUser, useUserReport, useUserStats } from "@/lib/api/hooks/useAdmin"
 import { UserReport } from "@/lib/types/admin"
+import { formatCurrency } from "@/lib/utils"
+import { Calendar, DollarSign, Eye, Package, Search, Star, UserCheck, Users, UserX } from "lucide-react"
+import { useState } from "react"
 
 export default function UsersManagementPage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState<string>("all")
     const [startDate, setStartDate] = useState<string>("")
     const [endDate, setEndDate] = useState<string>("")
-    const [selectedUser, setSelectedUser] = useState<UserReport | null>(null)
 
     // Fetch data
     const { data: userStats, isLoading: statsLoading } = useUserStats()
@@ -32,7 +30,7 @@ export default function UsersManagementPage() {
     const deactivateUserMutation = useAdminDeactivateUser()
 
     // Filter users based on search and status
-    const filteredUsers = userReport?.filter(user => {
+    const filteredUsers = userReport?.filter((user: UserReport) => {
         const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.phone.includes(searchQuery)
@@ -72,33 +70,7 @@ export default function UsersManagementPage() {
         return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
     }
 
-    const exportToCSV = () => {
-        if (!filteredUsers.length) return
 
-        const headers = ["Name", "Email", "Phone", "Role", "Status", "Joined Date", "Completed Orders", "Total Spent", "Ratings Given"]
-        const csvContent = [
-            headers.join(","),
-            ...filteredUsers.map(user => [
-                user.name,
-                user.email,
-                user.phone,
-                user.role,
-                user.isActive ? "Active" : "Inactive",
-                formatDate(user.createdAt),
-                user.completedOrders,
-                user.totalSpent,
-                user.ratingsGiven
-            ].join(","))
-        ].join("\n")
-
-        const blob = new Blob([csvContent], { type: "text/csv" })
-        const url = window.URL.createObjectURL(blob)
-        const a = document.createElement("a")
-        a.href = url
-        a.download = `users-report-${new Date().toISOString().split("T")[0]}.csv`
-        a.click()
-        window.URL.revokeObjectURL(url)
-    }
 
     return (
         <ProtectedRoute>
@@ -112,10 +84,7 @@ export default function UsersManagementPage() {
                                 Manage and monitor user accounts, activity, and engagement.
                             </p>
                         </div>
-                        <Button onClick={exportToCSV} disabled={!filteredUsers.length}>
-                            <Download className="h-4 w-4 mr-2" />
-                            Export CSV
-                        </Button>
+
                     </div>
 
                     {/* Statistics Cards */}
@@ -173,7 +142,7 @@ export default function UsersManagementPage() {
                             <CardContent>
                                 <div className="text-2xl font-bold">
                                     {reportLoading || !userReport?.length ? "..." :
-                                        Math.round(userReport.reduce((sum, user) => sum + user.completedOrders, 0) / userReport.length)}
+                                        Math.round(userReport.reduce((sum: number, user: UserReport) => sum + user.completedOrders, 0) / userReport.length)}
                                 </div>
                                 <p className="text-xs text-muted-foreground">
                                     Per user
@@ -269,7 +238,7 @@ export default function UsersManagementPage() {
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {filteredUsers.map((user) => (
+                                            {filteredUsers.map((user: UserReport) => (
                                                 <TableRow key={user.userId}>
                                                     <TableCell>
                                                         <div className="flex items-center space-x-3">
@@ -325,7 +294,6 @@ export default function UsersManagementPage() {
                                                                     <Button
                                                                         variant="outline"
                                                                         size="sm"
-                                                                        onClick={() => setSelectedUser(user)}
                                                                     >
                                                                         <Eye className="h-4 w-4" />
                                                                     </Button>
