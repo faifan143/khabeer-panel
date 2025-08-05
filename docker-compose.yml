@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  khabeer-panel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    restart: unless-stopped
+    container_name: khabeer-panel
+    networks:
+      - khabeer-network
+
+networks:
+  khabeer-network:
+    driver: bridge 

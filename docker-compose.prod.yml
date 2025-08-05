@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  khabeer-panel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    restart: unless-stopped
+    container_name: khabeer-panel-prod
+    networks:
+      - khabeer-network
+    # Add health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  khabeer-network:
+    driver: bridge
