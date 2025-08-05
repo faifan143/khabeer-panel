@@ -331,49 +331,6 @@ export default function OrdersManagementPage() {
         <ProtectedRoute>
             <AdminLayout>
                 <div className="space-y-8">
-                    {/* Enhanced Header */}
-                    <div className="flex flex-col space-y-4">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h1 className="text-3xl font-bold tracking-tight text-gray-900">Orders Management</h1>
-                                <p className="text-lg text-muted-foreground mt-1">
-                                    Monitor and manage all orders across the platform
-                                </p>
-                            </div>
-                            <div className="flex items-center space-x-3">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => refetchOrders()}
-                                    className="flex items-center space-x-2"
-                                >
-                                    <RefreshCw className="h-4 w-4" />
-                                    <span>Refresh</span>
-                                </Button>
-                                <Button
-                                    variant="default"
-                                    size="sm"
-                                    onClick={() => setActiveTab("pending")}
-                                    className="flex items-center space-x-2 bg-green-600 hover:bg-green-700"
-                                >
-                                    <CheckCircle className="h-4 w-4" />
-                                    <span>Manage Pending Orders</span>
-                                </Button>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        placeholder="Search orders by ID, user, provider, service..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="pl-10 w-80"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-
-
                     {/* Enhanced Stats Display */}
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                         <StatCard

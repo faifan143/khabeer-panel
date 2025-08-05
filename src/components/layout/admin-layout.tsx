@@ -5,6 +5,7 @@ import { Sidebar } from "./sidebar"
 import { useAuthStore } from "@/lib/stores/auth.store"
 import { useLogout } from "@/lib/api/hooks/useAuth"
 import { LogOut, User, Settings } from "lucide-react"
+import { usePathname } from "next/navigation"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -28,6 +29,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 
+
 interface AdminLayoutProps {
     children: React.ReactNode
 }
@@ -36,6 +38,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     const [isCollapsed, setIsCollapsed] = React.useState(false)
     const { user, logout } = useAuthStore()
     const logoutMutation = useLogout()
+    const pathname = usePathname()
+
 
     const handleLogout = async () => {
         await logoutMutation.mutateAsync()
@@ -54,6 +58,60 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         return name.charAt(0).toUpperCase()
     }
 
+    // Get page title and subtitle based on current path
+    const getPageInfo = () => {
+        const path = pathname.split('/').filter(Boolean)
+
+        if (path.length === 0 || path[0] === 'dashboard') {
+            return {
+                title: "Dashboard",
+                subtitle: "Platform overview and analytics"
+            }
+        }
+
+        const pageMap: Record<string, { title: string; subtitle: string }> = {
+            'orders': {
+                title: "Orders Management",
+                subtitle: "Monitor and manage all orders"
+            },
+            'users': {
+                title: "Users Management",
+                subtitle: "Manage user accounts and permissions"
+            },
+            'categories-services': {
+                title: "Categories & Services",
+                subtitle: "Manage service categories and offerings"
+            },
+            'provider-verification': {
+                title: "Provider Verification",
+                subtitle: "Review and approve provider applications"
+            },
+            'income': {
+                title: "Income & Finance",
+                subtitle: "Track revenue and financial metrics"
+            },
+            'ratings': {
+                title: "Ratings & Reviews",
+                subtitle: "Monitor customer feedback and ratings"
+            },
+            'notifications': {
+                title: "Notifications",
+                subtitle: "Manage system notifications and alerts"
+            },
+            'settings': {
+                title: "Settings",
+                subtitle: "Configure platform settings and preferences"
+            }
+        }
+
+        return pageMap[path[0]] || {
+            title: "Dashboard",
+            subtitle: "Platform overview and analytics"
+        }
+    }
+
+    const pageInfo = getPageInfo()
+
     return (
         <div className="min-h-screen bg-slate-50">
             <Sidebar isCollapsed={isCollapsed} onCollapse={setIsCollapsed} />
@@ -65,21 +123,21 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     isCollapsed ? "md:ml-16" : "md:ml-64"
                 )}
             >
-                {/* Enhanced Top Header */}
+                {/* Enhanced Functional Header */}
                 <header className="sticky top-0 z-40 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 shadow-sm">
                     <div className="flex h-16 items-center justify-between px-6">
-                        {/* Left side - Enhanced Breadcrumb */}
-                        <div className="flex items-center space-x-4">
-                            <nav className="flex items-center space-x-2">
-                                <Badge variant="secondary" className="font-medium">
-                                    Dashboard
-                                </Badge>
-                                <span className="text-muted-foreground">/</span>
-                                <span className="text-sm font-medium text-foreground">Overview</span>
-                            </nav>
+                        {/* Left side - Page Info Only */}
+                        <div className="flex items-center">
+                            {/* Page Title and Subtitle */}
+                            <div className="flex flex-col">
+                                <h1 className="text-lg font-semibold text-foreground">{pageInfo.title}</h1>
+                                <p className="text-sm text-muted-foreground">{pageInfo.subtitle}</p>
+                            </div>
                         </div>
 
-                        {/* Right side - Enhanced User Menu */}
+
+
+                        {/* Right side - User Menu Only */}
                         <div className="flex items-center space-x-3">
                             {/* User Info */}
                             <div className="hidden md:flex items-center space-x-3">

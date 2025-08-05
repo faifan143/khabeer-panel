@@ -200,23 +200,6 @@ export default function IncomePage() {
     <ProtectedRoute>
       <AdminLayout>
         <div className="space-y-4">
-          {/* Compact Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">Income & Finance</h1>
-              <p className="text-sm text-muted-foreground">Monitor revenue, commissions, and financial performance</p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button onClick={loadFinancialData} variant="outline" size="sm">
-                <Calendar className="mr-1 h-4 w-4" />
-                Refresh
-              </Button>
-              <Button variant="default" size="sm">
-                <Download className="mr-1 h-4 w-4" />
-                Export
-              </Button>
-            </div>
-          </div>
 
           {/* Compact Metrics Cards */}
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">

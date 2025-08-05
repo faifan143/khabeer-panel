@@ -76,17 +76,6 @@ export default function UsersManagementPage() {
         <ProtectedRoute>
             <AdminLayout>
                 <div className="space-y-6">
-                    {/* Page Header */}
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-3xl font-bold tracking-tight">Users Management</h1>
-                            <p className="text-muted-foreground">
-                                Manage and monitor user accounts, activity, and engagement.
-                            </p>
-                        </div>
-
-                    </div>
-
                     {/* Statistics Cards */}
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <Card>
