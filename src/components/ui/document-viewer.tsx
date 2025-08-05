@@ -1,17 +1,15 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React from 'react'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import {
   File,
   FileText,
   Image,
-  Download,
-  Eye,
   X,
+  Download,
   Calendar,
   User
 } from 'lucide-react'
@@ -42,35 +40,23 @@ export function DocumentViewer({
   className,
   showUploadInfo = true
 }: DocumentViewerProps) {
-  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null)
-  const [isViewerOpen, setIsViewerOpen] = useState(false)
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  // Don't render anything until we're on the client
-  if (!isClient) {
-    return null
-  }
-
   const getFileIcon = (type: string) => {
-    if (type.startsWith('image/')) return <Image className="h-5 w-5" />
-    if (type === 'application/pdf') return <FileText className="h-5 w-5" />
-    return <File className="h-5 w-5" />
+    if (type.startsWith('image/')) return <Image className="h-4 w-4" />
+    if (type === 'application/pdf') return <FileText className="h-4 w-4" />
+    return <File className="h-4 w-4" />
   }
 
   const getFileTypeColor = (type: string) => {
-    if (type.startsWith('image/')) return 'bg-blue-100 text-blue-800 border-blue-200'
-    if (type === 'application/pdf') return 'bg-red-100 text-red-800 border-red-200'
-    return 'bg-gray-100 text-gray-800 border-gray-200'
+    if (type.startsWith('image/')) return 'bg-blue-100 text-blue-800'
+    if (type === 'application/pdf') return 'bg-red-100 text-red-800'
+    return 'bg-gray-100 text-gray-800'
   }
 
   const getFileTypeLabel = (type: string) => {
     if (type.startsWith('image/')) return 'Image'
     if (type === 'application/pdf') return 'PDF'
-    if (type.includes('word')) return 'Word'
+    if (type === 'application/msword') return 'DOC'
+    if (type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'DOCX'
     return 'Document'
   }
 
@@ -94,19 +80,21 @@ export function DocumentViewer({
     })
   }
 
-  const openDocument = (document: Document) => {
-    setSelectedDocument(document)
-    setIsViewerOpen(true)
-  }
-
   const downloadDocument = (document: Document) => {
-    const link = document.createElement('a')
-    link.href = document.url
-    link.download = document.name
-    link.target = '_blank'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    // Fix the URL to point to the documents subdirectory for all provider files
+    const backendUrl = 'http://localhost:3001'
+    let fullUrl = document.url.startsWith('http')
+      ? document.url
+      : `${backendUrl}${document.url}`
+
+    // All provider files should be in the documents subdirectory
+    if (!fullUrl.includes('/documents/')) {
+      // Replace /uploads/ with /uploads/documents/ for all provider files
+      fullUrl = fullUrl.replace('/uploads/', '/uploads/documents/')
+    }
+
+    // Simple approach: open in new tab, browser will handle download
+    window.open(fullUrl, '_blank')
   }
 
   if (documents.length === 0) {
@@ -183,23 +171,15 @@ export function DocumentViewer({
                   </div>
                 )}
 
-                <div className="flex items-center space-x-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openDocument(document)}
-                    className="flex-1 h-8 text-xs"
-                  >
-                    <Eye className="h-3 w-3 mr-1" />
-                    View
-                  </Button>
+                <div className="pt-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => downloadDocument(document)}
-                    className="h-8 w-8 p-0"
+                    className="w-full h-8 text-xs"
                   >
-                    <Download className="h-3 w-3" />
+                    <Download className="h-3 w-3 mr-1" />
+                    Download
                   </Button>
                 </div>
               </div>
@@ -207,71 +187,6 @@ export function DocumentViewer({
           </Card>
         ))}
       </div>
-
-      {/* Document Viewer Dialog */}
-      <Dialog open={isViewerOpen} onOpenChange={setIsViewerOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              {selectedDocument && getFileIcon(selectedDocument.type)}
-              <span>{selectedDocument?.name}</span>
-            </DialogTitle>
-          </DialogHeader>
-
-          {selectedDocument && (
-            <div className="flex-1 overflow-hidden">
-              {selectedDocument.type.startsWith('image/') ? (
-                <div className="flex items-center justify-center h-full">
-                  <img
-                    src={selectedDocument.url}
-                    alt={selectedDocument.name}
-                    className="max-w-full max-h-full object-contain"
-                  />
-                </div>
-              ) : (
-                <div className="h-full">
-                  <iframe
-                    src={selectedDocument.url}
-                    title={selectedDocument.name}
-                    className="w-full h-full border-0"
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between pt-4 border-t">
-            <div className="text-sm text-gray-500">
-              {selectedDocument && (
-                <>
-                  <span>Type: {getFileTypeLabel(selectedDocument.type)}</span>
-                  {selectedDocument.size && (
-                    <span className="ml-4">Size: {formatFileSize(selectedDocument.size)}</span>
-                  )}
-                </>
-              )}
-            </div>
-            <div className="flex items-center space-x-2">
-              {selectedDocument && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => downloadDocument(selectedDocument)}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                onClick={() => setIsViewerOpen(false)}
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 } 
