@@ -45,6 +45,8 @@ export function DocumentManagementDialog({
   const [activeTab, setActiveTab] = useState('documents')
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [adminNotes, setAdminNotes] = useState('')
+  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
+  const [uploadStatus, setUploadStatus] = useState<{ [key: string]: 'uploading' | 'completed' | 'error' }>({})
 
   // Hooks
   const { data: documentsData, isLoading: documentsLoading } = useProviderDocuments(provider?.id || 0)
@@ -69,8 +71,56 @@ export function DocumentManagementDialog({
     }
 
     try {
+      // Initialize progress for all files
+      const initialProgress: { [key: string]: number } = {}
+      const initialStatus: { [key: string]: 'uploading' | 'completed' | 'error' } = {}
+
+      selectedFiles.forEach(file => {
+        initialProgress[file.name] = 0
+        initialStatus[file.name] = 'uploading'
+      })
+
+      setUploadProgress(initialProgress)
+      setUploadStatus(initialStatus)
+
+      // Start progress simulation
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          const newProgress = { ...prev }
+          let allComplete = true
+
+          Object.keys(newProgress).forEach(fileName => {
+            if (newProgress[fileName] < 90) { // Stop at 90% until upload completes
+              newProgress[fileName] = Math.min(newProgress[fileName] + 10, 90)
+              allComplete = false
+            }
+          })
+
+          return newProgress
+        })
+      }, 200)
+
       // First upload the files
       const uploadResult = await uploadDocumentsMutation.mutateAsync(selectedFiles)
+
+      // Complete the progress
+      setUploadProgress(prev => {
+        const newProgress = { ...prev }
+        Object.keys(newProgress).forEach(fileName => {
+          newProgress[fileName] = 100
+        })
+        return newProgress
+      })
+
+      setUploadStatus(prev => {
+        const newStatus = { ...prev }
+        Object.keys(newStatus).forEach(fileName => {
+          newStatus[fileName] = 'completed'
+        })
+        return newStatus
+      })
+
+      clearInterval(progressInterval)
 
       // Then add them to the provider
       if (provider) {
@@ -81,10 +131,23 @@ export function DocumentManagementDialog({
         })
       }
 
-      setSelectedFiles([])
+      // Clear after a short delay to show completion
+      setTimeout(() => {
+        setSelectedFiles([])
+        setUploadProgress({})
+        setUploadStatus({})
+      }, 1000)
+
       toast.success('Documents uploaded and assigned successfully')
     } catch (error) {
       console.error('Upload failed:', error)
+      setUploadStatus(prev => {
+        const newStatus = { ...prev }
+        Object.keys(newStatus).forEach(fileName => {
+          newStatus[fileName] = 'error'
+        })
+        return newStatus
+      })
       toast.error('Failed to upload documents')
     }
   }
@@ -206,6 +269,8 @@ export function DocumentManagementDialog({
                       maxFiles={5}
                       maxSize={10 * 1024 * 1024} // 10MB
                       showPreview={true}
+                      uploadProgress={uploadProgress}
+                      uploadStatus={uploadStatus}
                     />
 
                     {selectedFiles.length > 0 && (

@@ -28,6 +28,8 @@ interface FileUploadProps {
   className?: string
   disabled?: boolean
   showPreview?: boolean
+  uploadProgress?: { [key: string]: number }
+  uploadStatus?: { [key: string]: 'uploading' | 'completed' | 'error' }
 }
 
 interface UploadedFile {
@@ -46,7 +48,9 @@ export function FileUpload({
   maxSize = 10 * 1024 * 1024, // 10MB
   className,
   disabled = false,
-  showPreview = true
+  showPreview = true,
+  uploadProgress = {},
+  uploadStatus = {}
 }: FileUploadProps) {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [dragActive, setDragActive] = useState(false)
@@ -96,14 +100,29 @@ export function FileUpload({
     if (validFiles.length > 0) {
       const newUploadedFiles: UploadedFile[] = validFiles.map(file => ({
         file,
-        progress: 0,
-        status: 'uploading'
+        progress: uploadProgress[file.name] || 0,
+        status: uploadStatus[file.name] || 'uploading'
       }))
 
-      setUploadedFiles(prev => [...prev, ...newUploadedFiles])
+      setUploadedFiles(prev => {
+        // Remove any existing files with the same name
+        const filtered = prev.filter(f => !validFiles.some(vf => vf.name === f.file.name))
+        return [...filtered, ...newUploadedFiles]
+      })
       onFilesSelected(validFiles)
     }
-  }, [disabled, onFilesSelected, maxSize, acceptedFileTypes])
+  }, [disabled, onFilesSelected, maxSize, acceptedFileTypes, uploadProgress, uploadStatus])
+
+  // Update uploaded files when progress or status changes
+  React.useEffect(() => {
+    setUploadedFiles(prev =>
+      prev.map(file => ({
+        ...file,
+        progress: uploadProgress[file.file.name] || file.progress,
+        status: uploadStatus[file.file.name] || file.status
+      }))
+    )
+  }, [uploadProgress, uploadStatus])
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault()

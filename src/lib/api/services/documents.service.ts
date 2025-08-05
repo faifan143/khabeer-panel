@@ -37,7 +37,7 @@ export class DocumentsService {
   }
 
   static async getProviderDocuments(providerId: number): Promise<ProviderDocumentsResponse> {
-    const response = await api.get<ProviderDocumentsResponse>(`/provider-verification/provider/${providerId}`)
+    const response = await api.get<ProviderDocumentsResponse>(`/providers/${providerId}/documents`)
     return response.data
   }
 

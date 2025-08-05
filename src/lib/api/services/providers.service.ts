@@ -47,6 +47,11 @@ export class ProvidersService {
     return response.data
   }
 
+  static async getProviderDocuments(providerId: number): Promise<any> {
+    const response = await api.get<any>(`/providers/${providerId}/documents`)
+    return response.data
+  }
+
   static async getTopProviders(limit: number = 5): Promise<Provider[]> {
     const response = await api.get<Provider[]>(`/providers/top?limit=${limit}`)
     return response.data
