@@ -12,8 +12,8 @@ export const useProviderDocuments = (providerId: number) => {
 
 export const useUploadDocuments = () => {
   return useMutation({
-    mutationFn: ({ files, onProgress }: { files: File[], onProgress?: (progress: { [key: string]: number }) => void }) =>
-      DocumentsService.uploadDocuments(files, onProgress),
+    mutationFn: ({ files }: { files: File[] }) =>
+      DocumentsService.uploadDocuments(files),
     onSuccess: () => {
       toast.success('Documents uploaded successfully')
     },

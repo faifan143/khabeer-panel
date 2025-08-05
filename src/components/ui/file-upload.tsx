@@ -3,7 +3,6 @@
 import React, { useCallback, useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
@@ -12,7 +11,6 @@ import {
   FileText,
   Image,
   X,
-  CheckCircle,
   AlertCircle,
   Download,
   Eye
@@ -28,14 +26,10 @@ interface FileUploadProps {
   className?: string
   disabled?: boolean
   showPreview?: boolean
-  uploadProgress?: { [key: string]: number }
-  uploadStatus?: { [key: string]: 'uploading' | 'completed' | 'error' }
 }
 
 interface UploadedFile {
   file: File
-  progress: number
-  status: 'uploading' | 'completed' | 'error'
   url?: string
   error?: string
 }
@@ -49,8 +43,6 @@ export function FileUpload({
   className,
   disabled = false,
   showPreview = true,
-  uploadProgress = {},
-  uploadStatus = {}
 }: FileUploadProps) {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [dragActive, setDragActive] = useState(false)
@@ -100,8 +92,7 @@ export function FileUpload({
     if (validFiles.length > 0) {
       const newUploadedFiles: UploadedFile[] = validFiles.map(file => ({
         file,
-        progress: uploadProgress[file.name] || 0,
-        status: uploadStatus[file.name] || 'uploading'
+        url: URL.createObjectURL(file) // Assuming URL.createObjectURL is available
       }))
 
       setUploadedFiles(prev => {
@@ -111,18 +102,7 @@ export function FileUpload({
       })
       onFilesSelected(validFiles)
     }
-  }, [disabled, onFilesSelected, maxSize, acceptedFileTypes, uploadProgress, uploadStatus])
-
-  // Update uploaded files when progress or status changes
-  React.useEffect(() => {
-    setUploadedFiles(prev =>
-      prev.map(file => ({
-        ...file,
-        progress: uploadProgress[file.file.name] || file.progress,
-        status: uploadStatus[file.file.name] || file.status
-      }))
-    )
-  }, [uploadProgress, uploadStatus])
+  }, [disabled, onFilesSelected, maxSize, acceptedFileTypes])
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -252,21 +232,7 @@ export function FileUpload({
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    {uploadedFile.status === 'uploading' && (
-                      <div className="flex items-center space-x-2">
-                        <Progress value={uploadedFile.progress} className="w-20" />
-                        <span className="text-xs text-gray-500">{Math.round(uploadedFile.progress)}%</span>
-                      </div>
-                    )}
-
-                    {uploadedFile.status === 'completed' && (
-                      <div className="flex items-center space-x-1">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span className="text-xs text-green-600">Uploaded</span>
-                      </div>
-                    )}
-
-                    {uploadedFile.status === 'error' && (
+                    {uploadedFile.error && (
                       <div className="flex items-center space-x-1">
                         <AlertCircle className="h-4 w-4 text-red-500" />
                         <span className="text-xs text-red-600">Error</span>

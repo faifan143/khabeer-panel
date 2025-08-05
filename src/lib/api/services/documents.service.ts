@@ -23,8 +23,7 @@ export interface ProviderDocumentsResponse {
 
 export class DocumentsService {
   static async uploadDocuments(
-    files: File[],
-    onProgress?: (progress: { [key: string]: number }) => void
+    files: File[]
   ): Promise<UploadDocumentResponse> {
     const formData = new FormData()
     files.forEach(file => {
@@ -34,18 +33,9 @@ export class DocumentsService {
     const response = await api.post<UploadDocumentResponse>('/files/upload-documents-admin', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
-      },
-      onUploadProgress: (progressEvent) => {
-        if (progressEvent.total && onProgress) {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-          const progress: { [key: string]: number } = {}
-          files.forEach(file => {
-            progress[file.name] = percentCompleted
-          })
-          onProgress(progress)
-        }
       }
     })
+
     return response.data
   }
 

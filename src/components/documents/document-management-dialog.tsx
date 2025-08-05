@@ -1,34 +1,23 @@
 "use client"
 
-import React, { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { FileUpload } from '@/components/ui/file-upload'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { DocumentViewer } from '@/components/ui/document-viewer'
+import { FileUpload } from '@/components/ui/file-upload'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  useProviderDocuments,
-  useUploadDocuments,
   useAddDocumentsToProvider,
+  useProviderDocuments,
   useRemoveDocumentFromProvider,
-  useApproveProviderVerification,
-  useRejectProviderVerification
+  useUploadDocuments
 } from '@/lib/api/hooks/useDocuments'
 import { Provider } from '@/lib/api/types'
 import {
-  Upload,
   FileText,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  Shield,
-  ShieldCheck,
-  ShieldX
+  Upload
 } from 'lucide-react'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
 
 interface DocumentManagementDialogProps {
@@ -44,17 +33,12 @@ export function DocumentManagementDialog({
 }: DocumentManagementDialogProps) {
   const [activeTab, setActiveTab] = useState('documents')
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
-  const [adminNotes, setAdminNotes] = useState('')
-  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
-  const [uploadStatus, setUploadStatus] = useState<{ [key: string]: 'uploading' | 'completed' | 'error' }>({})
 
   // Hooks
   const { data: documentsData, isLoading: documentsLoading } = useProviderDocuments(provider?.id || 0)
   const uploadDocumentsMutation = useUploadDocuments()
   const addDocumentsMutation = useAddDocumentsToProvider()
   const removeDocumentMutation = useRemoveDocumentFromProvider()
-  const approveVerificationMutation = useApproveProviderVerification()
-  const rejectVerificationMutation = useRejectProviderVerification()
 
   const handleFilesSelected = (files: File[]) => {
     setSelectedFiles(prev => [...prev, ...files])
@@ -71,33 +55,9 @@ export function DocumentManagementDialog({
     }
 
     try {
-      // Initialize progress for all files
-      const initialProgress: { [key: string]: number } = {}
-      const initialStatus: { [key: string]: 'uploading' | 'completed' | 'error' } = {}
-
-      selectedFiles.forEach(file => {
-        initialProgress[file.name] = 0
-        initialStatus[file.name] = 'uploading'
-      })
-
-      setUploadProgress(initialProgress)
-      setUploadStatus(initialStatus)
-
-      // Upload files with real progress tracking
+      // Upload files
       const uploadResult = await uploadDocumentsMutation.mutateAsync({
-        files: selectedFiles,
-        onProgress: (progress) => {
-          setUploadProgress(progress)
-        }
-      })
-
-      // Set completion status
-      setUploadStatus(prev => {
-        const newStatus = { ...prev }
-        Object.keys(newStatus).forEach(fileName => {
-          newStatus[fileName] = 'completed'
-        })
-        return newStatus
+        files: selectedFiles
       })
 
       // Then add them to the provider
@@ -109,23 +69,11 @@ export function DocumentManagementDialog({
         })
       }
 
-      // Clear after a short delay to show completion
-      setTimeout(() => {
-        setSelectedFiles([])
-        setUploadProgress({})
-        setUploadStatus({})
-      }, 1000)
-
+      // Clear selected files
+      setSelectedFiles([])
       toast.success('Documents uploaded and assigned successfully')
     } catch (error) {
       console.error('Upload failed:', error)
-      setUploadStatus(prev => {
-        const newStatus = { ...prev }
-        Object.keys(newStatus).forEach(fileName => {
-          newStatus[fileName] = 'error'
-        })
-        return newStatus
-      })
       toast.error('Failed to upload documents')
     }
   }
@@ -139,54 +87,7 @@ export function DocumentManagementDialog({
     }
   }
 
-  const handleApproveVerification = async () => {
-    if (provider) {
-      await approveVerificationMutation.mutateAsync({
-        providerId: provider.id,
-        adminNotes: adminNotes || undefined
-      })
-      setAdminNotes('')
-      onClose()
-    }
-  }
 
-  const handleRejectVerification = async () => {
-    if (!adminNotes.trim()) {
-      toast.error('Please provide a reason for rejection')
-      return
-    }
-
-    if (provider) {
-      await rejectVerificationMutation.mutateAsync({
-        providerId: provider.id,
-        adminNotes: adminNotes
-      })
-      setAdminNotes('')
-      onClose()
-    }
-  }
-
-  const getVerificationStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return 'bg-green-100 text-green-800 border-green-200'
-      case 'rejected':
-        return 'bg-red-100 text-red-800 border-red-200'
-      default:
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-    }
-  }
-
-  const getVerificationStatusIcon = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return <ShieldCheck className="h-4 w-4" />
-      case 'rejected':
-        return <ShieldX className="h-4 w-4" />
-      default:
-        return <Shield className="h-4 w-4" />
-    }
-  }
 
   if (!provider) return null
 
@@ -202,10 +103,10 @@ export function DocumentManagementDialog({
 
         <div className="flex-1 overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="upload">Upload</TabsTrigger>
-              <TabsTrigger value="verification">Verification</TabsTrigger>
+
             </TabsList>
 
             <div className="mt-4 overflow-y-auto max-h-[calc(90vh-200px)]">
@@ -247,8 +148,6 @@ export function DocumentManagementDialog({
                       maxFiles={5}
                       maxSize={10 * 1024 * 1024} // 10MB
                       showPreview={true}
-                      uploadProgress={uploadProgress}
-                      uploadStatus={uploadStatus}
                     />
 
                     {selectedFiles.length > 0 && (
@@ -277,112 +176,6 @@ export function DocumentManagementDialog({
                         </Button>
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Verification Tab */}
-              <TabsContent value="verification" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                      <Shield className="h-5 w-5" />
-                      <span>Verification Management</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Current Status */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Current Verification Status</Label>
-                      <div className="flex items-center space-x-2">
-                        <Badge
-                          variant="outline"
-                          className={getVerificationStatusColor(documentsData?.verificationStatus || 'pending')}
-                        >
-                          {getVerificationStatusIcon(documentsData?.verificationStatus || 'pending')}
-                          <span className="ml-1 capitalize">
-                            {documentsData?.verificationStatus || 'pending'}
-                          </span>
-                        </Badge>
-                      </div>
-                      {documentsData?.adminNotes && (
-                        <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                          <strong>Admin Notes:</strong> {documentsData.adminNotes}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Admin Notes */}
-                    <div className="space-y-2">
-                      <Label htmlFor="adminNotes" className="text-sm font-medium">
-                        Admin Notes {documentsData?.verificationStatus === 'pending' && '(Optional)'}
-                      </Label>
-                      <Textarea
-                        id="adminNotes"
-                        value={adminNotes}
-                        onChange={(e) => setAdminNotes(e.target.value)}
-                        placeholder={
-                          documentsData?.verificationStatus === 'pending'
-                            ? "Add notes about the verification decision..."
-                            : "Provide a reason for rejection..."
-                        }
-                        rows={3}
-                      />
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4 border-t">
-                      {documentsData?.verificationStatus === 'pending' ? (
-                        <>
-                          <Button
-                            variant="outline"
-                            onClick={() => setAdminNotes('')}
-                            className="flex-1 sm:flex-none"
-                          >
-                            Clear
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            onClick={handleRejectVerification}
-                            disabled={rejectVerificationMutation.isPending}
-                            className="flex-1 sm:flex-none"
-                          >
-                            {rejectVerificationMutation.isPending ? (
-                              <div className="flex items-center justify-center space-x-2">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                <span>Rejecting...</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center justify-center space-x-2">
-                                <XCircle className="h-4 w-4" />
-                                <span>Reject</span>
-                              </div>
-                            )}
-                          </Button>
-                          <Button
-                            onClick={handleApproveVerification}
-                            disabled={approveVerificationMutation.isPending}
-                            className="flex-1 sm:flex-none"
-                          >
-                            {approveVerificationMutation.isPending ? (
-                              <div className="flex items-center justify-center space-x-2">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                <span>Approving...</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center justify-center space-x-2">
-                                <CheckCircle className="h-4 w-4" />
-                                <span>Approve</span>
-                              </div>
-                            )}
-                          </Button>
-                        </>
-                      ) : (
-                        <div className="text-sm text-gray-500 text-center sm:text-left">
-                          Verification has already been {documentsData?.verificationStatus}
-                        </div>
-                      )}
-                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
