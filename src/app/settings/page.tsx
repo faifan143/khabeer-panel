@@ -56,10 +56,8 @@ export default function SettingsPage() {
     const { data: subAdmins, isLoading: subAdminsLoading } = useSubAdmins()
     const createSubAdminMutation = useCreateSubAdmin()
     const deleteSubAdminMutation = useDeleteSubAdmin()
-    const { data: adBanners, isLoading: bannersLoading } = useAdBanners()
-    const createAdBannerMutation = useCreateAdBanner()
+    const { data: existingAdBanner, isLoading: bannerLoading } = useAdBanners()
     const updateAdBannerMutation = useUpdateAdBanner()
-    const deleteAdBannerMutation = useDeleteAdBanner()
 
     // Terms & Conditions state
     const [termsEn, setTermsEn] = useState<File | null>(null)
@@ -89,7 +87,7 @@ export default function SettingsPage() {
     })
 
     // Ad Banner state
-    const [adBanner, setAdBanner] = useState({
+    const [adBannerConfig, setAdBannerConfig] = useState({
         title: "",
         description: "",
         image: null as File | null,
@@ -143,7 +141,7 @@ export default function SettingsPage() {
                 return
             }
 
-            setAdBanner(prev => ({
+            setAdBannerConfig(prev => ({
                 ...prev,
                 image: file,
                 imagePreview: URL.createObjectURL(file)
@@ -204,7 +202,7 @@ export default function SettingsPage() {
     }
 
     const handleRemoveImage = () => {
-        setAdBanner(prev => ({
+        setAdBannerConfig(prev => ({
             ...prev,
             image: null,
             imagePreview: ""
@@ -345,55 +343,40 @@ export default function SettingsPage() {
     }
 
     const handleSaveAdBanner = async () => {
-        if (!adBanner.title || !adBanner.description) {
+        if (!adBannerConfig.title || !adBannerConfig.description) {
             toast.error("Please fill all required fields")
             return
         }
 
-        if (adBanner.linkType === "external" && !adBanner.externalLink) {
+        if (adBannerConfig.linkType === "external" && !adBannerConfig.externalLink) {
             toast.error("Please provide external link")
             return
         }
 
-        if (adBanner.linkType === "provider" && !adBanner.providerId) {
+        if (adBannerConfig.linkType === "provider" && !adBannerConfig.providerId) {
             toast.error("Please select a provider")
             return
         }
 
         try {
-            await createAdBannerMutation.mutateAsync({
-                title: adBanner.title,
-                description: adBanner.description,
-                imageUrl: adBanner.imagePreview,
-                linkType: adBanner.linkType,
-                externalLink: adBanner.externalLink,
-                providerId: adBanner.providerId ? parseInt(adBanner.providerId) : undefined,
-                isActive: adBanner.isActive
+            // For single banner, we'll use the first banner ID or create if none exists
+            const bannerId = existingAdBanner?.[0]?.id || 1
+            await updateAdBannerMutation.mutateAsync({
+                id: bannerId,
+                data: {
+                    title: adBannerConfig.title,
+                    description: adBannerConfig.description,
+                    imageUrl: adBannerConfig.imagePreview,
+                    linkType: adBannerConfig.linkType,
+                    externalLink: adBannerConfig.externalLink,
+                    providerId: adBannerConfig.providerId ? parseInt(adBannerConfig.providerId) : undefined,
+                    isActive: adBannerConfig.isActive
+                }
             })
 
-            // Reset form
-            setAdBanner({
-                title: "",
-                description: "",
-                image: null,
-                imagePreview: "",
-                linkType: "external",
-                externalLink: "",
-                providerId: "",
-                isActive: false
-            })
-            toast.success("Ad banner saved successfully!")
+            toast.success("Ad banner configuration saved successfully!")
         } catch (error) {
-            toast.error("Failed to save ad banner")
-        }
-    }
-
-    const handleDeleteAdBanner = async (id: number) => {
-        try {
-            await deleteAdBannerMutation.mutateAsync(id)
-            toast.success("Ad banner deleted successfully!")
-        } catch (error) {
-            toast.error("Failed to delete ad banner")
+            toast.error("Failed to save ad banner configuration")
         }
     }
 
@@ -910,8 +893,8 @@ export default function SettingsPage() {
                                             <Label className="text-sm font-medium">Banner Title *</Label>
                                             <Input
                                                 placeholder="Enter banner title"
-                                                value={adBanner.title}
-                                                onChange={(e) => setAdBanner(prev => ({ ...prev, title: e.target.value }))}
+                                                value={adBannerConfig.title}
+                                                onChange={(e) => setAdBannerConfig(prev => ({ ...prev, title: e.target.value }))}
                                                 className="mt-1"
                                             />
                                         </div>
@@ -919,8 +902,8 @@ export default function SettingsPage() {
                                             <Label className="text-sm font-medium">Description *</Label>
                                             <Input
                                                 placeholder="Enter banner description"
-                                                value={adBanner.description}
-                                                onChange={(e) => setAdBanner(prev => ({ ...prev, description: e.target.value }))}
+                                                value={adBannerConfig.description}
+                                                onChange={(e) => setAdBannerConfig(prev => ({ ...prev, description: e.target.value }))}
                                                 className="mt-1"
                                             />
                                         </div>
@@ -929,10 +912,10 @@ export default function SettingsPage() {
                                     <div>
                                         <Label className="text-sm font-medium">Banner Image</Label>
                                         <div className="space-y-3 mt-2">
-                                            {adBanner.imagePreview ? (
+                                            {adBannerConfig.imagePreview ? (
                                                 <div className="relative inline-block">
                                                     <img
-                                                        src={adBanner.imagePreview}
+                                                        src={adBannerConfig.imagePreview}
                                                         alt="Banner Preview"
                                                         className="h-32 w-auto rounded-lg object-cover"
                                                     />
@@ -972,8 +955,8 @@ export default function SettingsPage() {
                                     <div>
                                         <Label className="text-sm font-medium">Link Type</Label>
                                         <Select
-                                            value={adBanner.linkType}
-                                            onValueChange={(value) => setAdBanner(prev => ({ ...prev, linkType: value as "external" | "provider" }))}
+                                            value={adBannerConfig.linkType}
+                                            onValueChange={(value) => setAdBannerConfig(prev => ({ ...prev, linkType: value as "external" | "provider" }))}
                                         >
                                             <SelectTrigger className="mt-1">
                                                 <SelectValue />
@@ -985,13 +968,13 @@ export default function SettingsPage() {
                                         </Select>
                                     </div>
 
-                                    {adBanner.linkType === "external" ? (
+                                    {adBannerConfig.linkType === "external" ? (
                                         <div>
                                             <Label className="text-sm font-medium">External Link *</Label>
                                             <Input
                                                 placeholder="https://example.com"
-                                                value={adBanner.externalLink}
-                                                onChange={(e) => setAdBanner(prev => ({ ...prev, externalLink: e.target.value }))}
+                                                value={adBannerConfig.externalLink}
+                                                onChange={(e) => setAdBannerConfig(prev => ({ ...prev, externalLink: e.target.value }))}
                                                 className="mt-1"
                                             />
                                         </div>
@@ -999,8 +982,8 @@ export default function SettingsPage() {
                                         <div>
                                             <Label className="text-sm font-medium">Select Provider *</Label>
                                             <Select
-                                                value={adBanner.providerId}
-                                                onValueChange={(value) => setAdBanner(prev => ({ ...prev, providerId: value }))}
+                                                value={adBannerConfig.providerId}
+                                                onValueChange={(value) => setAdBannerConfig(prev => ({ ...prev, providerId: value }))}
                                             >
                                                 <SelectTrigger className="mt-1">
                                                     <SelectValue placeholder="Choose a provider" />
@@ -1017,8 +1000,8 @@ export default function SettingsPage() {
                                     <div className="flex items-center space-x-2">
                                         <Checkbox
                                             id="banner-active"
-                                            checked={adBanner.isActive}
-                                            onCheckedChange={(checked) => setAdBanner(prev => ({ ...prev, isActive: checked as boolean }))}
+                                            checked={adBannerConfig.isActive}
+                                            onCheckedChange={(checked) => setAdBannerConfig(prev => ({ ...prev, isActive: checked as boolean }))}
                                         />
                                         <Label htmlFor="banner-active" className="text-sm font-medium">
                                             Activate this banner
@@ -1032,71 +1015,7 @@ export default function SettingsPage() {
                                 </CardContent>
                             </Card>
 
-                            {/* Existing Ad Banners */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Megaphone className="h-5 w-5" />
-                                        Existing Ad Banners
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Title</TableHead>
-                                                <TableHead>Description</TableHead>
-                                                <TableHead>Link Type</TableHead>
-                                                <TableHead>Status</TableHead>
-                                                <TableHead>Created</TableHead>
-                                                <TableHead className="text-right">Actions</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {bannersLoading ? (
-                                                <TableRow>
-                                                    <TableCell colSpan={6} className="text-center py-8">
-                                                        <div className="text-muted-foreground">Loading banners...</div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ) : adBanners && adBanners.length > 0 ? (
-                                                adBanners.map((banner) => (
-                                                    <TableRow key={banner.id}>
-                                                        <TableCell className="font-medium">{banner.title}</TableCell>
-                                                        <TableCell>{banner.description}</TableCell>
-                                                        <TableCell>
-                                                            <Badge variant="outline">
-                                                                {banner.linkType}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Badge variant={banner.isActive ? "default" : "secondary"}>
-                                                                {banner.isActive ? "active" : "inactive"}
-                                                            </Badge>
-                                                        </TableCell>
-                                                        <TableCell>{formatDate(banner.createdAt)}</TableCell>
-                                                        <TableCell className="text-right">
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => handleDeleteAdBanner(banner.id)}
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))
-                                            ) : (
-                                                <TableRow>
-                                                    <TableCell colSpan={6} className="text-center py-8">
-                                                        <div className="text-muted-foreground">No ad banners found</div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                </CardContent>
-                            </Card>
+
                         </TabsContent>
                     </Tabs>
                 </div>
