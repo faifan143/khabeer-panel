@@ -21,7 +21,7 @@ import {
   TrendingUp,
   Users
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 export default function IncomePage() {
   const [financialSummary, setFinancialSummary] = useState<FinancialSummary | null>(null)
@@ -36,16 +36,22 @@ export default function IncomePage() {
   const [sortField, setSortField] = useState('')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
+  console.log('IncomePage render - loading:', loading, 'financialSummary:', !!financialSummary)
 
-  const loadFinancialData = async () => {
+
+  const loadFinancialData = useCallback(async () => {
     try {
       setLoading(true)
+      console.log('Loading financial data...')
+
       const [summary, invoiceData, ordersData, offerData] = await Promise.all([
         FinanceService.getFinancialSummary(startDate || undefined, endDate || undefined),
         FinanceService.getRevenueReport(startDate || undefined, endDate || undefined),
         FinanceService.getAllOrdersReport(startDate || undefined, endDate || undefined),
         FinanceService.getOffers()
       ])
+
+      console.log('Financial data loaded successfully:', { summary, invoiceData, ordersData, offerData })
 
       setFinancialSummary(summary)
       setInvoices(invoiceData)
@@ -57,9 +63,16 @@ export default function IncomePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [startDate, endDate])
+
   useEffect(() => {
+    console.log('useEffect triggered - loading financial data')
     loadFinancialData()
+
+    // Cleanup function to prevent memory leaks
+    return () => {
+      console.log('IncomePage cleanup - unmounting')
+    }
   }, [loadFinancialData])
 
 

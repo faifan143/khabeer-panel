@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { useAdminAcceptOrder, useAdminCancelOrder, useAdminCompleteOrder, useAdminOrders, useAdminRejectOrder, useAdminUpdateOrderStatus, useDashboardStats } from "@/lib/api/hooks/useAdmin"
+import { useAdminAcceptOrder, useAdminCancelOrder, useAdminCompleteOrder, useAdminOrders, useAdminRejectOrder, useAdminUpdateOrderStatus } from "@/lib/api/hooks/useAdmin"
 import { Order } from "@/lib/api/types"
 import { formatCurrency } from "@/lib/utils"
 import {
@@ -586,10 +586,11 @@ export default function OrdersManagementPage() {
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-gray-50">
-                                                <TableHead className="font-semibold">Service Name</TableHead>
+                                                <TableHead className="font-semibold">Order ID</TableHead>
                                                 <TableHead className="font-semibold">Customer</TableHead>
+                                                <TableHead className="font-semibold">Location</TableHead>
                                                 <TableHead className="font-semibold">Provider</TableHead>
-                                                <TableHead className="font-semibold">Amount</TableHead>
+                                                <TableHead className="font-semibold">Service & Category</TableHead>
                                                 <TableHead className="font-semibold">Status</TableHead>
                                                 <TableHead className="font-semibold">Date</TableHead>
                                                 <TableHead className="font-semibold text-right">Actions</TableHead>
@@ -599,10 +600,8 @@ export default function OrdersManagementPage() {
                                             {currentOrders.map((order) => (
                                                 <TableRow key={order.id} className="hover:bg-gray-50/50">
                                                     <TableCell>
-                                                        <div className="space-y-1">
-
-                                                            <div className="text-sm text-muted-foreground">{order.service?.title}</div>
-
+                                                        <div className="font-mono text-sm font-medium text-gray-900">
+                                                            #{order.id}
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
@@ -613,14 +612,30 @@ export default function OrdersManagementPage() {
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="space-y-1">
+                                                            <div className="text-sm font-medium text-gray-900">
+                                                                {order.location || 'N/A'}
+                                                            </div>
+                                                            {order.locationDetails && (
+                                                                <div className="text-xs text-muted-foreground truncate max-w-32">
+                                                                    {order.locationDetails}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="space-y-1">
                                                             <div className="font-medium text-gray-900">{order.provider?.name}</div>
                                                             <div className="text-sm text-muted-foreground">{order.provider?.phone}</div>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="space-y-1">
-                                                            <div className="font-semibold text-green-600">{renderCurrency(order.totalAmount)}</div>
-                                                            <div className="text-xs text-muted-foreground">Commission: {renderCurrency(order.commissionAmount)}</div>
+                                                            <div className="font-medium text-gray-900">{order.service?.title}</div>
+                                                            {order.service?.category?.titleEn && (
+                                                                <div className="text-sm text-muted-foreground">
+                                                                    {order.service.category.titleEn}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
@@ -649,6 +664,7 @@ export default function OrdersManagementPage() {
                                                                     setIsOrderDialogOpen(true)
                                                                 }}
                                                                 className="h-8 w-8 p-0 hover:bg-blue-100"
+                                                                title="View Details"
                                                             >
                                                                 <Eye className="h-4 w-4" />
                                                             </Button>
@@ -686,10 +702,23 @@ export default function OrdersManagementPage() {
                                                                     size="sm"
                                                                     onClick={() => handleOrderComplete(order.id)}
                                                                     className="h-8 w-8 p-0 hover:bg-green-100"
+                                                                    title="Mark as Completed"
                                                                 >
                                                                     <CheckCircle className="h-4 w-4" />
                                                                 </Button>
                                                             )}
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => {
+                                                                    setSelectedOrder(order)
+                                                                    setIsCancelDialogOpen(true)
+                                                                }}
+                                                                className="h-8 w-8 p-0 hover:bg-red-100"
+                                                                title="Delete Order"
+                                                            >
+                                                                <XCircle className="h-4 w-4" />
+                                                            </Button>
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>
