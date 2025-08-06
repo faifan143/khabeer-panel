@@ -12,13 +12,43 @@ export class ProvidersService {
     return response.data
   }
 
-  static async createProvider(providerData: CreateProviderDto): Promise<Provider> {
-    const response = await api.post<Provider>('/providers', providerData)
+  static async createProvider(providerData: CreateProviderDto & { image?: File }): Promise<Provider> {
+    const formData = new FormData()
+    
+    // Add all provider data to FormData
+    Object.keys(providerData).forEach(key => {
+      if (key === 'image' && providerData.image) {
+        formData.append('image', providerData.image)
+      } else if (key !== 'image') {
+        formData.append(key, providerData[key])
+      }
+    })
+
+    const response = await api.post<Provider>('/providers', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     return response.data
   }
 
-  static async updateProvider(id: number, providerData: UpdateProviderDto): Promise<Provider> {
-    const response = await api.put<Provider>(`/providers/${id}`, providerData)
+  static async updateProvider(id: number, providerData: UpdateProviderDto & { image?: File }): Promise<Provider> {
+    const formData = new FormData()
+    
+    // Add all provider data to FormData
+    Object.keys(providerData).forEach(key => {
+      if (key === 'image' && providerData.image) {
+        formData.append('image', providerData.image)
+      } else if (key !== 'image') {
+        formData.append(key, providerData[key])
+      }
+    })
+
+    const response = await api.put<Provider>(`/providers/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     return response.data
   }
 

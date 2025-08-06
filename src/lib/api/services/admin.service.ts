@@ -192,6 +192,33 @@ export const adminService = {
     return response.data
   },
 
+  // File Upload Functions
+  uploadLegalDocuments: async (files: File[]) => {
+    const formData = new FormData()
+    files.forEach((file, index) => {
+      formData.append('documents', file)
+    })
+
+    const response = await api.post('/admin/settings/upload-legal-documents', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+
+  uploadBannerImage: async (file: File) => {
+    const formData = new FormData()
+    formData.append('image', file)
+
+    const response = await api.post('/admin/settings/upload-banner-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+
   // Sub-Admin Management Functions
   getSubAdmins: async () => {
     const response = await api.get('/admin/subadmins')
@@ -222,31 +249,104 @@ export const adminService = {
   createAdBanner: async (data: {
     title: string
     description: string
-    imageUrl?: string
+    image?: File
     linkType: string
     externalLink?: string
     providerId?: number
     isActive: boolean
   }) => {
-    const response = await api.post('/admin/ad-banners', data)
+    const formData = new FormData()
+    formData.append('title', data.title)
+    formData.append('description', data.description)
+    formData.append('linkType', data.linkType)
+    formData.append('isActive', data.isActive.toString())
+    
+    if (data.externalLink) {
+      formData.append('externalLink', data.externalLink)
+    }
+    if (data.providerId) {
+      formData.append('providerId', data.providerId.toString())
+    }
+    if (data.image) {
+      formData.append('image', data.image)
+    }
+
+    const response = await api.post('/admin/ad-banners', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     return response.data
   },
 
   updateAdBanner: async (id: number, data: {
     title?: string
     description?: string
-    imageUrl?: string
+    image?: File
     linkType?: string
     externalLink?: string
     providerId?: number
     isActive?: boolean
   }) => {
-    const response = await api.put(`/admin/ad-banners/${id}`, data)
+    const formData = new FormData()
+    
+    if (data.title) formData.append('title', data.title)
+    if (data.description) formData.append('description', data.description)
+    if (data.linkType) formData.append('linkType', data.linkType)
+    if (data.externalLink) formData.append('externalLink', data.externalLink)
+    if (data.providerId) formData.append('providerId', data.providerId.toString())
+    if (data.isActive !== undefined) formData.append('isActive', data.isActive.toString())
+    if (data.image) formData.append('image', data.image)
+
+    const response = await api.put(`/admin/ad-banners/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     return response.data
   },
 
   deleteAdBanner: async (id: number) => {
     const response = await api.delete(`/admin/ad-banners/${id}`)
+    return response.data
+  },
+
+  // Notification Management Functions
+  getAllNotifications: async () => {
+    const response = await api.get('/admin/notifications')
+    return response.data
+  },
+
+  createNotification: async (data: {
+    title: string
+    message: string
+    image?: File
+    targetAudience: string[]
+  }) => {
+    const formData = new FormData()
+    formData.append('title', data.title)
+    formData.append('message', data.message)
+    formData.append('targetAudience', JSON.stringify(data.targetAudience))
+    
+    if (data.image) {
+      formData.append('image', data.image)
+    }
+
+    const response = await api.post('/admin/notifications', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+
+  sendNotification: async (id: number) => {
+    const response = await api.put(`/admin/notifications/${id}/send`)
+    return response.data
+  },
+
+  deleteNotification: async (id: number) => {
+    const response = await api.delete(`/admin/notifications/${id}`)
     return response.data
   }
 }

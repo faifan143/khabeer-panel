@@ -36,7 +36,8 @@ import {
     X
 } from "lucide-react"
 import { useState, useMemo, useRef, useEffect } from "react"
-import { useSystemSettings, useUpdateSystemSetting, useSubAdmins, useCreateSubAdmin, useDeleteSubAdmin, useAdBanners, useCreateAdBanner, useUpdateAdBanner, useDeleteAdBanner } from "@/lib/api/hooks/useAdmin"
+import { useSystemSettings, useUpdateSystemSetting, useUploadLegalDocuments, useUploadBannerImage, useSubAdmins, useCreateSubAdmin, useDeleteSubAdmin, useAdBanners, useCreateAdBanner, useUpdateAdBanner, useDeleteAdBanner } from "@/lib/api/hooks/useAdmin"
+import { getImageUrl } from "@/lib/utils/image"
 
 const availablePermissions = [
     { id: "dashboard", label: "Dashboard Access", description: "View dashboard statistics" },
@@ -53,10 +54,13 @@ export default function SettingsPage() {
     // API Hooks
     const { data: systemSettings, isLoading: settingsLoading } = useSystemSettings()
     const updateSettingMutation = useUpdateSystemSetting()
+    const uploadLegalDocumentsMutation = useUploadLegalDocuments()
+    const uploadBannerImageMutation = useUploadBannerImage()
     const { data: subAdmins, isLoading: subAdminsLoading } = useSubAdmins()
     const createSubAdminMutation = useCreateSubAdmin()
     const deleteSubAdminMutation = useDeleteSubAdmin()
     const { data: existingAdBanner, isLoading: bannerLoading } = useAdBanners()
+    const createAdBannerMutation = useCreateAdBanner()
     const updateAdBannerMutation = useUpdateAdBanner()
 
     // Terms & Conditions state
@@ -64,6 +68,14 @@ export default function SettingsPage() {
     const [termsAr, setTermsAr] = useState<File | null>(null)
     const [privacyEn, setPrivacyEn] = useState<File | null>(null)
     const [privacyAr, setPrivacyAr] = useState<File | null>(null)
+
+    // Existing legal documents state
+    const [existingLegalDocs, setExistingLegalDocs] = useState({
+        termsEn: "",
+        termsAr: "",
+        privacyEn: "",
+        privacyAr: ""
+    })
 
     // Social Media Links state
     const [socialLinks, setSocialLinks] = useState({
@@ -118,8 +130,39 @@ export default function SettingsPage() {
             // Load support links
             const supportSetting = systemSettings.support?.find(s => s.key === 'whatsapp_support')
             if (supportSetting) setSupportWhatsapp(supportSetting.value)
+
+            // Load existing legal documents
+            const legalSettings = systemSettings.legal || []
+            const termsEnSetting = legalSettings.find(s => s.key === 'terms_en')
+            const termsArSetting = legalSettings.find(s => s.key === 'terms_ar')
+            const privacyEnSetting = legalSettings.find(s => s.key === 'privacy_en')
+            const privacyArSetting = legalSettings.find(s => s.key === 'privacy_ar')
+
+            setExistingLegalDocs({
+                termsEn: termsEnSetting ? getImageUrl(termsEnSetting.value) : "",
+                termsAr: termsArSetting ? getImageUrl(termsArSetting.value) : "",
+                privacyEn: privacyEnSetting ? getImageUrl(privacyEnSetting.value) : "",
+                privacyAr: privacyArSetting ? getImageUrl(privacyArSetting.value) : ""
+            })
         }
     }, [systemSettings])
+
+    // Load existing ad banner data when component mounts
+    useEffect(() => {
+        if (existingAdBanner && existingAdBanner.length > 0) {
+            const banner = existingAdBanner[0]
+            setAdBannerConfig(prev => ({
+                ...prev,
+                title: banner.title,
+                description: banner.description,
+                imagePreview: banner.imageUrl ? getImageUrl(banner.imageUrl) : "",
+                linkType: banner.linkType,
+                externalLink: banner.externalLink || "",
+                providerId: banner.providerId?.toString() || "",
+                isActive: banner.isActive
+            }))
+        }
+    }, [existingAdBanner])
 
     const fileInputRef = useRef<HTMLInputElement>(null)
     const termsEnInputRef = useRef<HTMLInputElement>(null)
@@ -220,20 +263,20 @@ export default function SettingsPage() {
         }
 
         try {
-            // Convert files to base64 or upload to server
-            const termsEnBase64 = await fileToBase64(termsEn)
-            const termsArBase64 = await fileToBase64(termsAr)
+            // Upload files to server
+            const uploadResult = await uploadLegalDocumentsMutation.mutateAsync([termsEn, termsAr])
 
+            // Save file URLs to settings
             await Promise.all([
                 updateSettingMutation.mutateAsync({
                     key: 'terms_en',
-                    value: termsEnBase64,
+                    value: uploadResult.documents[0].url,
                     description: 'Terms and Conditions in English',
                     category: 'legal'
                 }),
                 updateSettingMutation.mutateAsync({
                     key: 'terms_ar',
-                    value: termsArBase64,
+                    value: uploadResult.documents[1].url,
                     description: 'Terms and Conditions in Arabic',
                     category: 'legal'
                 })
@@ -251,20 +294,20 @@ export default function SettingsPage() {
         }
 
         try {
-            // Convert files to base64 or upload to server
-            const privacyEnBase64 = await fileToBase64(privacyEn)
-            const privacyArBase64 = await fileToBase64(privacyAr)
+            // Upload files to server
+            const uploadResult = await uploadLegalDocumentsMutation.mutateAsync([privacyEn, privacyAr])
 
+            // Save file URLs to settings
             await Promise.all([
                 updateSettingMutation.mutateAsync({
                     key: 'privacy_en',
-                    value: privacyEnBase64,
+                    value: uploadResult.documents[0].url,
                     description: 'Privacy Policy in English',
                     category: 'legal'
                 }),
                 updateSettingMutation.mutateAsync({
                     key: 'privacy_ar',
-                    value: privacyArBase64,
+                    value: uploadResult.documents[1].url,
                     description: 'Privacy Policy in Arabic',
                     category: 'legal'
                 })
@@ -275,14 +318,7 @@ export default function SettingsPage() {
         }
     }
 
-    const fileToBase64 = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader()
-            reader.readAsDataURL(file)
-            reader.onload = () => resolve(reader.result as string)
-            reader.onerror = error => reject(error)
-        })
-    }
+
 
     const handleSaveSocialLinks = async () => {
         try {
@@ -359,20 +395,29 @@ export default function SettingsPage() {
         }
 
         try {
-            // For single banner, we'll use the first banner ID or create if none exists
-            const bannerId = existingAdBanner?.[0]?.id || 1
-            await updateAdBannerMutation.mutateAsync({
-                id: bannerId,
-                data: {
-                    title: adBannerConfig.title,
-                    description: adBannerConfig.description,
-                    imageUrl: adBannerConfig.imagePreview,
-                    linkType: adBannerConfig.linkType,
-                    externalLink: adBannerConfig.externalLink,
-                    providerId: adBannerConfig.providerId ? parseInt(adBannerConfig.providerId) : undefined,
-                    isActive: adBannerConfig.isActive
-                }
-            })
+            const bannerData: any = {
+                title: adBannerConfig.title,
+                description: adBannerConfig.description,
+                linkType: adBannerConfig.linkType,
+                externalLink: adBannerConfig.externalLink,
+                providerId: adBannerConfig.providerId ? parseInt(adBannerConfig.providerId) : undefined,
+                isActive: adBannerConfig.isActive
+            }
+
+            // Add image file if exists
+            if (adBannerConfig.image) {
+                bannerData.image = adBannerConfig.image
+            }
+
+            // If banner exists, update it; otherwise create new one
+            if (existingAdBanner && existingAdBanner.length > 0) {
+                await updateAdBannerMutation.mutateAsync({
+                    id: existingAdBanner[0].id,
+                    data: bannerData
+                })
+            } else {
+                await createAdBannerMutation.mutateAsync(bannerData)
+            }
 
             toast.success("Ad banner configuration saved successfully!")
         } catch (error) {
@@ -445,6 +490,37 @@ export default function SettingsPage() {
                                                             <X className="h-4 w-4" />
                                                         </Button>
                                                     </div>
+                                                ) : existingLegalDocs.termsEn ? (
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                                                            <div className="flex items-center space-x-2">
+                                                                <FileText className="h-5 w-5 text-green-500" />
+                                                                <span className="text-sm font-medium">Terms & Conditions (English)</span>
+                                                                <span className="text-xs text-muted-foreground">(Current)</span>
+                                                            </div>
+                                                            <div className="flex items-center space-x-2">
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => window.open(existingLegalDocs.termsEn, '_blank')}
+                                                                >
+                                                                    <Eye className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                                                            <Upload className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                                                            <p className="text-sm text-gray-600 mb-2">Upload new file to replace current</p>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => termsEnInputRef.current?.click()}
+                                                            >
+                                                                Choose New File
+                                                            </Button>
+                                                        </div>
+                                                    </div>
                                                 ) : (
                                                     <div className="border-2 border-dashed rounded-lg p-6 text-center">
                                                         <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
@@ -487,6 +563,37 @@ export default function SettingsPage() {
                                                         >
                                                             <X className="h-4 w-4" />
                                                         </Button>
+                                                    </div>
+                                                ) : existingLegalDocs.termsAr ? (
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                                                            <div className="flex items-center space-x-2">
+                                                                <FileText className="h-5 w-5 text-green-500" />
+                                                                <span className="text-sm font-medium">Terms & Conditions (Arabic)</span>
+                                                                <span className="text-xs text-muted-foreground">(Current)</span>
+                                                            </div>
+                                                            <div className="flex items-center space-x-2">
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => window.open(existingLegalDocs.termsAr, '_blank')}
+                                                                >
+                                                                    <Eye className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                                                            <Upload className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                                                            <p className="text-sm text-gray-600 mb-2">Upload new file to replace current</p>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => termsArInputRef.current?.click()}
+                                                            >
+                                                                Choose New File
+                                                            </Button>
+                                                        </div>
                                                     </div>
                                                 ) : (
                                                     <div className="border-2 border-dashed rounded-lg p-6 text-center">
@@ -547,6 +654,37 @@ export default function SettingsPage() {
                                                             <X className="h-4 w-4" />
                                                         </Button>
                                                     </div>
+                                                ) : existingLegalDocs.privacyEn ? (
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                                                            <div className="flex items-center space-x-2">
+                                                                <FileText className="h-5 w-5 text-green-500" />
+                                                                <span className="text-sm font-medium">Privacy Policy (English)</span>
+                                                                <span className="text-xs text-muted-foreground">(Current)</span>
+                                                            </div>
+                                                            <div className="flex items-center space-x-2">
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => window.open(existingLegalDocs.privacyEn, '_blank')}
+                                                                >
+                                                                    <Eye className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                                                            <Upload className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                                                            <p className="text-sm text-gray-600 mb-2">Upload new file to replace current</p>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => privacyEnInputRef.current?.click()}
+                                                            >
+                                                                Choose New File
+                                                            </Button>
+                                                        </div>
+                                                    </div>
                                                 ) : (
                                                     <div className="border-2 border-dashed rounded-lg p-6 text-center">
                                                         <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
@@ -589,6 +727,37 @@ export default function SettingsPage() {
                                                         >
                                                             <X className="h-4 w-4" />
                                                         </Button>
+                                                    </div>
+                                                ) : existingLegalDocs.privacyAr ? (
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                                                            <div className="flex items-center space-x-2">
+                                                                <FileText className="h-5 w-5 text-green-500" />
+                                                                <span className="text-sm font-medium">Privacy Policy (Arabic)</span>
+                                                                <span className="text-xs text-muted-foreground">(Current)</span>
+                                                            </div>
+                                                            <div className="flex items-center space-x-2">
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => window.open(existingLegalDocs.privacyAr, '_blank')}
+                                                                >
+                                                                    <Eye className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                        <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                                                            <Upload className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                                                            <p className="text-sm text-gray-600 mb-2">Upload new file to replace current</p>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => privacyArInputRef.current?.click()}
+                                                            >
+                                                                Choose New File
+                                                            </Button>
+                                                        </div>
                                                     </div>
                                                 ) : (
                                                     <div className="border-2 border-dashed rounded-lg p-6 text-center">

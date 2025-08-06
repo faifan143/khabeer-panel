@@ -365,6 +365,29 @@ export const useUpdateSystemSetting = () => {
   })
 }
 
+// File Upload hooks
+export const useUploadLegalDocuments = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (files: File[]) => adminService.uploadLegalDocuments(files),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'settings'] })
+    },
+  })
+}
+
+export const useUploadBannerImage = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (file: File) => adminService.uploadBannerImage(file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'ad-banners'] })
+    },
+  })
+}
+
 // Admin Sub-Admin hooks
 export const useSubAdmins = () => {
   return useQuery({
@@ -458,6 +481,53 @@ export const useDeleteAdBanner = () => {
     mutationFn: (id: number) => adminService.deleteAdBanner(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'ad-banners'] })
+    },
+  })
+}
+
+// Admin Notification hooks
+export const useNotifications = () => {
+  return useQuery({
+    queryKey: ['admin', 'notifications'],
+    queryFn: adminService.getAllNotifications,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+export const useCreateNotification = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: {
+      title: string
+      message: string
+      image?: File
+      targetAudience: string[]
+    }) => adminService.createNotification(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'notifications'] })
+    },
+  })
+}
+
+export const useSendNotification = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.sendNotification(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'notifications'] })
+    },
+  })
+}
+
+export const useDeleteNotification = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.deleteNotification(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'notifications'] })
     },
   })
 }

@@ -12,13 +12,43 @@ export class UsersService {
     return response.data
   }
 
-  static async createUser(userData: CreateUserDto): Promise<User> {
-    const response = await api.post<User>('/users', userData)
+  static async createUser(userData: CreateUserDto & { image?: File }): Promise<User> {
+    const formData = new FormData()
+    
+    // Add all user data to FormData
+    Object.keys(userData).forEach(key => {
+      if (key === 'image' && userData.image) {
+        formData.append('image', userData.image)
+      } else if (key !== 'image') {
+        formData.append(key, userData[key])
+      }
+    })
+
+    const response = await api.post<User>('/users', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     return response.data
   }
 
-  static async updateUser(id: number, userData: UpdateUserDto): Promise<User> {
-    const response = await api.put<User>(`/users/${id}`, userData)
+  static async updateUser(id: number, userData: UpdateUserDto & { image?: File }): Promise<User> {
+    const formData = new FormData()
+    
+    // Add all user data to FormData
+    Object.keys(userData).forEach(key => {
+      if (key === 'image' && userData.image) {
+        formData.append('image', userData.image)
+      } else if (key !== 'image') {
+        formData.append(key, userData[key])
+      }
+    })
+
+    const response = await api.put<User>(`/users/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     return response.data
   }
 

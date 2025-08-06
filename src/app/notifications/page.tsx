@@ -28,62 +28,17 @@ import {
     X
 } from "lucide-react"
 import { useState, useMemo, useRef } from "react"
+import { useNotifications, useCreateNotification, useSendNotification, useDeleteNotification } from "@/lib/api/hooks/useAdmin"
 
-// Mock data - replace with actual API calls
-const mockNotifications = [
-    {
-        id: 1,
-        title: "New Service Available",
-        message: "We've added new cleaning services to our platform. Check them out!",
-        image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop",
-        targetAudience: ["customers", "providers"],
-        sentAt: "2024-01-15T10:30:00Z",
-        status: "sent",
-        recipientsCount: 1250
-    },
-    {
-        id: 2,
-        title: "Maintenance Notice",
-        message: "Our platform will be under maintenance tonight from 2-4 AM. We apologize for any inconvenience.",
-        image: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop",
-        targetAudience: ["customers"],
-        sentAt: "2024-01-14T16:20:00Z",
-        status: "sent",
-        recipientsCount: 890
-    },
-    {
-        id: 3,
-        title: "Provider Verification Update",
-        message: "New verification requirements have been implemented. Please review your documents.",
-        image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop",
-        targetAudience: ["providers"],
-        sentAt: "2024-01-13T09:15:00Z",
-        status: "sent",
-        recipientsCount: 340
-    },
-    {
-        id: 4,
-        title: "Holiday Schedule",
-        message: "Our services will have modified hours during the upcoming holiday. Check the updated schedule.",
-        image: "https://images.unsplash.com/photo-1542810634-71277d95dcbb?w=400&h=300&fit=crop",
-        targetAudience: ["customers", "providers"],
-        sentAt: "2024-01-12T14:45:00Z",
-        status: "draft",
-        recipientsCount: 0
-    },
-    {
-        id: 5,
-        title: "Welcome to Khabeer",
-        message: "Welcome to our platform! We're excited to have you join our community of service providers and customers.",
-        image: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=300&fit=crop",
-        targetAudience: ["customers"],
-        sentAt: "2024-01-11T11:30:00Z",
-        status: "sent",
-        recipientsCount: 2100
-    }
-]
+
 
 export default function NotificationsPage() {
+    // API Hooks
+    const { data: notifications = [], isLoading } = useNotifications()
+    const createNotificationMutation = useCreateNotification()
+    const sendNotificationMutation = useSendNotification()
+    const deleteNotificationMutation = useDeleteNotification()
+
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState<string>("all")
     const [audienceFilter, setAudienceFilter] = useState<string>("all")
@@ -165,7 +120,7 @@ export default function NotificationsPage() {
 
     // Filter notifications
     const filteredNotifications = useMemo(() => {
-        return mockNotifications.filter(notification => {
+        return notifications.filter(notification => {
             const matchesSearch =
                 notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 notification.message.toLowerCase().includes(searchQuery.toLowerCase())
@@ -177,7 +132,7 @@ export default function NotificationsPage() {
 
             return matchesSearch && matchesStatus && matchesAudience
         })
-    }, [searchQuery, statusFilter, audienceFilter])
+    }, [notifications, searchQuery, statusFilter, audienceFilter])
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString("en-US", {
@@ -210,7 +165,7 @@ export default function NotificationsPage() {
         ))
     }
 
-    const handleCreateNotification = () => {
+    const handleCreateNotification = async () => {
         if (!newNotification.title || !newNotification.message) {
             toast.error("Please fill in all required fields")
             return
@@ -221,35 +176,47 @@ export default function NotificationsPage() {
             return
         }
 
-        // Here you would call the API to create the notification
-        console.log("Creating notification:", newNotification)
+        try {
+            await createNotificationMutation.mutateAsync({
+                title: newNotification.title,
+                message: newNotification.message,
+                image: newNotification.image || undefined,
+                targetAudience: newNotification.targetAudience
+            })
 
-        toast.success("Notification created successfully")
+            toast.success("Notification created successfully")
 
-        // Reset form
-        setNewNotification({
-            title: "",
-            message: "",
-            image: null,
-            imagePreview: "",
-            targetAudience: [],
-            status: "draft"
-        })
-        setIsCreateDialogOpen(false)
+            // Reset form
+            setNewNotification({
+                title: "",
+                message: "",
+                image: null,
+                imagePreview: "",
+                targetAudience: [],
+                status: "draft"
+            })
+            setIsCreateDialogOpen(false)
+        } catch (error) {
+            toast.error("Failed to create notification")
+        }
     }
 
-    const handleSendNotification = (id: number) => {
-        // Here you would call the API to send the notification
-        console.log("Sending notification:", id)
-
-        toast.success("Notification sent successfully")
+    const handleSendNotification = async (id: number) => {
+        try {
+            await sendNotificationMutation.mutateAsync(id)
+            toast.success("Notification sent successfully")
+        } catch (error) {
+            toast.error("Failed to send notification")
+        }
     }
 
-    const handleDeleteNotification = (id: number) => {
-        // Here you would call the API to delete the notification
-        console.log("Deleting notification:", id)
-
-        toast.success("Notification deleted successfully")
+    const handleDeleteNotification = async (id: number) => {
+        try {
+            await deleteNotificationMutation.mutateAsync(id)
+            toast.success("Notification deleted successfully")
+        } catch (error) {
+            toast.error("Failed to delete notification")
+        }
     }
 
     return (
@@ -266,7 +233,7 @@ export default function NotificationsPage() {
                                 <Bell className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">{mockNotifications.length}</div>
+                                <div className="text-2xl font-bold">{notifications.length}</div>
                                 <p className="text-xs text-muted-foreground">
                                     All time notifications
                                 </p>
@@ -280,7 +247,7 @@ export default function NotificationsPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">
-                                    {mockNotifications.filter(n =>
+                                    {notifications.filter(n =>
                                         n.status === "sent" &&
                                         new Date(n.sentAt).toDateString() === new Date().toDateString()
                                     ).length}
@@ -298,7 +265,7 @@ export default function NotificationsPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">
-                                    {mockNotifications.reduce((sum, n) => sum + n.recipientsCount, 0).toLocaleString()}
+                                    {notifications.reduce((sum, n) => sum + n.recipientsCount, 0).toLocaleString()}
                                 </div>
                                 <p className="text-xs text-muted-foreground">
                                     Total users reached
@@ -313,7 +280,7 @@ export default function NotificationsPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">
-                                    {mockNotifications.filter(n => n.status === "draft").length}
+                                    {notifications.filter(n => n.status === "draft").length}
                                 </div>
                                 <p className="text-xs text-muted-foreground">
                                     Pending notifications
