@@ -165,5 +165,11 @@ export const adminService = {
   deactivateUser: async (id: number) => {
     const response = await api.put(`/admin/users/${id}/deactivate`)
     return response.data
+  },
+
+  // Get all ratings for admin
+  getAllRatings: async () => {
+    const response = await api.get('/admin/ratings')
+    return response.data
   }
 }

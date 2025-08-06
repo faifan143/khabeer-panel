@@ -330,3 +330,12 @@ export const useAdminRejectJoinRequest = () => {
     },
   })
 }
+
+// Admin Ratings hooks
+export const useAdminRatings = () => {
+  return useQuery({
+    queryKey: ['admin', 'ratings'],
+    queryFn: adminService.getAllRatings,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
