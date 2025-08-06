@@ -23,9 +23,11 @@ import {
     Eye,
     Trash2,
     Image as ImageIcon,
-    Send
+    Send,
+    Upload,
+    X
 } from "lucide-react"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useRef } from "react"
 
 // Mock data - replace with actual API calls
 const mockNotifications = [
@@ -93,10 +95,73 @@ export default function NotificationsPage() {
     const [newNotification, setNewNotification] = useState({
         title: "",
         message: "",
-        image: "",
+        image: null as File | null,
+        imagePreview: "",
         targetAudience: [] as string[],
         status: "draft"
     })
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    // File handling functions
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                toast.error('Please select an image file')
+                return
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error('Image size should be less than 5MB')
+                return
+            }
+
+            setNewNotification(prev => ({
+                ...prev,
+                image: file,
+                imagePreview: URL.createObjectURL(file)
+            }))
+        }
+    }
+
+    const handleRemoveImage = () => {
+        setNewNotification(prev => ({
+            ...prev,
+            image: null,
+            imagePreview: ""
+        }))
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ""
+        }
+    }
+
+    const handleFileDrop = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault()
+        const file = event.dataTransfer.files?.[0]
+        if (file) {
+            if (!file.type.startsWith('image/')) {
+                toast.error('Please select an image file')
+                return
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error('Image size should be less than 5MB')
+                return
+            }
+
+            setNewNotification(prev => ({
+                ...prev,
+                image: file,
+                imagePreview: URL.createObjectURL(file)
+            }))
+        }
+    }
+
+    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault()
+    }
 
     // Filter notifications
     const filteredNotifications = useMemo(() => {
@@ -165,7 +230,8 @@ export default function NotificationsPage() {
         setNewNotification({
             title: "",
             message: "",
-            image: "",
+            image: null,
+            imagePreview: "",
             targetAudience: [],
             status: "draft"
         })
@@ -296,53 +362,100 @@ export default function NotificationsPage() {
                                             New Notification
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="max-w-2xl">
-                                        <DialogHeader>
-                                            <DialogTitle>Create New Notification</DialogTitle>
-                                            <DialogDescription>
-                                                Send a notification to your users with image and text
+                                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                                        <DialogHeader className="border-b">
+                                            <DialogTitle className="text-xl font-semibold">Create New Notification</DialogTitle>
+                                            <DialogDescription className="text-sm text-muted-foreground">
+                                                Send a notification to your users with image and text. Fill in the required fields below.
                                             </DialogDescription>
                                         </DialogHeader>
-                                        <div className="space-y-4">
-                                            <div>
-                                                <Label htmlFor="title">Title *</Label>
+                                        <div className="space-y-6 ">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="title" className="text-sm font-medium">
+                                                    Notification Title *
+                                                </Label>
                                                 <Input
                                                     id="title"
-                                                    placeholder="Enter notification title"
+                                                    placeholder="e.g., New Service Available, Maintenance Notice"
                                                     value={newNotification.title}
                                                     onChange={(e) => setNewNotification(prev => ({ ...prev, title: e.target.value }))}
+                                                    className="h-10"
                                                 />
+                                                <p className="text-xs text-muted-foreground">
+                                                    Keep it concise and descriptive
+                                                </p>
                                             </div>
-
                                             <div>
-                                                <Label htmlFor="message">Message *</Label>
-                                                <Textarea
-                                                    id="message"
-                                                    placeholder="Enter notification message"
-                                                    rows={4}
-                                                    value={newNotification.message}
-                                                    onChange={(e) => setNewNotification(prev => ({ ...prev, message: e.target.value }))}
-                                                />
-                                            </div>
+                                                <Label>Notification Image</Label>
+                                                <div className="space-y-3 mt-2" >
+                                                    {/* File Upload Area */}
+                                                    <div
+                                                        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${newNotification.imagePreview
+                                                            ? 'border-green-300 bg-green-50'
+                                                            : 'border-gray-300 hover:border-gray-400'
+                                                            }`}
+                                                        onDrop={handleFileDrop}
+                                                        onDragOver={handleDragOver}
+                                                    >
+                                                        {newNotification.imagePreview ? (
+                                                            <div className="space-y-3">
+                                                                <div className="relative inline-block">
+                                                                    <img
+                                                                        src={newNotification.imagePreview}
+                                                                        alt="Preview"
+                                                                        className="h-32 w-auto rounded-lg object-cover mx-auto"
+                                                                    />
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="destructive"
+                                                                        size="sm"
+                                                                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                                                                        onClick={handleRemoveImage}
+                                                                    >
+                                                                        <X className="h-3 w-3" />
+                                                                    </Button>
+                                                                </div>
+                                                                <p className="text-sm text-green-600 font-medium">
+                                                                    Image uploaded successfully!
+                                                                </p>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="space-y-3">
+                                                                <Upload className="h-8 w-8 text-gray-400 mx-auto" />
+                                                                <div>
+                                                                    <p className="text-sm font-medium text-gray-700">
+                                                                        Drop an image here, or click to select
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-500 mt-1">
+                                                                        PNG, JPG, GIF up to 5MB
+                                                                    </p>
+                                                                </div>
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => fileInputRef.current?.click()}
+                                                                >
+                                                                    Choose File
+                                                                </Button>
+                                                            </div>
+                                                        )}
+                                                    </div>
 
-                                            <div>
-                                                <Label htmlFor="image">Image URL</Label>
-                                                <div className="flex items-center gap-2">
-                                                    <Input
-                                                        id="image"
-                                                        placeholder="Enter image URL"
-                                                        value={newNotification.image}
-                                                        onChange={(e) => setNewNotification(prev => ({ ...prev, image: e.target.value }))}
+                                                    {/* Hidden file input */}
+                                                    <input
+                                                        ref={fileInputRef}
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={handleFileSelect}
+                                                        className="hidden"
                                                     />
-                                                    <Button variant="outline" size="sm">
-                                                        <ImageIcon className="h-4 w-4" />
-                                                    </Button>
                                                 </div>
                                             </div>
 
-                                            <div>
-                                                <Label>Target Audience *</Label>
-                                                <div className="flex gap-2 mt-2">
+                                            <div className="space-y-3">
+                                                <Label className="text-sm font-medium">Target Audience *</Label>
+                                                <div className="flex gap-3">
                                                     <Button
                                                         type="button"
                                                         variant={newNotification.targetAudience.includes("customers") ? "default" : "outline"}
@@ -376,11 +489,19 @@ export default function NotificationsPage() {
                                                 </div>
                                             </div>
 
-                                            <div className="flex justify-end gap-2 pt-4">
-                                                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                                            <div className="flex justify-end gap-3 pt-6 border-t">
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => setIsCreateDialogOpen(false)}
+                                                    className="px-6"
+                                                >
                                                     Cancel
                                                 </Button>
-                                                <Button onClick={handleCreateNotification}>
+                                                <Button
+                                                    onClick={handleCreateNotification}
+                                                    className="px-6"
+                                                    disabled={!newNotification.title || !newNotification.message || newNotification.targetAudience.length === 0}
+                                                >
                                                     <Send className="h-4 w-4 mr-2" />
                                                     Create & Send
                                                 </Button>
@@ -535,8 +656,8 @@ export default function NotificationsPage() {
                             </div>
                         </CardContent>
                     </Card>
-                </div>
-            </AdminLayout>
-        </ProtectedRoute>
+                </div >
+            </AdminLayout >
+        </ProtectedRoute >
     )
 }
