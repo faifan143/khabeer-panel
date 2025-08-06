@@ -3,18 +3,18 @@
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { AdminLayout } from "@/components/layout/admin-layout"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { useProviders, useProviderServices, useProviderOrders, useProviderRatings } from "@/lib/api/hooks/useProviders"
-import { useProviderStats, useAdminActivateProvider, useAdminDeactivateProvider, useAdminVerifyProvider, useAdminUnverifyProvider } from "@/lib/api/hooks/useAdmin"
+import { useProviders, useProviderServices, useProviderOrders } from "@/lib/api/hooks/useProviders"
+import { useAdminActivateProvider, useAdminDeactivateProvider, useAdminVerifyProvider, useAdminUnverifyProvider, useAdminPendingJoinRequests, useAdminApproveJoinRequest, useAdminRejectJoinRequest } from "@/lib/api/hooks/useAdmin"
 import { Provider } from "@/lib/api/types"
 import { formatCurrency } from "@/lib/utils"
 import { DocumentManagementDialog } from "@/components/documents/document-management-dialog"
@@ -39,9 +39,13 @@ import {
     ShieldCheck,
     ShieldX,
     Calendar,
-    FileText
+    FileText,
+    TrendingUp,
+    TrendingDown,
+    Percent,
+    Receipt
 } from "lucide-react"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import toast from "react-hot-toast"
 
 // Loading Skeleton Components
@@ -102,54 +106,71 @@ const StatCard = ({
     </Card>
 )
 
-const getStatusColor = (isActive: boolean, isVerified: boolean) => {
-    if (!isActive) return 'bg-red-100 text-red-800 border-red-200'
-    if (!isVerified) return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-    return 'bg-green-100 text-green-800 border-green-200'
+const getStatusColor = (isActive: boolean) => {
+    return isActive ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'
 }
 
-const getStatusIcon = (isActive: boolean, isVerified: boolean) => {
-    if (!isActive) return <UserX className="h-4 w-4" />
-    if (!isVerified) return <Clock className="h-4 w-4" />
-    return <UserCheck className="h-4 w-4" />
+const getStatusIcon = (isActive: boolean) => {
+    return isActive ? <UserCheck className="h-4 w-4" /> : <UserX className="h-4 w-4" />
 }
 
-const getStatusText = (isActive: boolean, isVerified: boolean) => {
-    if (!isActive) return 'Inactive'
-    if (!isVerified) return 'Unverified'
-    return 'Active'
+const getStatusText = (isActive: boolean) => {
+    return isActive ? 'Active' : 'Inactive'
 }
 
-export default function ProvidersManagementPage() {
-    const [activeTab, setActiveTab] = useState("all")
+export default function ProviderVerificationPage() {
+    const [activeTab, setActiveTab] = useState("verified")
     const [searchTerm, setSearchTerm] = useState("")
-
     const [viewMode, setViewMode] = useState<"grid" | "list">("list")
     const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null)
     const [isProviderDialogOpen, setIsProviderDialogOpen] = useState(false)
-    const [isVerificationDialogOpen, setIsVerificationDialogOpen] = useState(false)
     const [isDocumentDialogOpen, setIsDocumentDialogOpen] = useState(false)
-    const [verificationNotes, setVerificationNotes] = useState("")
+    const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
+    const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
+    const [approveNotes, setApproveNotes] = useState("")
+    const [rejectReason, setRejectReason] = useState("")
     const [statusFilter, setStatusFilter] = useState<string>("all")
-    const [verificationFilter, setVerificationFilter] = useState<string>("all")
 
-    // Hooks
+    // Hooks for verified providers
     const { data: providersResponse, isLoading: providersLoading } = useProviders(1, 1000)
-
     const { data: providerServices } = useProviderServices(selectedProvider?.id || 0)
     const { data: providerOrders } = useProviderOrders(selectedProvider?.id || 0)
-    const { data: providerRatings } = useProviderRatings(selectedProvider?.id || 0)
 
-    // Extract data from response
+    // Hooks for join requests
+    const { data: joinRequestsResponse, isLoading: joinRequestsLoading } = useAdminPendingJoinRequests()
+
+    // Extract data from responses
     const providers = (Array.isArray(providersResponse) ? providersResponse : providersResponse?.data) as Provider[] || []
+    const joinRequests = (Array.isArray(joinRequestsResponse) ? joinRequestsResponse : joinRequestsResponse?.data) as any[] || []
 
-    // Filter providers by status and verification
-    const activeProviders = providers.filter(provider => provider.isActive)
-    const inactiveProviders = providers.filter(provider => !provider.isActive)
+    // Filter verified providers only
     const verifiedProviders = providers.filter(provider => provider.isVerified)
-    const unverifiedProviders = providers.filter(provider => !provider.isVerified)
 
-    // Filter providers based on active tab and search
+    // Admin provider management hooks
+    const activateProviderMutation = useAdminActivateProvider()
+    const deactivateProviderMutation = useAdminDeactivateProvider()
+    const verifyProviderMutation = useAdminVerifyProvider()
+    const unverifyProviderMutation = useAdminUnverifyProvider()
+    const approveJoinRequestMutation = useAdminApproveJoinRequest()
+    const rejectJoinRequestMutation = useAdminRejectJoinRequest()
+
+    // Computed statistics for verified providers
+    const providerStats = useMemo(() => {
+        const totalIncome = verifiedProviders.reduce((sum, provider) => {
+            // This would need to be calculated from actual order data
+            return sum + 0 // Placeholder
+        }, 0)
+
+        return {
+            total: verifiedProviders.length,
+            active: verifiedProviders.filter(p => p.isActive).length,
+            inactive: verifiedProviders.filter(p => !p.isActive).length,
+            totalIncome: Math.round(totalIncome * 100) / 100,
+            pendingRequests: joinRequests.length
+        }
+    }, [verifiedProviders, joinRequests])
+
+    // Filter providers based on search and status
     const getFilteredProviders = (providerList: Provider[]) => {
         let filtered = providerList.filter(provider =>
             provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -164,37 +185,20 @@ export default function ProvidersManagementPage() {
             )
         }
 
-        if (verificationFilter !== "all") {
-            filtered = filtered.filter(provider =>
-                verificationFilter === "verified" ? provider.isVerified : !provider.isVerified
-            )
-        }
-
         return filtered
     }
 
-    const getCurrentProviders = () => {
-        switch (activeTab) {
-            case "active":
-                return getFilteredProviders(activeProviders)
-            case "inactive":
-                return getFilteredProviders(inactiveProviders)
-            case "verified":
-                return getFilteredProviders(verifiedProviders)
-            case "unverified":
-                return getFilteredProviders(unverifiedProviders)
-            default:
-                return getFilteredProviders(providers)
+    const currentProviders = getFilteredProviders(verifiedProviders)
+
+    // Calculate provider income (placeholder - would need actual order data)
+    const calculateProviderIncome = (providerId: number) => {
+        // This would need to be implemented with actual order data
+        return {
+            total: 0,
+            afterDiscounts: 0,
+            offerDiscounts: 0
         }
     }
-
-    const currentProviders = getCurrentProviders()
-
-    // Admin provider management hooks
-    const activateProviderMutation = useAdminActivateProvider()
-    const deactivateProviderMutation = useAdminDeactivateProvider()
-    const verifyProviderMutation = useAdminVerifyProvider()
-    const unverifyProviderMutation = useAdminUnverifyProvider()
 
     const handleActivateProvider = async (providerId: number) => {
         try {
@@ -216,22 +220,26 @@ export default function ProvidersManagementPage() {
         }
     }
 
-    const handleVerifyProvider = async (providerId: number) => {
+    const handleApproveJoinRequest = async (requestId: number) => {
         try {
-            await verifyProviderMutation.mutateAsync(providerId)
-            toast.success("Provider verified successfully")
+            await approveJoinRequestMutation.mutateAsync({ id: requestId, notes: approveNotes })
+            toast.success("Join request approved successfully")
+            setIsApproveDialogOpen(false)
+            setApproveNotes("")
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to verify provider"
+            const errorMessage = error instanceof Error ? error.message : "Failed to approve join request"
             toast.error(errorMessage)
         }
     }
 
-    const handleUnverifyProvider = async (providerId: number) => {
+    const handleRejectJoinRequest = async (requestId: number) => {
         try {
-            await unverifyProviderMutation.mutateAsync(providerId)
-            toast.success("Provider unverified successfully")
+            await rejectJoinRequestMutation.mutateAsync({ id: requestId, notes: rejectReason })
+            toast.success("Join request rejected successfully")
+            setIsRejectDialogOpen(false)
+            setRejectReason("")
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to unverify provider"
+            const errorMessage = error instanceof Error ? error.message : "Failed to reject join request"
             toast.error(errorMessage)
         }
     }
@@ -246,10 +254,15 @@ export default function ProvidersManagementPage() {
         })
     }
 
-    const calculateAverageRating = (ratings: any[]) => {
-        if (!ratings || ratings.length === 0) return 0
-        const sum = ratings.reduce((acc, rating) => acc + (rating.rating || 0), 0)
-        return (sum / ratings.length).toFixed(1)
+    const renderCurrency = (amount: number) => {
+        const currencyString = formatCurrency(amount)
+        const parts = currencyString.split(' OMR')
+        return (
+            <span className="font-semibold">
+                {parts[0]}
+                <span className="text-sm text-muted-foreground ml-1 font-normal">OMR</span>
+            </span>
+        )
     }
 
     return (
@@ -257,116 +270,76 @@ export default function ProvidersManagementPage() {
             <AdminLayout>
                 <div className="space-y-8">
                     {/* Enhanced Stats Display */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                         <StatCard
-                            title="Total Providers"
-                            value={providers.length}
-                            icon={Users}
-                            color="bg-gradient-to-br from-blue-500 to-indigo-600"
-                            description="All providers"
+                            title="Verified Providers"
+                            value={providerStats.total}
+                            icon={ShieldCheck}
+                            color="bg-gradient-to-br from-green-500 to-emerald-600"
+                            description="Document verified"
                         />
                         <StatCard
-                            title="Active"
-                            value={activeProviders.length}
+                            title="Active Providers"
+                            value={providerStats.active}
                             icon={UserCheck}
-                            color="bg-gradient-to-br from-green-500 to-emerald-600"
+                            color="bg-gradient-to-br from-blue-500 to-indigo-600"
                             description="Currently active"
                         />
                         <StatCard
-                            title="Inactive"
-                            value={inactiveProviders.length}
+                            title="Inactive Providers"
+                            value={providerStats.inactive}
                             icon={UserX}
                             color="bg-gradient-to-br from-red-500 to-pink-600"
                             description="Deactivated"
                         />
                         <StatCard
-                            title="Verified"
-                            value={verifiedProviders.length}
-                            icon={ShieldCheck}
+                            title="Total Income"
+                            value={`${providerStats.totalIncome} OMR`}
+                            icon={DollarSign}
                             color="bg-gradient-to-br from-emerald-500 to-teal-600"
-                            description="Document verified"
+                            description="All time earnings"
                         />
                         <StatCard
-                            title="Unverified"
-                            value={unverifiedProviders.length}
-                            icon={ShieldX}
+                            title="Pending Requests"
+                            value={providerStats.pendingRequests}
+                            icon={Clock}
                             color="bg-gradient-to-br from-yellow-500 to-orange-600"
-                            description="Pending verification"
-                        />
-                        <StatCard
-                            title="New This Month"
-                            value={providers.filter(p => {
-                                const createdAt = new Date(p.createdAt)
-                                const monthAgo = new Date()
-                                monthAgo.setMonth(monthAgo.getMonth() - 1)
-                                return createdAt >= monthAgo
-                            }).length}
-                            icon={Zap}
-                            color="bg-gradient-to-br from-purple-500 to-violet-600"
-                            description="Recent registrations"
+                            description="Awaiting approval"
                         />
                     </div>
 
-                    {/* Enhanced Tabs */}
+                    {/* Main Tabs */}
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                         <div className="flex items-center justify-between">
-                            <TabsList className="grid w-auto grid-cols-5 bg-gray-100 p-1">
-                                <TabsTrigger
-                                    value="all"
-                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                                >
-                                    All Providers
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="active"
-                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                                >
-                                    Active
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="inactive"
-                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                                >
-                                    Inactive
-                                </TabsTrigger>
+                            <TabsList className="grid w-auto grid-cols-2 bg-gray-100 p-1">
                                 <TabsTrigger
                                     value="verified"
-                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                                    className="px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
                                 >
-                                    Verified
+                                    Verified Providers
                                 </TabsTrigger>
                                 <TabsTrigger
-                                    value="unverified"
-                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                                    value="join-requests"
+                                    className="px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
                                 >
-                                    Unverified
+                                    Provider Join Requests
                                 </TabsTrigger>
                             </TabsList>
 
                             <div className="flex items-center space-x-3">
-                                {/* Status Filter */}
-                                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                    <SelectTrigger className="w-40">
-                                        <SelectValue placeholder="Filter by status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Status</SelectItem>
-                                        <SelectItem value="active">Active</SelectItem>
-                                        <SelectItem value="inactive">Inactive</SelectItem>
-                                    </SelectContent>
-                                </Select>
-
-                                {/* Verification Filter */}
-                                <Select value={verificationFilter} onValueChange={setVerificationFilter}>
-                                    <SelectTrigger className="w-40">
-                                        <SelectValue placeholder="Filter by verification" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Verification</SelectItem>
-                                        <SelectItem value="verified">Verified</SelectItem>
-                                        <SelectItem value="unverified">Unverified</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                {/* Status Filter - only for verified providers */}
+                                {activeTab === "verified" && (
+                                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                        <SelectTrigger className="w-40">
+                                            <SelectValue placeholder="Filter by status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Status</SelectItem>
+                                            <SelectItem value="active">Active</SelectItem>
+                                            <SelectItem value="inactive">Inactive</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
 
                                 {/* View Toggle */}
                                 <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
@@ -390,8 +363,8 @@ export default function ProvidersManagementPage() {
                             </div>
                         </div>
 
-                        {/* Providers Display */}
-                        <TabsContent value={activeTab} className="space-y-6">
+                        {/* Verified Providers Tab */}
+                        <TabsContent value="verified" className="space-y-6">
                             {providersLoading ? (
                                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                                     {Array.from({ length: 6 }).map((_, i) => (
@@ -400,260 +373,187 @@ export default function ProvidersManagementPage() {
                                 </div>
                             ) : viewMode === "grid" ? (
                                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                    {currentProviders.map((provider) => (
-                                        <Card key={provider.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50/50 hover:from-blue-50/50 hover:to-indigo-50/50">
-                                            <CardContent className="p-6">
-                                                <div className="flex items-start justify-between mb-4">
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center space-x-2 mb-2">
-                                                            <Badge variant="outline" className={`${getStatusColor(provider.isActive, provider.isVerified)}`}>
-                                                                {getStatusIcon(provider.isActive, provider.isVerified)}
-                                                                <span className="ml-1">{getStatusText(provider.isActive, provider.isVerified)}</span>
-                                                            </Badge>
-                                                            {provider.isVerified && (
+                                    {currentProviders.map((provider) => {
+                                        const income = calculateProviderIncome(provider.id)
+                                        return (
+                                            <Card key={provider.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50/50 hover:from-blue-50/50 hover:to-indigo-50/50">
+                                                <CardContent className="p-6">
+                                                    <div className="flex items-start justify-between mb-4">
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center space-x-2 mb-2">
+                                                                <Badge variant="outline" className={`${getStatusColor(provider.isActive)}`}>
+                                                                    {getStatusIcon(provider.isActive)}
+                                                                    <span className="ml-1">{getStatusText(provider.isActive)}</span>
+                                                                </Badge>
                                                                 <Shield className="h-4 w-4 text-green-600" />
-                                                            )}
+                                                            </div>
+                                                            <h3 className="font-semibold text-gray-900 mb-1">{provider.name}</h3>
+                                                            <p className="text-sm text-muted-foreground mb-3">{provider.description}</p>
                                                         </div>
-                                                        <h3 className="font-semibold text-gray-900 mb-1">{provider.name}</h3>
-                                                        <p className="text-sm text-muted-foreground mb-3">{provider.description}</p>
                                                     </div>
-                                                </div>
 
-                                                <div className="space-y-3">
-                                                    <div className="flex items-center space-x-2 text-sm">
-                                                        <Phone className="h-4 w-4 text-muted-foreground" />
-                                                        <span className="text-muted-foreground">{provider.phone}</span>
-                                                    </div>
-                                                    {provider.email && (
+                                                    <div className="space-y-3">
                                                         <div className="flex items-center space-x-2 text-sm">
-                                                            <User className="h-4 w-4 text-muted-foreground" />
-                                                            <span className="text-muted-foreground truncate">{provider.email}</span>
+                                                            <Phone className="h-4 w-4 text-muted-foreground" />
+                                                            <span className="text-muted-foreground">{provider.phone}</span>
                                                         </div>
-                                                    )}
-                                                    <div className="flex items-center space-x-2 text-sm">
-                                                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                                                        <span className="text-muted-foreground">{provider.state}</span>
+                                                        <div className="flex items-center space-x-2 text-sm">
+                                                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                                                            <span className="text-muted-foreground">{provider.state}</span>
+                                                        </div>
+                                                        <div className="flex items-center space-x-2 text-sm">
+                                                            <DollarSign className="h-4 w-4 text-muted-foreground" />
+                                                            <span className="text-muted-foreground">Total: {renderCurrency(income.total)}</span>
+                                                        </div>
+                                                        <div className="flex items-center space-x-2 text-sm">
+                                                            <Percent className="h-4 w-4 text-muted-foreground" />
+                                                            <span className="text-muted-foreground">Discounts: {renderCurrency(income.offerDiscounts)}</span>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex items-center space-x-2 text-sm">
-                                                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                                                        <span className="text-muted-foreground">Joined {formatDate(provider.createdAt)}</span>
-                                                    </div>
-                                                </div>
 
-                                                <div className="flex items-center justify-end space-x-2 mt-4 pt-4 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => {
-                                                            setSelectedProvider(provider)
-                                                            setIsProviderDialogOpen(true)
-                                                        }}
-                                                        className="h-8 w-8 p-0 hover:bg-blue-100"
-                                                    >
-                                                        <Eye className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => {
-                                                            setSelectedProvider(provider)
-                                                            setIsDocumentDialogOpen(true)
-                                                        }}
-                                                        className="h-8 w-8 p-0 hover:bg-purple-100"
-                                                    >
-                                                        <FileText className="h-4 w-4" />
-                                                    </Button>
-                                                    {!provider.isActive ? (
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-8 w-8 p-0 hover:bg-green-100"
-                                                                >
-                                                                    <UserCheck className="h-4 w-4" />
-                                                                </Button>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>Activate Provider</AlertDialogTitle>
-                                                                    <AlertDialogDescription>
-                                                                        Are you sure you want to activate {provider.name}? This will allow them to access the platform and receive orders.
-                                                                    </AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                    <AlertDialogAction
-                                                                        onClick={() => handleActivateProvider(provider.id)}
-                                                                        className="bg-green-600 hover:bg-green-700"
+                                                    <div className="flex items-center justify-end space-x-2 mt-4 pt-4 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                setSelectedProvider(provider)
+                                                                setIsProviderDialogOpen(true)
+                                                            }}
+                                                            className="h-8 w-8 p-0 hover:bg-blue-100"
+                                                        >
+                                                            <Eye className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                setSelectedProvider(provider)
+                                                                setIsDocumentDialogOpen(true)
+                                                            }}
+                                                            className="h-8 w-8 p-0 hover:bg-purple-100"
+                                                        >
+                                                            <FileText className="h-4 w-4" />
+                                                        </Button>
+                                                        {!provider.isActive ? (
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-8 w-8 p-0 hover:bg-green-100"
                                                                     >
-                                                                        Activate
-                                                                    </AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                    ) : (
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-8 w-8 p-0 hover:bg-red-100"
-                                                                >
-                                                                    <UserX className="h-4 w-4" />
-                                                                </Button>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>Deactivate Provider</AlertDialogTitle>
-                                                                    <AlertDialogDescription>
-                                                                        Are you sure you want to deactivate {provider.name}? This will prevent them from accessing the platform and receiving new orders.
-                                                                    </AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                    <AlertDialogAction
-                                                                        onClick={() => handleDeactivateProvider(provider.id)}
-                                                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                                        <UserCheck className="h-4 w-4" />
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>Activate Provider</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            Are you sure you want to activate {provider.name}?
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogAction
+                                                                            onClick={() => handleActivateProvider(provider.id)}
+                                                                            className="bg-green-600 hover:bg-green-700"
+                                                                        >
+                                                                            Activate
+                                                                        </AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        ) : (
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-8 w-8 p-0 hover:bg-red-100"
                                                                     >
-                                                                        Deactivate
-                                                                    </AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                    )}
-                                                    {!provider.isVerified ? (
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-8 w-8 p-0 hover:bg-green-100"
-                                                                >
-                                                                    <ShieldCheck className="h-4 w-4" />
-                                                                </Button>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>Verify Provider</AlertDialogTitle>
-                                                                    <AlertDialogDescription>
-                                                                        Are you sure you want to verify {provider.name}? This will mark their documents as verified and increase their trust level.
-                                                                    </AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                    <AlertDialogAction
-                                                                        onClick={() => handleVerifyProvider(provider.id)}
-                                                                        className="bg-green-600 hover:bg-green-700"
-                                                                    >
-                                                                        Verify
-                                                                    </AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                    ) : (
-                                                        <AlertDialog>
-                                                            <AlertDialogTrigger asChild>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="h-8 w-8 p-0 hover:bg-yellow-100"
-                                                                >
-                                                                    <ShieldX className="h-4 w-4" />
-                                                                </Button>
-                                                            </AlertDialogTrigger>
-                                                            <AlertDialogContent>
-                                                                <AlertDialogHeader>
-                                                                    <AlertDialogTitle>Remove Verification</AlertDialogTitle>
-                                                                    <AlertDialogDescription>
-                                                                        Are you sure you want to remove verification from {provider.name}? This will mark their documents as unverified and may affect their trust level.
-                                                                    </AlertDialogDescription>
-                                                                </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                    <AlertDialogAction
-                                                                        onClick={() => handleUnverifyProvider(provider.id)}
-                                                                        className="bg-yellow-600 hover:bg-yellow-700"
-                                                                    >
-                                                                        Remove Verification
-                                                                    </AlertDialogAction>
-                                                                </AlertDialogFooter>
-                                                            </AlertDialogContent>
-                                                        </AlertDialog>
-                                                    )}
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    ))}
+                                                                        <UserX className="h-4 w-4" />
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>Deactivate Provider</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            Are you sure you want to deactivate {provider.name}?
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogAction
+                                                                            onClick={() => handleDeactivateProvider(provider.id)}
+                                                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                                        >
+                                                                            Deactivate
+                                                                        </AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        )}
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        )
+                                    })}
                                 </div>
                             ) : (
                                 <Card className="border-0 shadow-lg">
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-gray-50">
-                                                <TableHead className="font-semibold">Provider Name</TableHead>
-                                                <TableHead className="font-semibold">Contact Info</TableHead>
-                                                <TableHead className="font-semibold">Location</TableHead>
+                                                <TableHead className="font-semibold">Provider</TableHead>
+                                                <TableHead className="font-semibold">Contact & Location</TableHead>
+                                                <TableHead className="font-semibold">Categories & Services</TableHead>
+                                                <TableHead className="font-semibold">Incoming Orders</TableHead>
+                                                <TableHead className="font-semibold">Detailed Income</TableHead>
+                                                <TableHead className="font-semibold">Documents</TableHead>
                                                 <TableHead className="font-semibold">Status</TableHead>
-                                                <TableHead className="font-semibold">Verification</TableHead>
-                                                <TableHead className="font-semibold">Joined</TableHead>
                                                 <TableHead className="font-semibold text-right">Actions</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {currentProviders.map((provider) => (
-                                                <TableRow key={provider.id} className="hover:bg-gray-50/50">
-                                                    <TableCell>
-                                                        <div className="space-y-1">
-                                                            <div className="font-medium text-gray-900">{provider.name}</div>
-                                                            <div className="text-sm text-muted-foreground">{provider.description}</div>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="space-y-1">
-                                                            <div className="text-sm font-medium">{provider.phone}</div>
-                                                            {provider.email && (
-                                                                <div className="text-sm text-muted-foreground">{provider.email}</div>
-                                                            )}
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="text-sm">{provider.state}</div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Badge variant="outline" className={`${getStatusColor(provider.isActive, provider.isVerified)}`}>
-                                                            {getStatusIcon(provider.isActive, provider.isVerified)}
-                                                            <span className="ml-1">{getStatusText(provider.isActive, provider.isVerified)}</span>
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="flex items-center space-x-2">
-                                                            {provider.isVerified ? (
-                                                                <ShieldCheck className="h-4 w-4 text-green-600" />
-                                                            ) : (
-                                                                <ShieldX className="h-4 w-4 text-yellow-600" />
-                                                            )}
-                                                            <span className="text-sm">
-                                                                {provider.isVerified ? 'Verified' : 'Unverified'}
-                                                            </span>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="text-sm">{formatDate(provider.createdAt)}</div>
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <div className="flex items-center justify-end space-x-2">
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => {
-                                                                    setSelectedProvider(provider)
-                                                                    setIsProviderDialogOpen(true)
-                                                                }}
-                                                                className="h-8 w-8 p-0 hover:bg-blue-100"
-                                                            >
-                                                                <Eye className="h-4 w-4" />
-                                                            </Button>
+                                            {currentProviders.map((provider) => {
+                                                const income = calculateProviderIncome(provider.id)
+                                                return (
+                                                    <TableRow key={provider.id} className="hover:bg-gray-50/50">
+                                                        <TableCell>
+                                                            <div className="flex items-center space-x-3">
+                                                                <Avatar className="h-10 w-10">
+                                                                    <AvatarImage src={provider.image} alt={provider.name} />
+                                                                    <AvatarFallback>{provider.name.charAt(0)}</AvatarFallback>
+                                                                </Avatar>
+                                                                <div className="space-y-1">
+                                                                    <div className="font-medium text-gray-900">{provider.name}</div>
+                                                                    <div className="text-sm text-muted-foreground">{provider.description}</div>
+                                                                </div>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="space-y-1">
+                                                                <div className="text-sm font-medium">{provider.phone}</div>
+                                                                <div className="text-sm text-muted-foreground">{provider.state}</div>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="space-y-1">
+                                                                <div className="text-sm">Categories: N/A</div>
+                                                                <div className="text-sm text-muted-foreground">Services: N/A</div>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="text-sm font-medium">0 orders</div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="space-y-1">
+                                                                <div className="text-sm font-medium text-green-600">Total: {renderCurrency(income.total)}</div>
+                                                                <div className="text-sm text-muted-foreground">After discounts: {renderCurrency(income.afterDiscounts)}</div>
+                                                                <div className="text-xs text-muted-foreground">Offer discounts: {renderCurrency(income.offerDiscounts)}</div>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
@@ -665,124 +565,218 @@ export default function ProvidersManagementPage() {
                                                             >
                                                                 <FileText className="h-4 w-4" />
                                                             </Button>
-                                                            {!provider.isActive ? (
-                                                                <AlertDialog>
-                                                                    <AlertDialogTrigger asChild>
-                                                                        <Button
-                                                                            variant="ghost"
-                                                                            size="sm"
-                                                                            className="h-8 w-8 p-0 hover:bg-green-100"
-                                                                        >
-                                                                            <UserCheck className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </AlertDialogTrigger>
-                                                                    <AlertDialogContent>
-                                                                        <AlertDialogHeader>
-                                                                            <AlertDialogTitle>Activate Provider</AlertDialogTitle>
-                                                                            <AlertDialogDescription>
-                                                                                Are you sure you want to activate {provider.name}? This will allow them to access the platform and receive orders.
-                                                                            </AlertDialogDescription>
-                                                                        </AlertDialogHeader>
-                                                                        <AlertDialogFooter>
-                                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                            <AlertDialogAction
-                                                                                onClick={() => handleActivateProvider(provider.id)}
-                                                                                className="bg-green-600 hover:bg-green-700"
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge variant="outline" className={`${getStatusColor(provider.isActive)}`}>
+                                                                {getStatusIcon(provider.isActive)}
+                                                                <span className="ml-1">{getStatusText(provider.isActive)}</span>
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <div className="flex items-center justify-end space-x-2">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        setSelectedProvider(provider)
+                                                                        setIsProviderDialogOpen(true)
+                                                                    }}
+                                                                    className="h-8 w-8 p-0 hover:bg-blue-100"
+                                                                >
+                                                                    <Eye className="h-4 w-4" />
+                                                                </Button>
+                                                                {!provider.isActive ? (
+                                                                    <AlertDialog>
+                                                                        <AlertDialogTrigger asChild>
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                className="h-8 w-8 p-0 hover:bg-green-100"
                                                                             >
-                                                                                Activate
-                                                                            </AlertDialogAction>
-                                                                        </AlertDialogFooter>
-                                                                    </AlertDialogContent>
-                                                                </AlertDialog>
-                                                            ) : (
-                                                                <AlertDialog>
-                                                                    <AlertDialogTrigger asChild>
-                                                                        <Button
-                                                                            variant="ghost"
-                                                                            size="sm"
-                                                                            className="h-8 w-8 p-0 hover:bg-red-100"
-                                                                        >
-                                                                            <UserX className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </AlertDialogTrigger>
-                                                                    <AlertDialogContent>
-                                                                        <AlertDialogHeader>
-                                                                            <AlertDialogTitle>Deactivate Provider</AlertDialogTitle>
-                                                                            <AlertDialogDescription>
-                                                                                Are you sure you want to deactivate {provider.name}? This will prevent them from accessing the platform and receiving new orders.
-                                                                            </AlertDialogDescription>
-                                                                        </AlertDialogHeader>
-                                                                        <AlertDialogFooter>
-                                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                            <AlertDialogAction
-                                                                                onClick={() => handleDeactivateProvider(provider.id)}
-                                                                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                                                <UserCheck className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </AlertDialogTrigger>
+                                                                        <AlertDialogContent>
+                                                                            <AlertDialogHeader>
+                                                                                <AlertDialogTitle>Activate Provider</AlertDialogTitle>
+                                                                                <AlertDialogDescription>
+                                                                                    Are you sure you want to activate {provider.name}?
+                                                                                </AlertDialogDescription>
+                                                                            </AlertDialogHeader>
+                                                                            <AlertDialogFooter>
+                                                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                                <AlertDialogAction
+                                                                                    onClick={() => handleActivateProvider(provider.id)}
+                                                                                    className="bg-green-600 hover:bg-green-700"
+                                                                                >
+                                                                                    Activate
+                                                                                </AlertDialogAction>
+                                                                            </AlertDialogFooter>
+                                                                        </AlertDialogContent>
+                                                                    </AlertDialog>
+                                                                ) : (
+                                                                    <AlertDialog>
+                                                                        <AlertDialogTrigger asChild>
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                className="h-8 w-8 p-0 hover:bg-red-100"
                                                                             >
-                                                                                Deactivate
-                                                                            </AlertDialogAction>
-                                                                        </AlertDialogFooter>
-                                                                    </AlertDialogContent>
-                                                                </AlertDialog>
+                                                                                <UserX className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </AlertDialogTrigger>
+                                                                        <AlertDialogContent>
+                                                                            <AlertDialogHeader>
+                                                                                <AlertDialogTitle>Deactivate Provider</AlertDialogTitle>
+                                                                                <AlertDialogDescription>
+                                                                                    Are you sure you want to deactivate {provider.name}?
+                                                                                </AlertDialogDescription>
+                                                                            </AlertDialogHeader>
+                                                                            <AlertDialogFooter>
+                                                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                                <AlertDialogAction
+                                                                                    onClick={() => handleDeactivateProvider(provider.id)}
+                                                                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                                                >
+                                                                                    Deactivate
+                                                                                </AlertDialogAction>
+                                                                            </AlertDialogFooter>
+                                                                        </AlertDialogContent>
+                                                                    </AlertDialog>
+                                                                )}
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                </Card>
+                            )}
+
+                            {currentProviders.length === 0 && !providersLoading && (
+                                <Card className="border-0 shadow-lg">
+                                    <CardContent className="p-12 text-center">
+                                        <ShieldCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No verified providers found</h3>
+                                        <p className="text-muted-foreground">
+                                            {searchTerm ? `No providers match your search "${searchTerm}"` : "No verified providers available"}
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            )}
+                        </TabsContent>
+
+                        {/* Provider Join Requests Tab */}
+                        <TabsContent value="join-requests" className="space-y-6">
+                            {joinRequestsLoading ? (
+                                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                    {Array.from({ length: 6 }).map((_, i) => (
+                                        <ProviderCardSkeleton key={i} />
+                                    ))}
+                                </div>
+                            ) : (
+                                <Card className="border-0 shadow-lg">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="bg-gray-50">
+                                                <TableHead className="font-semibold">Provider</TableHead>
+                                                <TableHead className="font-semibold">Contact Info</TableHead>
+                                                <TableHead className="font-semibold">Categories & Services</TableHead>
+                                                <TableHead className="font-semibold">Request Date</TableHead>
+                                                <TableHead className="font-semibold text-right">Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {joinRequests.map((request) => (
+                                                <TableRow key={request.id} className="hover:bg-gray-50/50">
+                                                    <TableCell>
+                                                        <div className="flex items-center space-x-3">
+                                                            <Avatar className="h-10 w-10">
+                                                                <AvatarImage src={request.provider?.image} alt={request.provider?.name} />
+                                                                <AvatarFallback>{request.provider?.name?.charAt(0)}</AvatarFallback>
+                                                            </Avatar>
+                                                            <div className="space-y-1">
+                                                                <div className="font-medium text-gray-900">{request.provider?.name}</div>
+                                                                <div className="text-sm text-muted-foreground">{request.provider?.description}</div>
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="space-y-1">
+                                                            <div className="text-sm font-medium">{request.provider?.phone}</div>
+                                                            {request.provider?.email && (
+                                                                <div className="text-sm text-muted-foreground">{request.provider.email}</div>
                                                             )}
-                                                            {!provider.isVerified ? (
-                                                                <AlertDialog>
-                                                                    <AlertDialogTrigger asChild>
-                                                                        <Button
-                                                                            variant="ghost"
-                                                                            size="sm"
-                                                                            className="h-8 w-8 p-0 hover:bg-green-100"
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="space-y-1">
+                                                            <div className="text-sm">Categories: N/A</div>
+                                                            <div className="text-sm text-muted-foreground">Services: N/A</div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="text-sm">{formatDate(request.requestDate)}</div>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <div className="flex items-center justify-end space-x-2">
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-8 w-8 p-0 hover:bg-green-100"
+                                                                    >
+                                                                        <CheckCircle className="h-4 w-4" />
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>Approve Join Request</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            Are you sure you want to approve {request.provider?.name}'s join request?
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogAction
+                                                                            onClick={() => handleApproveJoinRequest(request.id)}
+                                                                            className="bg-green-600 hover:bg-green-700"
                                                                         >
-                                                                            <ShieldCheck className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </AlertDialogTrigger>
-                                                                    <AlertDialogContent>
-                                                                        <AlertDialogHeader>
-                                                                            <AlertDialogTitle>Verify Provider</AlertDialogTitle>
-                                                                            <AlertDialogDescription>
-                                                                                Are you sure you want to verify {provider.name}? This will mark their documents as verified and increase their trust level.
-                                                                            </AlertDialogDescription>
-                                                                        </AlertDialogHeader>
-                                                                        <AlertDialogFooter>
-                                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                            <AlertDialogAction
-                                                                                onClick={() => handleVerifyProvider(provider.id)}
-                                                                                className="bg-green-600 hover:bg-green-700"
-                                                                            >
-                                                                                Verify
-                                                                            </AlertDialogAction>
-                                                                        </AlertDialogFooter>
-                                                                    </AlertDialogContent>
-                                                                </AlertDialog>
-                                                            ) : (
-                                                                <AlertDialog>
-                                                                    <AlertDialogTrigger asChild>
-                                                                        <Button
-                                                                            variant="ghost"
-                                                                            size="sm"
-                                                                            className="h-8 w-8 p-0 hover:bg-yellow-100"
+                                                                            Approve
+                                                                        </AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-8 w-8 p-0 hover:bg-red-100"
+                                                                    >
+                                                                        <XCircle className="h-4 w-4" />
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>Reject Join Request</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            Are you sure you want to reject {request.provider?.name}'s join request?
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogAction
+                                                                            onClick={() => handleRejectJoinRequest(request.id)}
+                                                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                                                         >
-                                                                            <ShieldX className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </AlertDialogTrigger>
-                                                                    <AlertDialogContent>
-                                                                        <AlertDialogHeader>
-                                                                            <AlertDialogTitle>Remove Verification</AlertDialogTitle>
-                                                                            <AlertDialogDescription>
-                                                                                Are you sure you want to remove verification from {provider.name}? This will mark their documents as unverified and may affect their trust level.
-                                                                            </AlertDialogDescription>
-                                                                        </AlertDialogHeader>
-                                                                        <AlertDialogFooter>
-                                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                            <AlertDialogAction
-                                                                                onClick={() => handleUnverifyProvider(provider.id)}
-                                                                                className="bg-yellow-600 hover:bg-yellow-700"
-                                                                            >
-                                                                                Remove Verification
-                                                                            </AlertDialogAction>
-                                                                        </AlertDialogFooter>
-                                                                    </AlertDialogContent>
-                                                                </AlertDialog>
-                                                            )}
+                                                                            Reject
+                                                                        </AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>
@@ -792,13 +786,13 @@ export default function ProvidersManagementPage() {
                                 </Card>
                             )}
 
-                            {currentProviders.length === 0 && !providersLoading && (
+                            {joinRequests.length === 0 && !joinRequestsLoading && (
                                 <Card className="border-0 shadow-lg">
                                     <CardContent className="p-12 text-center">
-                                        <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No providers found</h3>
+                                        <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No pending join requests</h3>
                                         <p className="text-muted-foreground">
-                                            {searchTerm ? `No providers match your search "${searchTerm}"` : `No providers in ${activeTab} status`}
+                                            All provider join requests have been processed
                                         </p>
                                     </CardContent>
                                 </Card>
@@ -824,9 +818,9 @@ export default function ProvidersManagementPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-sm font-medium">Status</Label>
-                                            <Badge variant="outline" className={`${getStatusColor(selectedProvider.isActive, selectedProvider.isVerified)}`}>
-                                                {getStatusIcon(selectedProvider.isActive, selectedProvider.isVerified)}
-                                                <span className="ml-1">{getStatusText(selectedProvider.isActive, selectedProvider.isVerified)}</span>
+                                            <Badge variant="outline" className={`${getStatusColor(selectedProvider.isActive)}`}>
+                                                {getStatusIcon(selectedProvider.isActive)}
+                                                <span className="ml-1">{getStatusText(selectedProvider.isActive)}</span>
                                             </Badge>
                                         </div>
                                     </div>
@@ -921,37 +915,6 @@ export default function ProvidersManagementPage() {
                                                 </div>
                                             </div>
                                         )}
-
-                                        {providerRatings && providerRatings.length > 0 && (
-                                            <div>
-                                                <Label className="text-sm font-medium">Customer Ratings</Label>
-                                                <div className="mt-1 space-y-2">
-                                                    <div className="flex items-center space-x-2 mb-2">
-                                                        <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                                                        <span className="font-semibold">{calculateAverageRating(providerRatings)}</span>
-                                                        <span className="text-sm text-muted-foreground">({providerRatings.length} reviews)</span>
-                                                    </div>
-                                                    {providerRatings.slice(0, 3).map((rating: any, index: number) => (
-                                                        <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                                                            <div className="flex items-center justify-between mb-1">
-                                                                <div className="flex items-center space-x-1">
-                                                                    {Array.from({ length: 5 }).map((_, i) => (
-                                                                        <Star
-                                                                            key={i}
-                                                                            className={`h-3 w-3 ${i < rating.rating ? 'text-yellow-500 fill-current' : 'text-gray-300'}`}
-                                                                        />
-                                                                    ))}
-                                                                </div>
-                                                                <span className="text-sm text-muted-foreground">{rating.user?.name}</span>
-                                                            </div>
-                                                            {rating.comment && (
-                                                                <div className="text-sm text-muted-foreground">{rating.comment}</div>
-                                                            )}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             )}
@@ -963,41 +926,73 @@ export default function ProvidersManagementPage() {
                         </DialogContent>
                     </Dialog>
 
-                    {/* Verification Dialog */}
-                    <Dialog open={isVerificationDialogOpen} onOpenChange={setIsVerificationDialogOpen}>
+                    {/* Approve Join Request Dialog */}
+                    <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
                         <DialogContent className="sm:max-w-[500px]">
                             <DialogHeader>
-                                <DialogTitle>Provider Verification</DialogTitle>
+                                <DialogTitle>Approve Join Request</DialogTitle>
                                 <DialogDescription>
-                                    Review and manage provider verification for {selectedProvider?.name}
+                                    Add any notes about approving this join request (optional)
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4">
                                 <div>
-                                    <Label htmlFor="verificationNotes" className="text-sm font-medium">Admin Notes (Optional)</Label>
+                                    <Label htmlFor="approveNotes" className="text-sm font-medium">Admin Notes (Optional)</Label>
                                     <Textarea
-                                        id="verificationNotes"
-                                        value={verificationNotes}
-                                        onChange={(e) => setVerificationNotes(e.target.value)}
-                                        placeholder="Enter verification notes..."
+                                        id="approveNotes"
+                                        value={approveNotes}
+                                        onChange={(e) => setApproveNotes(e.target.value)}
+                                        placeholder="Enter any notes about approving this request..."
                                         rows={3}
                                     />
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsVerificationDialogOpen(false)}>
+                                <Button variant="outline" onClick={() => setIsApproveDialogOpen(false)}>
                                     Cancel
                                 </Button>
                                 <Button
-                                    onClick={() => {
-                                        if (selectedProvider) {
-                                            handleVerifyProvider(selectedProvider.id)
-                                            setIsVerificationDialogOpen(false)
-                                            setVerificationNotes("")
-                                        }
-                                    }}
+                                    onClick={() => setIsApproveDialogOpen(false)}
+                                    className="bg-green-600 hover:bg-green-700"
                                 >
-                                    Approve Verification
+                                    Approve Request
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* Reject Join Request Dialog */}
+                    <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+                        <DialogContent className="sm:max-w-[500px]">
+                            <DialogHeader>
+                                <DialogTitle>Reject Join Request</DialogTitle>
+                                <DialogDescription>
+                                    Please provide a reason for rejecting this join request
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="rejectReason" className="text-sm font-medium">Rejection Reason (Required)</Label>
+                                    <Textarea
+                                        id="rejectReason"
+                                        value={rejectReason}
+                                        onChange={(e) => setRejectReason(e.target.value)}
+                                        placeholder="Enter reason for rejecting this request..."
+                                        rows={3}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button
+                                    onClick={() => setIsRejectDialogOpen(false)}
+                                    disabled={!rejectReason.trim()}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                    Reject Request
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
