@@ -20,8 +20,8 @@ import { useState } from "react"
 export default function UsersManagementPage() {
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState<string>("all")
-    const [startDate, setStartDate] = useState<string>("")
-    const [endDate, setEndDate] = useState<string>("")
+    const [startDate] = useState<string>("")
+    const [endDate] = useState<string>("")
 
     // Fetch data
     const { data: userStats, isLoading: statsLoading } = useUserStats()

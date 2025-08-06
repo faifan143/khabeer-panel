@@ -2,7 +2,7 @@
 export { AuthService } from './auth.service'
 
 // Admin service
-export { AdminService } from './admin.service'
+export { adminService as AdminService } from './admin.service'
 
 // User service
 export { UsersService } from './users.service'

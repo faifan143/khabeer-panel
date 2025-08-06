@@ -90,7 +90,7 @@ export function DashboardStats() {
                 <CardContent>
                     <div className="text-2xl font-bold text-gradient">{stats?.activeProjects}</div>
                     <p className="text-xs text-muted-foreground">
-                        <Badge variant="secondary" className="bg-blue-500/10 text-blue-600">Active</Badge> {Math.floor(stats?.activeProjects * 0.3)} completed this week
+                        <Badge variant="secondary" className="bg-blue-500/10 text-blue-600">Active</Badge> {Math.floor((stats?.activeProjects || 0) * 0.3)} completed this week
                     </p>
                 </CardContent>
             </Card>

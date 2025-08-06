@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -23,8 +23,6 @@ import {
     Filter,
     MapPin,
     Package,
-    RefreshCw,
-    Search,
     Truck,
     XCircle,
     Zap
@@ -59,7 +57,7 @@ const StatCard = ({
 }: {
     title: string
     value: string | number
-    icon: any
+    icon: React.ComponentType<{ className?: string }>
     color: string
     trend?: { value: number; isPositive: boolean }
     description?: string
@@ -127,6 +125,7 @@ const getStatusIcon = (status: string) => {
 export default function OrdersManagementPage() {
     const [activeTab, setActiveTab] = useState("all")
     const [searchTerm, setSearchTerm] = useState("")
+
     const [viewMode, setViewMode] = useState<"grid" | "list">("list")
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
     const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false)
@@ -144,7 +143,7 @@ export default function OrdersManagementPage() {
     const { data: ordersResponse, isLoading: ordersLoading, refetch: refetchOrders } = useAdminOrders(1, 1000) // Increased limit to get all orders
 
     // Also fetch dashboard stats to compare
-    const { data: dashboardStats } = useDashboardStats()
+
     const updateStatusMutation = useAdminUpdateOrderStatus()
     const cancelOrderMutation = useAdminCancelOrder()
     const completeOrderMutation = useAdminCompleteOrder()
@@ -197,7 +196,7 @@ export default function OrdersManagementPage() {
 
         if (dateFilter !== "all") {
             const today = new Date()
-            const orderDate = new Date()
+
 
             switch (dateFilter) {
                 case "today":
@@ -252,8 +251,9 @@ export default function OrdersManagementPage() {
             setIsStatusDialogOpen(false)
             setSelectedOrder(null)
             refetchOrders()
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to update order status")
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to update order status"
+            toast.error(errorMessage)
         }
     }
 
@@ -265,8 +265,9 @@ export default function OrdersManagementPage() {
             setSelectedOrder(null)
             setCancelReason("")
             refetchOrders()
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to cancel order")
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to cancel order"
+            toast.error(errorMessage)
         }
     }
 
@@ -275,8 +276,9 @@ export default function OrdersManagementPage() {
             await completeOrderMutation.mutateAsync(orderId)
             toast.success("Order marked as completed")
             refetchOrders()
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to complete order")
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to complete order"
+            toast.error(errorMessage)
         }
     }
 
@@ -288,8 +290,9 @@ export default function OrdersManagementPage() {
             setSelectedOrder(null)
             setAcceptNotes("")
             refetchOrders()
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to accept order")
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to accept order"
+            toast.error(errorMessage)
         }
     }
 
@@ -301,8 +304,9 @@ export default function OrdersManagementPage() {
             setSelectedOrder(null)
             setRejectReason("")
             refetchOrders()
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to reject order")
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to reject order"
+            toast.error(errorMessage)
         }
     }
 

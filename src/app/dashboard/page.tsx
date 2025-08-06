@@ -2,7 +2,7 @@
 
 import { AdminLayout } from "@/components/layout/admin-layout"
 import { ProtectedRoute } from "@/components/auth/protected-route"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Building2, Package, Calendar, DollarSign, TrendingUp, Sparkles, Star } from "lucide-react"
 import { useDashboardStats } from "@/lib/api/hooks/useAdmin"
 import { formatCurrency } from "@/lib/utils"
@@ -27,7 +27,7 @@ export default function DashboardPage() {
   }
 
   // Add safety checks for data
-  const overview = dashboardStats?.overview || {}
+  const overview = (dashboardStats?.overview || {}) as any
   const popularServices = dashboardStats?.popularServices || []
   const topProviders = dashboardStats?.topProviders || []
   const orderStats = dashboardStats?.orderStats
@@ -78,7 +78,7 @@ export default function DashboardPage() {
                   {dashboardLoading ? "..." : formatNumber(orderStats?.today || 0)}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Today's orders
+                  Today&apos;s orders
                 </p>
               </CardContent>
             </Card>

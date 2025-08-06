@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useLogin } from "@/lib/api/hooks/useAuth"
 import { useAuthStore } from "@/lib/stores/auth.store"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
-import toast from "react-hot-toast"
+
 
 const loginSchema = yup.object({
   email: yup.string().email("Please enter a valid email").required("Email is required"),
@@ -24,6 +24,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
   const { login, isAuthenticated, isLoading, isInitialized } = useAuthStore()
+  const loginMutation = useLogin()
 
   const {
     register,
@@ -33,7 +34,7 @@ export default function LoginPage() {
     resolver: yupResolver(loginSchema),
   })
 
-  const loginMutation = useLogin()
+
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function LoginPage() {
       const result = await loginMutation.mutateAsync(data)
       console.log('Login successful:', result)
       // The useLogin hook handles the login and navigation
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Login error:', err)
       // Error is already handled by the useLogin hook
     }

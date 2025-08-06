@@ -107,7 +107,8 @@ export function ProjectForm() {
             <FormField
               name="startDate"
               label="Start Date"
-              type="date"
+              type="text"
+              placeholder="YYYY-MM-DD"
               required
               form={{} as any}
             />
@@ -115,7 +116,8 @@ export function ProjectForm() {
             <FormField
               name="endDate"
               label="End Date"
-              type="date"
+              type="text"
+              placeholder="YYYY-MM-DD"
               required
               form={{} as any}
             />

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -15,22 +15,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useProviders, useProviderServices, useProviderOrders, useProviderRatings } from "@/lib/api/hooks/useProviders"
 import { useProviderStats, useAdminActivateProvider, useAdminDeactivateProvider, useAdminVerifyProvider, useAdminUnverifyProvider } from "@/lib/api/hooks/useAdmin"
-import { Provider, ProviderVerification, ProviderJoinRequest } from "@/lib/api/types"
+import { Provider } from "@/lib/api/types"
 import { formatCurrency } from "@/lib/utils"
 import { DocumentManagementDialog } from "@/components/documents/document-management-dialog"
 import {
-    AlertCircle,
     CheckCircle,
     Clock,
     DollarSign,
-    Edit,
     Eye,
     Filter,
     MapPin,
     Package,
     Phone,
-    RefreshCw,
-    Search,
     Shield,
     Star,
     Truck,
@@ -45,7 +41,7 @@ import {
     Calendar,
     FileText
 } from "lucide-react"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import toast from "react-hot-toast"
 
 // Loading Skeleton Components
@@ -75,7 +71,7 @@ const StatCard = ({
 }: {
     title: string
     value: string | number
-    icon: any
+    icon: React.ComponentType<{ className?: string }>
     color: string
     trend?: { value: number; isPositive: boolean }
     description?: string
@@ -127,6 +123,7 @@ const getStatusText = (isActive: boolean, isVerified: boolean) => {
 export default function ProvidersManagementPage() {
     const [activeTab, setActiveTab] = useState("all")
     const [searchTerm, setSearchTerm] = useState("")
+
     const [viewMode, setViewMode] = useState<"grid" | "list">("list")
     const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null)
     const [isProviderDialogOpen, setIsProviderDialogOpen] = useState(false)
@@ -137,8 +134,8 @@ export default function ProvidersManagementPage() {
     const [verificationFilter, setVerificationFilter] = useState<string>("all")
 
     // Hooks
-    const { data: providersResponse, isLoading: providersLoading, refetch: refetchProviders } = useProviders(1, 1000)
-    const { data: providerStats } = useProviderStats()
+    const { data: providersResponse, isLoading: providersLoading } = useProviders(1, 1000)
+
     const { data: providerServices } = useProviderServices(selectedProvider?.id || 0)
     const { data: providerOrders } = useProviderOrders(selectedProvider?.id || 0)
     const { data: providerRatings } = useProviderRatings(selectedProvider?.id || 0)
@@ -203,8 +200,9 @@ export default function ProvidersManagementPage() {
         try {
             await activateProviderMutation.mutateAsync(providerId)
             toast.success("Provider activated successfully")
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to activate provider")
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to activate provider"
+            toast.error(errorMessage)
         }
     }
 
@@ -212,8 +210,9 @@ export default function ProvidersManagementPage() {
         try {
             await deactivateProviderMutation.mutateAsync(providerId)
             toast.success("Provider deactivated successfully")
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to deactivate provider")
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to deactivate provider"
+            toast.error(errorMessage)
         }
     }
 
@@ -221,8 +220,9 @@ export default function ProvidersManagementPage() {
         try {
             await verifyProviderMutation.mutateAsync(providerId)
             toast.success("Provider verified successfully")
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to verify provider")
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to verify provider"
+            toast.error(errorMessage)
         }
     }
 
@@ -230,8 +230,9 @@ export default function ProvidersManagementPage() {
         try {
             await unverifyProviderMutation.mutateAsync(providerId)
             toast.success("Provider unverified successfully")
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to unverify provider")
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to unverify provider"
+            toast.error(errorMessage)
         }
     }
 
@@ -247,7 +248,7 @@ export default function ProvidersManagementPage() {
 
     const calculateAverageRating = (ratings: any[]) => {
         if (!ratings || ratings.length === 0) return 0
-        const sum = ratings.reduce((acc, rating) => acc + rating.rating, 0)
+        const sum = ratings.reduce((acc, rating) => acc + (rating.rating || 0), 0)
         return (sum / ratings.length).toFixed(1)
     }
 

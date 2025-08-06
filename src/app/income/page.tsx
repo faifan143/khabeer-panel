@@ -12,12 +12,9 @@ import { FinanceService, type FinancialSummary, type InvoiceData, type OfferData
 import { showError } from '@/lib/utils/toast'
 import {
   BarChart3,
-  Calendar,
   CreditCard,
   DollarSign,
-  Download,
   Eye,
-  Filter,
   Gift,
   Search,
   ShoppingCart,
@@ -29,19 +26,16 @@ import { useEffect, useState } from 'react'
 export default function IncomePage() {
   const [financialSummary, setFinancialSummary] = useState<FinancialSummary | null>(null)
   const [invoices, setInvoices] = useState<InvoiceData[]>([])
-  const [allOrders, setAllOrders] = useState<any[]>([])
+  const [allOrders, setAllOrders] = useState<unknown[]>([])
   const [offers, setOffers] = useState<OfferData[]>([])
   const [loading, setLoading] = useState(true)
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
+  const [startDate] = useState('')
+  const [endDate] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const [activeTab, setActiveTab] = useState('overview')
   const [sortField, setSortField] = useState('')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
-  useEffect(() => {
-    loadFinancialData()
-  }, [])
 
   const loadFinancialData = async () => {
     try {
@@ -64,41 +58,24 @@ export default function IncomePage() {
       setLoading(false)
     }
   }
+  useEffect(() => {
+    loadFinancialData()
+  }, [loadFinancialData])
 
-  const handleApplyFilters = async () => {
-    try {
-      setLoading(true)
-      const [summary, invoiceData, ordersData, offerData] = await Promise.all([
-        FinanceService.getFinancialSummary(startDate || undefined, endDate || undefined),
-        FinanceService.getRevenueReport(startDate || undefined, endDate || undefined),
-        FinanceService.getAllOrdersReport(startDate || undefined, endDate || undefined),
-        FinanceService.getOffers()
-      ])
 
-      setFinancialSummary(summary)
-      setInvoices(invoiceData)
-      setAllOrders(ordersData)
-      setOffers(offerData)
-    } catch (error) {
-      console.error('Error loading financial data:', error)
-      showError('Failed to load financial data')
-    } finally {
-      setLoading(false)
-    }
-  }
 
-  const filteredInvoices = invoices.filter(invoice =>
+  const filteredInvoices = (invoices as any[]).filter(invoice =>
     invoice.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     invoice.provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     invoice.service.title.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const filteredOffers = offers.filter(offer =>
+  const filteredOffers = (offers as any[]).filter(offer =>
     offer.provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     offer.service.title.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const filteredAllOrders = allOrders.filter(order =>
+  const filteredAllOrders = (allOrders as any[]).filter(order =>
     order.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.provider?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.service?.title?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -129,18 +106,18 @@ export default function IncomePage() {
     }
   }
 
-  const sortData = (data: any[], field: string, direction: 'asc' | 'desc') => {
+  const sortData = (data: unknown[], field: string, direction: 'asc' | 'desc') => {
     if (!field) return data
 
     return [...data].sort((a, b) => {
-      let aValue = a[field]
-      let bValue = b[field]
+      let aValue = (a as any)[field]
+      let bValue = (b as any)[field]
 
       // Handle nested objects
       if (field.includes('.')) {
         const [obj, prop] = field.split('.')
-        aValue = a[obj]?.[prop]
-        bValue = b[obj]?.[prop]
+        aValue = (a as any)[obj]?.[prop]
+        bValue = (b as any)[obj]?.[prop]
       }
 
       // Handle date fields
@@ -352,7 +329,7 @@ export default function IncomePage() {
                       </TableHeader>
                       <TableBody>
                         {/* Invoices */}
-                        {sortData(filteredInvoices, sortField, sortDirection).map((invoice) => (
+                        {sortData(filteredInvoices, sortField, sortDirection).map((invoice: any) => (
                           <TableRow key={`invoice-${invoice.invoiceId}`} className="hover:bg-green-50">
                             <TableCell>
                               <Badge variant="default" className="bg-green-600 text-xs">Invoice</Badge>
@@ -383,7 +360,7 @@ export default function IncomePage() {
                         ))}
 
                         {/* Orders */}
-                        {sortData(filteredAllOrders, sortField, sortDirection).map((order) => (
+                        {sortData(filteredAllOrders, sortField, sortDirection).map((order: any) => (
                           <TableRow key={`order-${order.orderId}`} className="hover:bg-blue-50">
                             <TableCell>
                               <Badge variant="outline" className="border-blue-600 text-blue-600 text-xs">Order</Badge>
@@ -421,7 +398,7 @@ export default function IncomePage() {
                         ))}
 
                         {/* Offers */}
-                        {sortData(filteredOffers, sortField, sortDirection).map((offer) => (
+                        {sortData(filteredOffers, sortField, sortDirection).map((offer: any) => (
                           <TableRow key={`offer-${offer.id}`} className="hover:bg-purple-50">
                             <TableCell>
                               <Badge variant="secondary" className="bg-purple-600 text-xs">Offer</Badge>
@@ -560,7 +537,7 @@ export default function IncomePage() {
                             </TableCell>
                           </TableRow>
                         ) : (
-                          sortData(filteredInvoices, sortField, sortDirection).map((invoice) => (
+                          sortData(filteredInvoices, sortField, sortDirection).map((invoice: any) => (
                             <TableRow key={invoice.invoiceId} className="hover:bg-green-50">
                               <TableCell className="font-medium text-xs">#{invoice.invoiceId}</TableCell>
                               <TableCell>
@@ -688,7 +665,7 @@ export default function IncomePage() {
                             </TableCell>
                           </TableRow>
                         ) : (
-                          sortData(filteredAllOrders, sortField, sortDirection).map((order) => (
+                          sortData(filteredAllOrders, sortField, sortDirection).map((order: any) => (
                             <TableRow key={order.orderId} className="hover:bg-blue-50">
                               <TableCell className="font-medium text-xs">#{order.orderId}</TableCell>
                               <TableCell>
@@ -822,7 +799,7 @@ export default function IncomePage() {
                             </TableCell>
                           </TableRow>
                         ) : (
-                          sortData(filteredOffers, sortField, sortDirection).map((offer) => (
+                          sortData(filteredOffers, sortField, sortDirection).map((offer: any) => (
                             <TableRow key={offer.id} className="hover:bg-purple-50">
                               <TableCell>
                                 <div className="flex items-center gap-1">

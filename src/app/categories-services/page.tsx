@@ -26,8 +26,6 @@ import {
     List,
     Package,
     Plus,
-    RefreshCw,
-    Search,
     Trash2,
     TrendingUp,
     Upload,
@@ -80,7 +78,7 @@ const StatCard = ({
 }: {
     title: string
     value: string | number
-    icon: any
+    icon: React.ComponentType<{ className?: string }>
     color: string
     trend?: { value: number; isPositive: boolean }
     description?: string
@@ -137,7 +135,9 @@ export default function CategoriesServicesPage() {
     const deleteServiceMutation = useDeleteService()
 
     // Extract data from responses
-    const services = (Array.isArray(servicesResponse) ? servicesResponse : servicesResponse?.data) as Service[] || []
+    const services = useMemo(() => {
+        return (Array.isArray(servicesResponse) ? servicesResponse : servicesResponse?.data) as Service[] || []
+    }, [servicesResponse])
 
     // Computed statistics
     const categoryStats = useMemo(() => ({
@@ -251,8 +251,9 @@ export default function CategoriesServicesPage() {
             setIsCategoryDialogOpen(false)
             resetCategoryForm()
             refetchCategories()
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to save category")
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to save category"
+            toast.error(errorMessage)
         }
     }
 
@@ -276,9 +277,10 @@ export default function CategoriesServicesPage() {
             setIsServiceDialogOpen(false)
             resetServiceForm()
             refetchServices()
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to save service")
-        }
+                 } catch (error: unknown) {
+             const errorMessage = error instanceof Error ? error.message : "Failed to save service"
+             toast.error(errorMessage)
+         }
     }
 
     const handleCategoryEdit = (category: Category) => {
@@ -311,9 +313,10 @@ export default function CategoriesServicesPage() {
             toast.success("Category and all related data deleted successfully!")
             refetchCategories()
             refetchServices() // Also refetch services since some might be deleted
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to delete category")
-        }
+                 } catch (error: unknown) {
+             const errorMessage = error instanceof Error ? error.message : "Failed to delete category"
+             toast.error(errorMessage)
+         }
     }
 
     const handleServiceDelete = async (id: number) => {
@@ -321,9 +324,10 @@ export default function CategoriesServicesPage() {
             await deleteServiceMutation.mutateAsync(id)
             toast.success("Service and all related data deleted successfully!")
             refetchServices()
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to delete service")
-        }
+                 } catch (error: unknown) {
+             const errorMessage = error instanceof Error ? error.message : "Failed to delete service"
+             toast.error(errorMessage)
+         }
     }
 
     const handleImageUpload = (file: File, type: 'category' | 'service') => {
@@ -748,7 +752,7 @@ export default function CategoriesServicesPage() {
                                                                     <AlertDialogHeader>
                                                                         <AlertDialogTitle>Delete Category</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            Are you sure you want to delete "{category.titleEn}"? This action cannot be undone and will permanently delete:
+                                                                                                                                                         Are you sure you want to delete &quot;{category.titleEn}&quot;? This action cannot be undone and will permanently delete:
                                                                             <br />• All services in this category
                                                                             <br />• All invoices and orders related to those services
                                                                             <br />• All provider services and offers
@@ -840,7 +844,7 @@ export default function CategoriesServicesPage() {
                                                                         <AlertDialogHeader>
                                                                             <AlertDialogTitle>Delete Category</AlertDialogTitle>
                                                                             <AlertDialogDescription>
-                                                                                Are you sure you want to delete "{category.titleEn}"? This action cannot be undone and will permanently delete:
+                                                                                Are you sure you want to delete &quot;{category.titleEn}&quot;? This action cannot be undone and will permanently delete:
                                                                                 <br />• All services in this category
                                                                                 <br />• All invoices and orders related to those services
                                                                                 <br />• All provider services and offers
@@ -959,7 +963,7 @@ export default function CategoriesServicesPage() {
                                                                 <AlertDialogHeader>
                                                                     <AlertDialogTitle>Delete Service</AlertDialogTitle>
                                                                     <AlertDialogDescription>
-                                                                        Are you sure you want to delete "{service.title}"? This action cannot be undone and will permanently delete:
+                                                                        Are you sure you want to delete &quot;{service.title}&quot;? This action cannot be undone and will permanently delete:
                                                                         <br />• All invoices and orders related to this service
                                                                         <br />• All provider services and offers
                                                                     </AlertDialogDescription>
@@ -1048,7 +1052,7 @@ export default function CategoriesServicesPage() {
                                                                     <AlertDialogHeader>
                                                                         <AlertDialogTitle>Delete Service</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            Are you sure you want to delete "{service.title}"? This action cannot be undone and will permanently delete:
+                                                                            Are you sure you want to delete &quot;{service.title}&quot;? This action cannot be undone and will permanently delete:
                                                                             <br />• All invoices and orders related to this service
                                                                             <br />• All provider services and offers
                                                                         </AlertDialogDescription>

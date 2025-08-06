@@ -253,14 +253,14 @@ export function Form<T extends FieldValues>({
 }: FormProps<T>) {
   const form = useForm<T>({
     resolver: yupResolver(schema),
-    defaultValues: defaultValues as T,
+    defaultValues: defaultValues as any,
   })
 
   const { handleSubmit, formState: { errors } } = form
 
-  const onSubmitHandler = async (data: T) => {
+  const onSubmitHandler = async (data: any) => {
     try {
-      await onSubmit(data)
+      await onSubmit(data as T)
     } catch (error) {
       console.error('Form submission error:', error)
       showValidationError({ general: error })
