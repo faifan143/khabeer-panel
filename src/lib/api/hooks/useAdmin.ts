@@ -339,3 +339,125 @@ export const useAdminRatings = () => {
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }
+
+// Admin Settings hooks
+export const useSystemSettings = (category?: string) => {
+  return useQuery({
+    queryKey: ['admin', 'settings', category],
+    queryFn: () => adminService.getSystemSettings(category),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  })
+}
+
+export const useUpdateSystemSetting = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ key, value, description, category }: {
+      key: string
+      value: string
+      description?: string
+      category?: string
+    }) => adminService.updateSystemSetting(key, value, description, category),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'settings'] })
+    },
+  })
+}
+
+// Admin Sub-Admin hooks
+export const useSubAdmins = () => {
+  return useQuery({
+    queryKey: ['admin', 'subadmins'],
+    queryFn: adminService.getSubAdmins,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+export const useCreateSubAdmin = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ name, email, password, permissions }: {
+      name: string
+      email: string
+      password: string
+      permissions: string[]
+    }) => adminService.createSubAdmin(name, email, password, permissions),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'subadmins'] })
+    },
+  })
+}
+
+export const useDeleteSubAdmin = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.deleteSubAdmin(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'subadmins'] })
+    },
+  })
+}
+
+// Admin Ad Banner hooks
+export const useAdBanners = () => {
+  return useQuery({
+    queryKey: ['admin', 'ad-banners'],
+    queryFn: adminService.getAdBanners,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+export const useCreateAdBanner = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: {
+      title: string
+      description: string
+      imageUrl?: string
+      linkType: string
+      externalLink?: string
+      providerId?: number
+      isActive: boolean
+    }) => adminService.createAdBanner(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'ad-banners'] })
+    },
+  })
+}
+
+export const useUpdateAdBanner = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: {
+      id: number
+      data: {
+        title?: string
+        description?: string
+        imageUrl?: string
+        linkType?: string
+        externalLink?: string
+        providerId?: number
+        isActive?: boolean
+      }
+    }) => adminService.updateAdBanner(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'ad-banners'] })
+    },
+  })
+}
+
+export const useDeleteAdBanner = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: number) => adminService.deleteAdBanner(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'ad-banners'] })
+    },
+  })
+}

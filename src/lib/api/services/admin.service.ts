@@ -171,5 +171,82 @@ export const adminService = {
   getAllRatings: async () => {
     const response = await api.get('/admin/ratings')
     return response.data
+  },
+
+  // Settings Management Functions
+  getSystemSettings: async (category?: string) => {
+    const params = new URLSearchParams()
+    if (category) params.append('category', category)
+
+    const response = await api.get(`/admin/settings?${params.toString()}`)
+    return response.data
+  },
+
+  updateSystemSetting: async (key: string, value: string, description?: string, category?: string) => {
+    const response = await api.post('/admin/settings', {
+      key,
+      value,
+      description,
+      category
+    })
+    return response.data
+  },
+
+  // Sub-Admin Management Functions
+  getSubAdmins: async () => {
+    const response = await api.get('/admin/subadmins')
+    return response.data
+  },
+
+  createSubAdmin: async (name: string, email: string, password: string, permissions: string[]) => {
+    const response = await api.post('/admin/subadmins', {
+      name,
+      email,
+      password,
+      permissions
+    })
+    return response.data
+  },
+
+  deleteSubAdmin: async (id: number) => {
+    const response = await api.delete(`/admin/subadmins/${id}`)
+    return response.data
+  },
+
+  // Ad Banner Management Functions
+  getAdBanners: async () => {
+    const response = await api.get('/admin/ad-banners')
+    return response.data
+  },
+
+  createAdBanner: async (data: {
+    title: string
+    description: string
+    imageUrl?: string
+    linkType: string
+    externalLink?: string
+    providerId?: number
+    isActive: boolean
+  }) => {
+    const response = await api.post('/admin/ad-banners', data)
+    return response.data
+  },
+
+  updateAdBanner: async (id: number, data: {
+    title?: string
+    description?: string
+    imageUrl?: string
+    linkType?: string
+    externalLink?: string
+    providerId?: number
+    isActive?: boolean
+  }) => {
+    const response = await api.put(`/admin/ad-banners/${id}`, data)
+    return response.data
+  },
+
+  deleteAdBanner: async (id: number) => {
+    const response = await api.delete(`/admin/ad-banners/${id}`)
+    return response.data
   }
 }
