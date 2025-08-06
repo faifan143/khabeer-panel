@@ -13,9 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { useProviders, useProviderServices, useProviderOrders } from "@/lib/api/hooks/useProviders"
-import { useAdminActivateProvider, useAdminDeactivateProvider, useAdminVerifyProvider, useAdminUnverifyProvider, useAdminPendingJoinRequests, useAdminApproveJoinRequest, useAdminRejectJoinRequest } from "@/lib/api/hooks/useAdmin"
-import { Provider } from "@/lib/api/types"
+import { useAdminActivateProvider, useAdminDeactivateProvider, useAdminVerifyProvider, useAdminUnverifyProvider, useAdminPendingJoinRequests, useAdminApproveJoinRequest, useAdminRejectJoinRequest, useAdminProviders, useAdminUnverifiedProviders } from "@/lib/api/hooks/useAdmin"
+import { AdminProvider, AdminProviderJoinRequest } from "@/lib/types/admin"
 import { formatCurrency } from "@/lib/utils"
 import { DocumentManagementDialog } from "@/components/documents/document-management-dialog"
 import {
@@ -122,7 +121,7 @@ export default function ProviderVerificationPage() {
     const [activeTab, setActiveTab] = useState("verified")
     const [searchTerm, setSearchTerm] = useState("")
     const [viewMode, setViewMode] = useState<"grid" | "list">("list")
-    const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null)
+    const [selectedProvider, setSelectedProvider] = useState<AdminProvider | null>(null)
     const [isProviderDialogOpen, setIsProviderDialogOpen] = useState(false)
     const [isDocumentDialogOpen, setIsDocumentDialogOpen] = useState(false)
     const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
@@ -132,19 +131,14 @@ export default function ProviderVerificationPage() {
     const [statusFilter, setStatusFilter] = useState<string>("all")
 
     // Hooks for verified providers
-    const { data: providersResponse, isLoading: providersLoading } = useProviders(1, 1000)
-    const { data: providerServices } = useProviderServices(selectedProvider?.id || 0)
-    const { data: providerOrders } = useProviderOrders(selectedProvider?.id || 0)
+    const { data: verifiedProviders, isLoading: verifiedProvidersLoading } = useAdminProviders()
+    const { data: unverifiedProviders, isLoading: unverifiedProvidersLoading } = useAdminUnverifiedProviders()
 
     // Hooks for join requests
     const { data: joinRequestsResponse, isLoading: joinRequestsLoading } = useAdminPendingJoinRequests()
 
     // Extract data from responses
-    const providers = (Array.isArray(providersResponse) ? providersResponse : providersResponse?.data) as Provider[] || []
-    const joinRequests = (Array.isArray(joinRequestsResponse) ? joinRequestsResponse : joinRequestsResponse?.data) as any[] || []
-
-    // Filter verified providers only
-    const verifiedProviders = providers.filter(provider => provider.isVerified)
+    const joinRequests = (Array.isArray(joinRequestsResponse) ? joinRequestsResponse : joinRequestsResponse?.data) as AdminProviderJoinRequest[] || []
 
     // Admin provider management hooks
     const activateProviderMutation = useAdminActivateProvider()
@@ -156,9 +150,20 @@ export default function ProviderVerificationPage() {
 
     // Computed statistics for verified providers
     const providerStats = useMemo(() => {
+        if (!verifiedProviders) {
+            return {
+                total: 0,
+                active: 0,
+                inactive: 0,
+                totalIncome: 0,
+                pendingRequests: joinRequests?.length || 0
+            }
+        }
+
         const totalIncome = verifiedProviders.reduce((sum, provider) => {
-            // This would need to be calculated from actual order data
-            return sum + 0 // Placeholder
+            // Calculate from actual order data
+            const providerIncome = provider.orders?.reduce((orderSum, order) => orderSum + order.totalAmount, 0) || 0
+            return sum + providerIncome
         }, 0)
 
         return {
@@ -166,12 +171,12 @@ export default function ProviderVerificationPage() {
             active: verifiedProviders.filter(p => p.isActive).length,
             inactive: verifiedProviders.filter(p => !p.isActive).length,
             totalIncome: Math.round(totalIncome * 100) / 100,
-            pendingRequests: joinRequests.length
+            pendingRequests: joinRequests?.length || 0
         }
     }, [verifiedProviders, joinRequests])
 
     // Filter providers based on search and status
-    const getFilteredProviders = (providerList: Provider[]) => {
+    const getFilteredProviders = (providerList: AdminProvider[]) => {
         let filtered = providerList.filter(provider =>
             provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             provider.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -188,15 +193,27 @@ export default function ProviderVerificationPage() {
         return filtered
     }
 
-    const currentProviders = getFilteredProviders(verifiedProviders)
+    const currentProviders = getFilteredProviders(verifiedProviders || [])
 
-    // Calculate provider income (placeholder - would need actual order data)
+    // Calculate provider income from actual data
     const calculateProviderIncome = (providerId: number) => {
-        // This would need to be implemented with actual order data
+        const provider = verifiedProviders?.find(p => p.id === providerId)
+        if (!provider) {
+            return {
+                total: 0,
+                afterDiscounts: 0,
+                offerDiscounts: 0
+            }
+        }
+
+        const totalIncome = provider.orders?.reduce((sum, order) => sum + order.totalAmount, 0) || 0
+        const offerDiscounts = provider.offers?.reduce((sum, offer) => sum + (offer.originalPrice - offer.offerPrice), 0) || 0
+        const afterDiscounts = totalIncome - offerDiscounts
+
         return {
-            total: 0,
-            afterDiscounts: 0,
-            offerDiscounts: 0
+            total: totalIncome,
+            afterDiscounts: afterDiscounts,
+            offerDiscounts: offerDiscounts
         }
     }
 
@@ -365,7 +382,7 @@ export default function ProviderVerificationPage() {
 
                         {/* Verified Providers Tab */}
                         <TabsContent value="verified" className="space-y-6">
-                            {providersLoading ? (
+                            {verifiedProvidersLoading ? (
                                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                                     {Array.from({ length: 6 }).map((_, i) => (
                                         <ProviderCardSkeleton key={i} />
@@ -654,7 +671,7 @@ export default function ProviderVerificationPage() {
                                 </Card>
                             )}
 
-                            {currentProviders.length === 0 && !providersLoading && (
+                            {currentProviders.length === 0 && !verifiedProvidersLoading && (
                                 <Card className="border-0 shadow-lg">
                                     <CardContent className="p-12 text-center">
                                         <ShieldCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -877,37 +894,42 @@ export default function ProviderVerificationPage() {
                                             </div>
                                         </div>
 
-                                        {providerServices && providerServices.length > 0 && (
+                                        {selectedProvider?.providerServices && selectedProvider.providerServices.length > 0 && (
                                             <div>
                                                 <Label className="text-sm font-medium">Services Offered</Label>
                                                 <div className="mt-1 space-y-2">
-                                                    {providerServices.map((service: any, index: number) => (
+                                                    {selectedProvider.providerServices.map((service, index: number) => (
                                                         <div key={index} className="p-3 bg-gray-50 rounded-lg">
                                                             <div className="font-semibold">{service.service?.title}</div>
                                                             <div className="text-sm text-muted-foreground">{service.service?.description}</div>
                                                             <div className="text-sm font-medium text-green-600 mt-1">
                                                                 Price: {formatCurrency(service.price)}
                                                             </div>
+                                                            {service.service?.category && (
+                                                                <div className="text-xs text-muted-foreground mt-1">
+                                                                    Category: {service.service.category.titleEn}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     ))}
                                                 </div>
                                             </div>
                                         )}
 
-                                        {providerOrders && providerOrders.length > 0 && (
+                                        {selectedProvider?.orders && selectedProvider.orders.length > 0 && (
                                             <div>
                                                 <Label className="text-sm font-medium">Recent Orders</Label>
                                                 <div className="mt-1 space-y-2">
-                                                    {providerOrders.slice(0, 5).map((order: any, index: number) => (
+                                                    {selectedProvider.orders.slice(0, 5).map((order, index: number) => (
                                                         <div key={index} className="p-3 bg-gray-50 rounded-lg">
                                                             <div className="flex items-center justify-between">
                                                                 <div>
-                                                                    <div className="font-semibold">#{order.bookingId}</div>
-                                                                    <div className="text-sm text-muted-foreground">{order.service?.title}</div>
+                                                                    <div className="font-semibold">Order #{order.id}</div>
+                                                                    <div className="text-sm text-muted-foreground">Total: {formatCurrency(order.totalAmount)}</div>
                                                                 </div>
                                                                 <div className="text-right">
-                                                                    <div className="font-semibold text-green-600">{formatCurrency(order.totalAmount)}</div>
-                                                                    <div className="text-sm text-muted-foreground">{order.status}</div>
+                                                                    <div className="font-semibold text-green-600">{formatCurrency(order.providerAmount)}</div>
+                                                                    <div className="text-sm text-muted-foreground">Commission: {formatCurrency(order.commissionAmount)}</div>
                                                                 </div>
                                                             </div>
                                                         </div>

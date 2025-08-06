@@ -117,4 +117,88 @@ export interface UserReport {
   address?: string
   state?: string
   image?: string
+}
+
+// Enhanced Provider types for admin panel
+export interface AdminProvider {
+  id: number
+  name: string
+  email: string | null
+  phone: string
+  description: string
+  image: string
+  state: string
+  isActive: boolean
+  isVerified: boolean
+  officialDocuments: string | null
+  createdAt: string
+  updatedAt: string
+  providerServices: Array<{
+    id: number
+    price: number
+    isActive: boolean
+    service: {
+      id: number
+      title: string
+      description: string
+      category: {
+        id: number
+        titleEn: string
+        titleAr: string
+      } | null
+    }
+  }>
+  orders: Array<{
+    id: number
+    totalAmount: number
+    providerAmount: number
+    commissionAmount: number
+  }>
+  offers: Array<{
+    id: number
+    originalPrice: number
+    offerPrice: number
+  }>
+  _count: {
+    orders: number
+    providerServices: number
+    ratings: number
+  }
+}
+
+export interface AdminProviderJoinRequest {
+  id: number
+  providerId: number
+  requestDate: string
+  status: string
+  adminNotes: string | null
+  provider: {
+    id: number
+    name: string
+    email: string | null
+    phone: string
+    description: string
+    image: string
+    state: string
+    isActive: boolean
+    officialDocuments: string | null
+    providerServices: Array<{
+      id: number
+      price: number
+      isActive: boolean
+      service: {
+        id: number
+        title: string
+        description: string
+        category: {
+          id: number
+          titleEn: string
+          titleAr: string
+        } | null
+      }
+    }>
+    _count: {
+      providerServices: number
+    }
+  }
 } 
