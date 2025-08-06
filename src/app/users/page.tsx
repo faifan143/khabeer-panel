@@ -33,7 +33,9 @@ export default function UsersManagementPage() {
     const filteredUsers = userReport?.filter((user: UserReport) => {
         const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            user.phone.includes(searchQuery)
+            user.phone.includes(searchQuery) ||
+            (user.address && user.address.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (user.state && user.state.toLowerCase().includes(searchQuery.toLowerCase()))
 
         const matchesStatus = statusFilter === "all" ||
             (statusFilter === "active" && user.isActive) ||
@@ -147,7 +149,7 @@ export default function UsersManagementPage() {
                             <div>
                                 <CardTitle>Users ({filteredUsers.length})</CardTitle>
                                 <CardDescription>
-                                    Detailed view of all users with their activity and engagement metrics
+                                    Manage users with their contact information, orders, and payment history
                                 </CardDescription>
                             </div>
 
@@ -155,7 +157,7 @@ export default function UsersManagementPage() {
                                 <div className="relative">
                                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                     <Input
-                                        placeholder="Search by name, email, or phone..."
+                                        placeholder="Search by name, email, phone, address, or state..."
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="pl-10"
@@ -187,13 +189,12 @@ export default function UsersManagementPage() {
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead>User</TableHead>
-                                                <TableHead>Contact</TableHead>
-                                                <TableHead>Status</TableHead>
-                                                <TableHead>Joined</TableHead>
+                                                <TableHead>Name</TableHead>
+                                                <TableHead>Phone</TableHead>
+                                                <TableHead>Address</TableHead>
                                                 <TableHead>Orders</TableHead>
-                                                <TableHead>Spent</TableHead>
-                                                <TableHead>Ratings</TableHead>
+                                                <TableHead>State</TableHead>
+                                                <TableHead>Payments</TableHead>
                                                 <TableHead>Actions</TableHead>
                                             </TableRow>
                                         </TableHeader>
@@ -202,49 +203,34 @@ export default function UsersManagementPage() {
                                                 <TableRow key={user.userId}>
                                                     <TableCell>
                                                         <div className="flex items-center space-x-3">
-                                                            <Avatar>
-                                                                <AvatarImage src="" />
+                                                            <Avatar className="h-10 w-10">
+                                                                <AvatarImage src={user.image || ""} alt={user.name} />
                                                                 <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                                                             </Avatar>
-                                                            <div>
-                                                                <div className="font-medium">{user.name}</div>
-                                                                <div className="text-sm text-muted-foreground">{user.role}</div>
-                                                            </div>
+                                                            <div className="font-medium">{user.name}</div>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <div className="space-y-1">
-                                                            <div className="text-sm">{user.email}</div>
-                                                            <div className="text-sm text-muted-foreground">{user.phone}</div>
-                                                        </div>
+                                                        <div className="text-sm">{user.phone}</div>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <Badge variant={user.isActive ? "default" : "secondary"}>
-                                                            {user.isActive ? "Active" : "Inactive"}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="flex items-center space-x-1">
-                                                            <Calendar className="h-3 w-3 text-muted-foreground" />
-                                                            <span className="text-sm">{formatDate(user.createdAt)}</span>
+                                                        <div className="text-sm text-muted-foreground max-w-32 truncate">
+                                                            {user.address || "N/A"}
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center space-x-1">
                                                             <Package className="h-3 w-3 text-muted-foreground" />
-                                                            <span className="text-sm">{user.completedOrders}</span>
+                                                            <span className="text-sm font-medium">{user.completedOrders}</span>
                                                         </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="text-sm">{user.state || "N/A"}</div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center space-x-1">
                                                             <DollarSign className="h-3 w-3 text-muted-foreground" />
-                                                            <span className="text-sm">{formatCurrency(user.totalSpent)}</span>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="flex items-center space-x-1">
-                                                            <Star className="h-3 w-3 text-muted-foreground" />
-                                                            <span className="text-sm">{user.ratingsGiven}</span>
+                                                            <span className="text-sm font-medium">{formatCurrency(user.totalSpent)}</span>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
@@ -267,8 +253,8 @@ export default function UsersManagementPage() {
                                                                     </DialogHeader>
                                                                     <div className="space-y-4">
                                                                         <div className="flex items-center space-x-3">
-                                                                            <Avatar>
-                                                                                <AvatarImage src="" />
+                                                                            <Avatar className="h-12 w-12">
+                                                                                <AvatarImage src={user.image || ""} alt={user.name} />
                                                                                 <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                                                                             </Avatar>
                                                                             <div>
@@ -286,14 +272,12 @@ export default function UsersManagementPage() {
                                                                                 <div className="text-muted-foreground">{user.phone}</div>
                                                                             </div>
                                                                             <div>
-                                                                                <div className="font-medium">Joined</div>
-                                                                                <div className="text-muted-foreground">{formatDate(user.createdAt)}</div>
+                                                                                <div className="font-medium">Address</div>
+                                                                                <div className="text-muted-foreground">{user.address || "N/A"}</div>
                                                                             </div>
                                                                             <div>
-                                                                                <div className="font-medium">Status</div>
-                                                                                <Badge variant={user.isActive ? "default" : "secondary"}>
-                                                                                    {user.isActive ? "Active" : "Inactive"}
-                                                                                </Badge>
+                                                                                <div className="font-medium">State</div>
+                                                                                <div className="text-muted-foreground">{user.state || "N/A"}</div>
                                                                             </div>
                                                                             <div>
                                                                                 <div className="font-medium">Orders</div>
@@ -302,6 +286,16 @@ export default function UsersManagementPage() {
                                                                             <div>
                                                                                 <div className="font-medium">Total Spent</div>
                                                                                 <div className="text-muted-foreground">{formatCurrency(user.totalSpent)}</div>
+                                                                            </div>
+                                                                            <div>
+                                                                                <div className="font-medium">Joined</div>
+                                                                                <div className="text-muted-foreground">{formatDate(user.createdAt)}</div>
+                                                                            </div>
+                                                                            <div>
+                                                                                <div className="font-medium">Status</div>
+                                                                                <Badge variant={user.isActive ? "default" : "secondary"}>
+                                                                                    {user.isActive ? "Active" : "Inactive"}
+                                                                                </Badge>
                                                                             </div>
                                                                         </div>
                                                                     </div>

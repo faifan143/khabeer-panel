@@ -114,4 +114,7 @@ export interface UserReport {
   completedOrders: number
   totalSpent: number
   ratingsGiven: number
+  address?: string
+  state?: string
+  image?: string
 } 
