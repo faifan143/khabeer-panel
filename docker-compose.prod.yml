@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   khabeer-panel:
@@ -8,8 +8,13 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - NODE_ENV=production
-      - PORT=3001
+      # Node.js Configuration
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-3001}
+
+      # API Configuration
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://31.97.71.187:3000/api}
+      NEXT_PUBLIC_API_URL_IMAGE: ${NEXT_PUBLIC_API_URL_IMAGE:-http://31.97.71.187:3000}
     restart: unless-stopped
     container_name: khabeer-panel-prod
     networks:

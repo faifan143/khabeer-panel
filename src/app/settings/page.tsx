@@ -2,42 +2,34 @@
 
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { AdminLayout } from "@/components/layout/admin-layout"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Checkbox } from "@/components/ui/checkbox"
-import toast from "react-hot-toast"
+import { useAdBanners, useCreateAdBanner, useCreateSubAdmin, useDeleteSubAdmin, useSubAdmins, useSystemSettings, useUpdateAdBanner, useUpdateSystemSetting, useUploadBannerImage, useUploadLegalDocuments } from "@/lib/api/hooks/useAdmin"
+import { getImageUrl } from "@/lib/utils/image"
 import {
-    Settings,
-    FileText,
-    Shield,
-    Share2,
-    HeadphonesIcon,
-    Users,
-    Megaphone,
-    Plus,
-    Edit,
-    Trash2,
-    Save,
-    Upload,
-    Link,
-    ExternalLink,
-    UserPlus,
     Eye,
-    EyeOff,
+    FileText,
+    HeadphonesIcon,
+    Megaphone,
+    Save,
+    Share2,
+    Shield,
+    Trash2,
+    Upload,
+    UserPlus,
+    Users,
     X
 } from "lucide-react"
-import { useState, useMemo, useRef, useEffect } from "react"
-import { useSystemSettings, useUpdateSystemSetting, useUploadLegalDocuments, useUploadBannerImage, useSubAdmins, useCreateSubAdmin, useDeleteSubAdmin, useAdBanners, useCreateAdBanner, useUpdateAdBanner, useDeleteAdBanner } from "@/lib/api/hooks/useAdmin"
-import { getImageUrl } from "@/lib/utils/image"
+import { useEffect, useRef, useState } from "react"
+import toast from "react-hot-toast"
 
 const availablePermissions = [
     { id: "dashboard", label: "Dashboard Access", description: "View dashboard statistics" },

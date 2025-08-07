@@ -208,6 +208,18 @@ export default function NotificationsPage() {
         }
     }
 
+    const getImageUrl = (imagePath: string) => {
+        // Use the correct environment variable name
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL_IMAGE;
+
+        if (!baseUrl) {
+            console.warn('Image base URL not configured in environment variables');
+            return imagePath; // Return the path as-is if no base URL is configured
+        }
+
+        return baseUrl + imagePath;
+    }
+
     return (
         <ProtectedRoute>
             <AdminLayout>
@@ -215,7 +227,7 @@ export default function NotificationsPage() {
 
 
                     {/* Statistics Cards */}
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Total Notifications</CardTitle>
@@ -249,21 +261,6 @@ export default function NotificationsPage() {
 
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Recipients</CardTitle>
-                                <Users className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">
-                                    {notifications.reduce((sum, n) => sum + n.recipientsCount, 0).toLocaleString()}
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                    Total users reached
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Failed Notifications</CardTitle>
                                 <Calendar className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
@@ -278,61 +275,6 @@ export default function NotificationsPage() {
                         </Card>
                     </div>
 
-                    {/* FCM Topics Monitoring */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Bell className="h-5 w-5" />
-                                FCM Topics Status
-                            </CardTitle>
-                            <p className="text-sm text-muted-foreground">
-                                Monitor your FCM topics and recent message activity
-                            </p>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <h4 className="font-medium">channel_users</h4>
-                                        <Badge variant="outline">Customers</Badge>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">
-                                        Topic for customer notifications
-                                    </p>
-                                    <div className="text-xs text-muted-foreground">
-                                        Last message: {notifications.filter(n =>
-                                            n.targetAudience.includes('customers') && n.status === 'sent'
-                                        ).length > 0 ?
-                                            formatDate(notifications.filter(n =>
-                                                n.targetAudience.includes('customers') && n.status === 'sent'
-                                            ).sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())[0].sentAt) :
-                                            'Never'
-                                        }
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <h4 className="font-medium">channel_providers</h4>
-                                        <Badge variant="outline">Providers</Badge>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">
-                                        Topic for provider notifications
-                                    </p>
-                                    <div className="text-xs text-muted-foreground">
-                                        Last message: {notifications.filter(n =>
-                                            n.targetAudience.includes('providers') && n.status === 'sent'
-                                        ).length > 0 ?
-                                            formatDate(notifications.filter(n =>
-                                                n.targetAudience.includes('providers') && n.status === 'sent'
-                                            ).sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())[0].sentAt) :
-                                            'Never'
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
 
                     {/* Notifications Table */}
                     <Card>
@@ -368,26 +310,7 @@ export default function NotificationsPage() {
                                         <SelectItem value="providers">Providers</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <Button
-                                    variant="outline"
-                                    onClick={async () => {
-                                        try {
-                                            const result = await api.post('/notifications/topics/test');
-                                            toast.success('Test messages sent to FCM topics!');
-                                            console.log('FCM Test Result:', result.data);
-                                        } catch (error: any) {
-                                            if (error.response?.status === 401) {
-                                                toast.error('Authentication failed. Please log in again.');
-                                            } else {
-                                                toast.error(`Failed to send test messages: ${error.response?.data?.message || 'Unknown error'}`);
-                                            }
-                                            console.error('FCM Test Error:', error);
-                                        }
-                                    }}
-                                    className="mr-2"
-                                >
-                                    Test FCM
-                                </Button>
+
                                 <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                                     <DialogTrigger asChild>
                                         <Button className="flex items-center gap-2">
@@ -577,7 +500,7 @@ export default function NotificationsPage() {
                                                     <TableCell>
                                                         {notification.imageUrl ? (
                                                             <Avatar className="h-12 w-12">
-                                                                <AvatarImage src={"http://localhost:3001" + notification.imageUrl} alt={notification.title} />
+                                                                <AvatarImage src={getImageUrl(notification.imageUrl)} alt={notification.title} />
                                                                 <AvatarFallback>
                                                                     <ImageIcon className="h-4 w-4" />
                                                                 </AvatarFallback>
