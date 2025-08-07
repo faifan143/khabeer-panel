@@ -19,9 +19,9 @@ export const useUser = (id: number) => {
 
 export const useCreateUser = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: (userData: CreateUserDto) => UsersService.createUser(userData),
+    mutationFn: (userData: CreateUserDto & { image?: File }) => UsersService.createUser(userData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
     },
@@ -30,9 +30,9 @@ export const useCreateUser = () => {
 
 export const useUpdateUser = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: ({ id, userData }: { id: number; userData: UpdateUserDto }) => 
+    mutationFn: ({ id, userData }: { id: number; userData: UpdateUserDto & { image?: File } }) =>
       UsersService.updateUser(id, userData),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
@@ -43,7 +43,7 @@ export const useUpdateUser = () => {
 
 export const useDeleteUser = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (id: number) => UsersService.deleteUser(id),
     onSuccess: () => {

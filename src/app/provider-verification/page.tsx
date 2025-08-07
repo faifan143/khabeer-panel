@@ -752,7 +752,7 @@ export default function ProviderVerificationPage() {
                                                                     <AlertDialogHeader>
                                                                         <AlertDialogTitle>Approve Join Request</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            Are you sure you want to approve {request.provider?.name}'s join request?
+                                                                            Are you sure you want to approve {request.provider?.name} join request?
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
@@ -780,7 +780,7 @@ export default function ProviderVerificationPage() {
                                                                     <AlertDialogHeader>
                                                                         <AlertDialogTitle>Reject Join Request</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            Are you sure you want to reject {request.provider?.name}'s join request?
+                                                                            Are you sure you want to reject {request.provider?.name} join request?
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
@@ -1022,7 +1022,11 @@ export default function ProviderVerificationPage() {
 
                     {/* Document Management Dialog */}
                     <DocumentManagementDialog
-                        provider={selectedProvider}
+                        provider={selectedProvider ? {
+                            ...selectedProvider,
+                            email: selectedProvider.email || undefined,
+                            officialDocuments: selectedProvider.officialDocuments || undefined
+                        } : null}
                         isOpen={isDocumentDialogOpen}
                         onClose={() => setIsDocumentDialogOpen(false)}
                     />

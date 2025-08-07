@@ -19,9 +19,9 @@ export const useProvider = (id: number) => {
 
 export const useCreateProvider = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: (providerData: CreateProviderDto) => ProvidersService.createProvider(providerData),
+    mutationFn: (providerData: CreateProviderDto & { image?: File }) => ProvidersService.createProvider(providerData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['providers'] })
     },
@@ -30,9 +30,9 @@ export const useCreateProvider = () => {
 
 export const useUpdateProvider = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
-    mutationFn: ({ id, providerData }: { id: number; providerData: UpdateProviderDto }) => 
+    mutationFn: ({ id, providerData }: { id: number; providerData: UpdateProviderDto & { image?: File } }) =>
       ProvidersService.updateProvider(id, providerData),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['providers'] })
@@ -43,7 +43,7 @@ export const useUpdateProvider = () => {
 
 export const useDeleteProvider = () => {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (id: number) => ProvidersService.deleteProvider(id),
     onSuccess: () => {
