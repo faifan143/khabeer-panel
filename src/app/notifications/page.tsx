@@ -28,7 +28,8 @@ import {
     X
 } from "lucide-react"
 import { useState, useMemo, useRef } from "react"
-import { useNotifications, useCreateNotification, useSendNotification, useDeleteNotification } from "@/lib/api/hooks/useAdmin"
+import { useNotifications, useCreateNotification, useDeleteNotification } from "@/lib/api/hooks/useAdmin"
+import { api } from "@/lib/api/axios"
 
 
 
@@ -36,7 +37,6 @@ export default function NotificationsPage() {
     // API Hooks
     const { data: notifications = [], isLoading } = useNotifications()
     const createNotificationMutation = useCreateNotification()
-    const sendNotificationMutation = useSendNotification()
     const deleteNotificationMutation = useDeleteNotification()
 
     const [searchQuery, setSearchQuery] = useState("")
@@ -49,7 +49,6 @@ export default function NotificationsPage() {
     // Form state for new notification
     const [newNotification, setNewNotification] = useState({
         title: "",
-        message: "",
         image: null as File | null,
         imagePreview: "",
         targetAudience: [] as string[],
@@ -122,8 +121,7 @@ export default function NotificationsPage() {
     const filteredNotifications = useMemo(() => {
         return notifications.filter(notification => {
             const matchesSearch =
-                notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                notification.message.toLowerCase().includes(searchQuery.toLowerCase())
+                notification.title.toLowerCase().includes(searchQuery.toLowerCase())
 
             const matchesStatus = statusFilter === "all" || notification.status === statusFilter
 
@@ -150,8 +148,8 @@ export default function NotificationsPage() {
                 return "bg-green-100 text-green-800"
             case "draft":
                 return "bg-yellow-100 text-yellow-800"
-            case "scheduled":
-                return "bg-blue-100 text-blue-800"
+            case "failed":
+                return "bg-red-100 text-red-800"
             default:
                 return "bg-gray-100 text-gray-800"
         }
@@ -166,8 +164,8 @@ export default function NotificationsPage() {
     }
 
     const handleCreateNotification = async () => {
-        if (!newNotification.title || !newNotification.message) {
-            toast.error("Please fill in all required fields")
+        if (!newNotification.title) {
+            toast.error("Please fill in the notification title")
             return
         }
 
@@ -179,17 +177,15 @@ export default function NotificationsPage() {
         try {
             await createNotificationMutation.mutateAsync({
                 title: newNotification.title,
-                message: newNotification.message,
                 image: newNotification.image || undefined,
                 targetAudience: newNotification.targetAudience
             })
 
-            toast.success("Notification created successfully")
+            toast.success("Notification sent successfully")
 
             // Reset form
             setNewNotification({
                 title: "",
-                message: "",
                 image: null,
                 imagePreview: "",
                 targetAudience: [],
@@ -197,18 +193,11 @@ export default function NotificationsPage() {
             })
             setIsCreateDialogOpen(false)
         } catch (error) {
-            toast.error("Failed to create notification")
-        }
-    }
-
-    const handleSendNotification = async (id: number) => {
-        try {
-            await sendNotificationMutation.mutateAsync(id)
-            toast.success("Notification sent successfully")
-        } catch (error) {
             toast.error("Failed to send notification")
         }
     }
+
+
 
     const handleDeleteNotification = async (id: number) => {
         try {
@@ -275,19 +264,75 @@ export default function NotificationsPage() {
 
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Draft Notifications</CardTitle>
+                                <CardTitle className="text-sm font-medium">Failed Notifications</CardTitle>
                                 <Calendar className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">
-                                    {notifications.filter(n => n.status === "draft").length}
+                                    {notifications.filter(n => n.status === "failed").length}
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                    Pending notifications
+                                    Failed to send
                                 </p>
                             </CardContent>
                         </Card>
                     </div>
+
+                    {/* FCM Topics Monitoring */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Bell className="h-5 w-5" />
+                                FCM Topics Status
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                                Monitor your FCM topics and recent message activity
+                            </p>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="font-medium">channel_users</h4>
+                                        <Badge variant="outline">Customers</Badge>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                        Topic for customer notifications
+                                    </p>
+                                    <div className="text-xs text-muted-foreground">
+                                        Last message: {notifications.filter(n =>
+                                            n.targetAudience.includes('customers') && n.status === 'sent'
+                                        ).length > 0 ?
+                                            formatDate(notifications.filter(n =>
+                                                n.targetAudience.includes('customers') && n.status === 'sent'
+                                            ).sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())[0].sentAt) :
+                                            'Never'
+                                        }
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="font-medium">channel_providers</h4>
+                                        <Badge variant="outline">Providers</Badge>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                        Topic for provider notifications
+                                    </p>
+                                    <div className="text-xs text-muted-foreground">
+                                        Last message: {notifications.filter(n =>
+                                            n.targetAudience.includes('providers') && n.status === 'sent'
+                                        ).length > 0 ?
+                                            formatDate(notifications.filter(n =>
+                                                n.targetAudience.includes('providers') && n.status === 'sent'
+                                            ).sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime())[0].sentAt) :
+                                            'Never'
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
 
                     {/* Notifications Table */}
                     <Card>
@@ -308,7 +353,8 @@ export default function NotificationsPage() {
                                         <SelectItem value="all">All Status</SelectItem>
                                         <SelectItem value="sent">Sent</SelectItem>
                                         <SelectItem value="draft">Draft</SelectItem>
-                                        <SelectItem value="scheduled">Scheduled</SelectItem>
+                                        <SelectItem value="failed">Failed</SelectItem>
+
                                     </SelectContent>
                                 </Select>
 
@@ -322,6 +368,26 @@ export default function NotificationsPage() {
                                         <SelectItem value="providers">Providers</SelectItem>
                                     </SelectContent>
                                 </Select>
+                                <Button
+                                    variant="outline"
+                                    onClick={async () => {
+                                        try {
+                                            const result = await api.post('/notifications/topics/test');
+                                            toast.success('Test messages sent to FCM topics!');
+                                            console.log('FCM Test Result:', result.data);
+                                        } catch (error: any) {
+                                            if (error.response?.status === 401) {
+                                                toast.error('Authentication failed. Please log in again.');
+                                            } else {
+                                                toast.error(`Failed to send test messages: ${error.response?.data?.message || 'Unknown error'}`);
+                                            }
+                                            console.error('FCM Test Error:', error);
+                                        }
+                                    }}
+                                    className="mr-2"
+                                >
+                                    Test FCM
+                                </Button>
                                 <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                                     <DialogTrigger asChild>
                                         <Button className="flex items-center gap-2">
@@ -333,7 +399,7 @@ export default function NotificationsPage() {
                                         <DialogHeader className="border-b">
                                             <DialogTitle className="text-xl font-semibold">Create New Notification</DialogTitle>
                                             <DialogDescription className="text-sm text-muted-foreground">
-                                                Send a notification to your users with image and text. Fill in the required fields below.
+                                                Send a notification to your users with title and image. Notifications are sent immediately to selected audiences.
                                             </DialogDescription>
                                         </DialogHeader>
                                         <div className="space-y-6 ">
@@ -467,10 +533,10 @@ export default function NotificationsPage() {
                                                 <Button
                                                     onClick={handleCreateNotification}
                                                     className="px-6"
-                                                    disabled={!newNotification.title || !newNotification.message || newNotification.targetAudience.length === 0}
+                                                    disabled={!newNotification.title || newNotification.targetAudience.length === 0}
                                                 >
                                                     <Send className="h-4 w-4 mr-2" />
-                                                    Create & Send
+                                                    Send Notification
                                                 </Button>
                                             </div>
                                         </div>
@@ -486,7 +552,6 @@ export default function NotificationsPage() {
                                         <TableRow className="bg-gray-50">
                                             <TableHead className="font-semibold">Image</TableHead>
                                             <TableHead className="font-semibold">Title</TableHead>
-                                            <TableHead className="font-semibold">Message</TableHead>
                                             <TableHead className="font-semibold">Target Audience</TableHead>
                                             <TableHead className="font-semibold">Status</TableHead>
                                             <TableHead className="font-semibold">Recipients</TableHead>
@@ -497,7 +562,7 @@ export default function NotificationsPage() {
                                     <TableBody>
                                         {filteredNotifications.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={8} className="text-center py-8">
+                                                <TableCell colSpan={7} className="text-center py-8">
                                                     <div className="text-muted-foreground">
                                                         {searchQuery || statusFilter !== "all" || audienceFilter !== "all"
                                                             ? "No notifications found matching your criteria"
@@ -510,9 +575,9 @@ export default function NotificationsPage() {
                                             filteredNotifications.map((notification) => (
                                                 <TableRow key={notification.id} className="hover:bg-gray-50/50">
                                                     <TableCell>
-                                                        {notification.image ? (
+                                                        {notification.imageUrl ? (
                                                             <Avatar className="h-12 w-12">
-                                                                <AvatarImage src={notification.image} alt={notification.title} />
+                                                                <AvatarImage src={"http://localhost:3001" + notification.imageUrl} alt={notification.title} />
                                                                 <AvatarFallback>
                                                                     <ImageIcon className="h-4 w-4" />
                                                                 </AvatarFallback>
@@ -526,11 +591,7 @@ export default function NotificationsPage() {
                                                     <TableCell>
                                                         <div className="font-medium">{notification.title}</div>
                                                     </TableCell>
-                                                    <TableCell>
-                                                        <div className="max-w-xs">
-                                                            <p className="text-sm line-clamp-2">{notification.message}</p>
-                                                        </div>
-                                                    </TableCell>
+
                                                     <TableCell>
                                                         <div className="flex flex-wrap gap-1">
                                                             {getAudienceBadges(notification.targetAudience)}
@@ -578,7 +639,6 @@ export default function NotificationsPage() {
                                                                             )}
                                                                             <div>
                                                                                 <h3 className="font-semibold text-lg">{selectedNotification.title}</h3>
-                                                                                <p className="text-muted-foreground mt-2">{selectedNotification.message}</p>
                                                                             </div>
                                                                             <div className="flex items-center justify-between text-sm">
                                                                                 <div className="flex items-center gap-2">
@@ -595,16 +655,6 @@ export default function NotificationsPage() {
                                                                     )}
                                                                 </DialogContent>
                                                             </Dialog>
-
-                                                            {notification.status === "draft" && (
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    onClick={() => handleSendNotification(notification.id)}
-                                                                >
-                                                                    <Send className="h-4 w-4" />
-                                                                </Button>
-                                                            )}
 
                                                             <Button
                                                                 variant="ghost"

@@ -260,7 +260,7 @@ export const adminService = {
     formData.append('description', data.description)
     formData.append('linkType', data.linkType)
     formData.append('isActive', data.isActive.toString())
-    
+
     if (data.externalLink) {
       formData.append('externalLink', data.externalLink)
     }
@@ -289,7 +289,7 @@ export const adminService = {
     isActive?: boolean
   }) => {
     const formData = new FormData()
-    
+
     if (data.title) formData.append('title', data.title)
     if (data.description) formData.append('description', data.description)
     if (data.linkType) formData.append('linkType', data.linkType)
@@ -319,15 +319,13 @@ export const adminService = {
 
   createNotification: async (data: {
     title: string
-    message: string
     image?: File
     targetAudience: string[]
   }) => {
     const formData = new FormData()
     formData.append('title', data.title)
-    formData.append('message', data.message)
     formData.append('targetAudience', JSON.stringify(data.targetAudience))
-    
+
     if (data.image) {
       formData.append('image', data.image)
     }

@@ -500,7 +500,6 @@ export const useCreateNotification = () => {
   return useMutation({
     mutationFn: (data: {
       title: string
-      message: string
       image?: File
       targetAudience: string[]
     }) => adminService.createNotification(data),
