@@ -138,12 +138,12 @@ export const adminService = {
   },
 
   approveJoinRequest: async (id: number, notes?: string) => {
-    const response = await api.put(`/admin/join-requests/${id}/approve`, { notes })
+    const response = await api.put(`/admin/providers/${id}/verify`, { notes })
     return response.data
   },
 
   rejectJoinRequest: async (id: number, notes: string) => {
-    const response = await api.put(`/admin/join-requests/${id}/reject`, { notes })
+    const response = await api.put(`/admin/providers/${id}/unverify`, { notes })
     return response.data
   },
 
