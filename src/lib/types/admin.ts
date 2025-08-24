@@ -201,4 +201,37 @@ export interface AdminProviderJoinRequest {
       providerServices: number
     }
   }
+}
+
+export interface AdBanner {
+  id: number
+  title: string
+  description: string
+  imageUrl: string | null
+  linkType: "external" | "provider"
+  externalLink: string | null
+  providerId: number | null
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateAdBannerDto {
+  title: string
+  description: string
+  image?: File
+  linkType: "external" | "provider"
+  externalLink?: string
+  providerId?: number
+  isActive: boolean
+}
+
+export interface UpdateAdBannerDto {
+  title?: string
+  description?: string
+  image?: File
+  linkType?: "external" | "provider"
+  externalLink?: string
+  providerId?: number
+  isActive?: boolean
 } 

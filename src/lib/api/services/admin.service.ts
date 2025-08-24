@@ -1,5 +1,7 @@
 import { api } from '../axios'
 import type { DashboardStats, OverviewStats, ServiceStats, ProviderStats, OrderStats } from '@/lib/types/admin'
+import { InvoiceService } from './invoice.service'
+import type { InvoiceFilters, CreateInvoiceDto, UpdateInvoiceDto } from '@/lib/types/invoice'
 
 export const adminService = {
   // Get dashboard statistics
@@ -346,5 +348,38 @@ export const adminService = {
   deleteNotification: async (id: number) => {
     const response = await api.delete(`/admin/notifications/${id}`)
     return response.data
+  },
+
+  // Invoice Management Functions
+  getInvoices: async (filters: InvoiceFilters = {}) => {
+    return await InvoiceService.getInvoices(filters)
+  },
+
+  getInvoice: async (id: number) => {
+    return await InvoiceService.getInvoice(id)
+  },
+
+  createInvoice: async (data: CreateInvoiceDto) => {
+    return await InvoiceService.createInvoice(data)
+  },
+
+  updateInvoice: async (id: number, data: UpdateInvoiceDto) => {
+    return await InvoiceService.updateInvoice(id, data)
+  },
+
+  updatePaymentStatus: async (id: number, paymentStatus: string, paymentMethod?: string) => {
+    return await InvoiceService.updatePaymentStatus(id, paymentStatus, paymentMethod)
+  },
+
+  markAsPaid: async (id: number, paymentMethod: string = 'Admin Payment') => {
+    return await InvoiceService.markAsPaid(id, paymentMethod)
+  },
+
+  getInvoiceStats: async () => {
+    return await InvoiceService.getInvoiceStats()
+  },
+
+  deleteInvoice: async (id: number) => {
+    return await InvoiceService.deleteInvoice(id)
   }
 }

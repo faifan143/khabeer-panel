@@ -90,6 +90,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 title: "Income & Finance",
                 subtitle: "Track revenue and financial metrics"
             },
+            'invoices': {
+                title: "Invoice Management",
+                subtitle: "Manage payments and invoices for completed orders"
+            },
             'ratings': {
                 title: "Ratings & Reviews",
                 subtitle: "Monitor customer feedback and ratings"

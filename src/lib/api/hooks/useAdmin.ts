@@ -1,5 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminService } from '../services/admin.service'
+import type { InvoiceFilters, UpdateInvoiceDto } from '@/lib/types/invoice'
+import toast from 'react-hot-toast'
 
 export const useDashboardStats = () => {
   return useQuery({
@@ -527,6 +529,121 @@ export const useDeleteNotification = () => {
     mutationFn: (id: number) => adminService.deleteNotification(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'notifications'] })
+    },
+  })
+}
+
+// Admin Invoice hooks
+export const useAdminInvoices = (filters: InvoiceFilters = {}) => {
+  return useQuery({
+    queryKey: ['admin', 'invoices', filters],
+    queryFn: () => adminService.getInvoices(filters),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  })
+}
+
+export const useAdminInvoice = (id: number) => {
+  return useQuery({
+    queryKey: ['admin', 'invoice', id],
+    queryFn: () => adminService.getInvoice(id),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+export const useAdminInvoiceStats = () => {
+  return useQuery({
+    queryKey: ['admin', 'invoice-stats'],
+    queryFn: () => adminService.getInvoiceStats(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+export const useAdminCreateInvoice = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: adminService.createInvoice,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invoice-stats'] })
+      toast.success('Invoice created successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create invoice')
+    },
+  })
+}
+
+export const useAdminUpdateInvoice = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateInvoiceDto }) =>
+      adminService.updateInvoice(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invoice', id] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invoice-stats'] })
+      toast.success('Invoice updated successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update invoice')
+    },
+  })
+}
+
+export const useAdminUpdatePaymentStatus = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, paymentStatus, paymentMethod }: { 
+      id: number; 
+      paymentStatus: string; 
+      paymentMethod?: string 
+    }) => adminService.updatePaymentStatus(id, paymentStatus, paymentMethod),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invoice', id] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invoice-stats'] })
+      toast.success('Payment status updated successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update payment status')
+    },
+  })
+}
+
+export const useAdminMarkAsPaid = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, paymentMethod }: { id: number; paymentMethod?: string }) =>
+      adminService.markAsPaid(id, paymentMethod),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invoice', id] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invoice-stats'] })
+      toast.success('Invoice marked as paid successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to mark invoice as paid')
+    },
+  })
+}
+
+export const useAdminDeleteInvoice = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: adminService.deleteInvoice,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invoices'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'invoice-stats'] })
+      toast.success('Invoice deleted successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete invoice')
     },
   })
 }

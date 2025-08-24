@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useAdminAcceptOrder, useAdminCancelOrder, useAdminCompleteOrder, useAdminOrders, useAdminRejectOrder, useAdminUpdateOrderStatus } from "@/lib/api/hooks/useAdmin"
+import { adminService } from "@/lib/api/services/admin.service"
 import { Order } from "@/lib/api/types"
 import { formatCurrency } from "@/lib/utils"
 import {
@@ -273,8 +274,29 @@ export default function OrdersManagementPage() {
 
     const handleOrderComplete = async (orderId: number) => {
         try {
+            // First complete the order
             await completeOrderMutation.mutateAsync(orderId)
-            toast.success("Order marked as completed")
+            
+            // Find the order to get its details for invoice creation
+            const order = orders.find(o => o.id === orderId)
+            if (order) {
+                // Automatically create invoice when order is completed
+                try {
+                    await adminService.createInvoice({
+                        orderId: order.id,
+                        totalAmount: order.totalAmount || 0,
+                        discount: 0, // No discount by default
+                        commission: order.commissionAmount || 0
+                    })
+                    toast.success("Order completed and invoice created successfully")
+                } catch (invoiceError) {
+                    console.error('Failed to create invoice:', invoiceError)
+                    toast.success("Order completed successfully, but invoice creation failed")
+                }
+            } else {
+                toast.success("Order marked as completed")
+            }
+            
             refetchOrders()
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : "Failed to complete order"

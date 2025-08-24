@@ -73,6 +73,12 @@ const navigationItems = [
         description: "Revenue, commissions, and financial reports"
     },
     {
+        title: "Invoice Management",
+        href: "/invoices",
+        icon: FileText,
+        description: "Manage payments and invoices"
+    },
+    {
         title: "Ratings & Reviews",
         href: "/ratings",
         icon: Star,

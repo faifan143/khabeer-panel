@@ -12,8 +12,9 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useAdBanners, useCreateAdBanner, useCreateSubAdmin, useDeleteSubAdmin, useSubAdmins, useSystemSettings, useUpdateAdBanner, useUpdateSystemSetting, useUploadBannerImage, useUploadLegalDocuments } from "@/lib/api/hooks/useAdmin"
+import { useAdBanners, useCreateAdBanner, useCreateSubAdmin, useDeleteSubAdmin, useSubAdmins, useSystemSettings, useUpdateAdBanner, useUpdateSystemSetting, useUploadBannerImage, useUploadLegalDocuments, useDeleteAdBanner } from "@/lib/api/hooks/useAdmin"
 import { getImageUrl } from "@/lib/utils/image"
+import { AdBanner } from "@/lib/types/admin"
 import {
     Eye,
     FileText,
@@ -54,6 +55,7 @@ export default function SettingsPage() {
     const { data: existingAdBanner, isLoading: bannerLoading } = useAdBanners()
     const createAdBannerMutation = useCreateAdBanner()
     const updateAdBannerMutation = useUpdateAdBanner()
+    const deleteAdBannerMutation = useDeleteAdBanner()
 
     // Terms & Conditions state
     const [termsEn, setTermsEn] = useState<File | null>(null)
@@ -91,12 +93,16 @@ export default function SettingsPage() {
     })
 
     // Ad Banner state
-    const [adBannerConfig, setAdBannerConfig] = useState({
+    const [adBanners, setAdBanners] = useState<AdBanner[]>([])
+
+    const [isAddBannerOpen, setIsAddBannerOpen] = useState(false)
+    const [editingBannerIndex, setEditingBannerIndex] = useState<number | null>(null)
+    const [newBanner, setNewBanner] = useState({
         title: "",
         description: "",
         image: null as File | null,
         imagePreview: "",
-        linkType: "external",
+        linkType: "external" as "external" | "provider",
         externalLink: "",
         providerId: "",
         isActive: false
@@ -142,17 +148,7 @@ export default function SettingsPage() {
     // Load existing ad banner data when component mounts
     useEffect(() => {
         if (existingAdBanner && existingAdBanner.length > 0) {
-            const banner = existingAdBanner[0]
-            setAdBannerConfig(prev => ({
-                ...prev,
-                title: banner.title,
-                description: banner.description,
-                imagePreview: banner.imageUrl ? getImageUrl(banner.imageUrl) : "",
-                linkType: banner.linkType,
-                externalLink: banner.externalLink || "",
-                providerId: banner.providerId?.toString() || "",
-                isActive: banner.isActive
-            }))
+            setAdBanners(existingAdBanner)
         }
     }, [existingAdBanner])
 
@@ -176,11 +172,22 @@ export default function SettingsPage() {
                 return
             }
 
-            setAdBannerConfig(prev => ({
+            setNewBanner(prev => ({
                 ...prev,
                 image: file,
                 imagePreview: URL.createObjectURL(file)
             }))
+        }
+    }
+
+    const handleRemoveImage = () => {
+        setNewBanner(prev => ({
+            ...prev,
+            image: null,
+            imagePreview: ""
+        }))
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ""
         }
     }
 
@@ -233,17 +240,6 @@ export default function SettingsPage() {
                 setPrivacyAr(null)
                 if (privacyArInputRef.current) privacyArInputRef.current.value = ""
                 break
-        }
-    }
-
-    const handleRemoveImage = () => {
-        setAdBannerConfig(prev => ({
-            ...prev,
-            image: null,
-            imagePreview: ""
-        }))
-        if (fileInputRef.current) {
-            fileInputRef.current.value = ""
         }
     }
 
@@ -371,40 +367,40 @@ export default function SettingsPage() {
     }
 
     const handleSaveAdBanner = async () => {
-        if (!adBannerConfig.title || !adBannerConfig.description) {
+        if (!newBanner.title.trim() || !newBanner.description.trim()) {
             toast.error("Please fill all required fields")
             return
         }
 
-        if (adBannerConfig.linkType === "external" && !adBannerConfig.externalLink) {
+        if (newBanner.linkType === "external" && !newBanner.externalLink.trim()) {
             toast.error("Please provide external link")
             return
         }
 
-        if (adBannerConfig.linkType === "provider" && !adBannerConfig.providerId) {
+        if (newBanner.linkType === "provider" && !newBanner.providerId) {
             toast.error("Please select a provider")
             return
         }
 
         try {
             const bannerData: any = {
-                title: adBannerConfig.title,
-                description: adBannerConfig.description,
-                linkType: adBannerConfig.linkType,
-                externalLink: adBannerConfig.externalLink,
-                providerId: adBannerConfig.providerId ? parseInt(adBannerConfig.providerId) : undefined,
-                isActive: adBannerConfig.isActive
+                title: newBanner.title.trim(),
+                description: newBanner.description.trim(),
+                linkType: newBanner.linkType,
+                externalLink: newBanner.externalLink.trim(),
+                providerId: newBanner.providerId ? parseInt(newBanner.providerId) : undefined,
+                isActive: newBanner.isActive
             }
 
             // Add image file if exists
-            if (adBannerConfig.image) {
-                bannerData.image = adBannerConfig.image
+            if (newBanner.image) {
+                bannerData.image = newBanner.image
             }
 
-            // If banner exists, update it; otherwise create new one
-            if (existingAdBanner && existingAdBanner.length > 0) {
+            // If editing existing banner, update it; otherwise create new one
+            if (editingBannerIndex !== null) {
                 await updateAdBannerMutation.mutateAsync({
-                    id: existingAdBanner[0].id,
+                    id: adBanners[editingBannerIndex].id,
                     data: bannerData
                 })
             } else {
@@ -412,9 +408,53 @@ export default function SettingsPage() {
             }
 
             toast.success("Ad banner configuration saved successfully!")
+            setIsAddBannerOpen(false)
+            setEditingBannerIndex(null)
+            setNewBanner({ title: "", description: "", image: null, imagePreview: "", linkType: "external", externalLink: "", providerId: "", isActive: false })
         } catch (error) {
             toast.error("Failed to save ad banner configuration")
+            console.error("Error saving ad banner:", error)
         }
+    }
+
+    const handleEditBanner = (index: number) => {
+        const banner = adBanners[index]
+        setNewBanner({
+            title: banner.title,
+            description: banner.description,
+            image: null,
+            imagePreview: banner.imageUrl ? getImageUrl(banner.imageUrl) : "",
+            linkType: banner.linkType,
+            externalLink: banner.externalLink || "",
+            providerId: banner.providerId?.toString() || "",
+            isActive: banner.isActive
+        })
+        setEditingBannerIndex(index)
+        setIsAddBannerOpen(true)
+    }
+
+    const handleDeleteBanner = async (id: number) => {
+        if (confirm("Are you sure you want to delete this banner?")) {
+            try {
+                await deleteAdBannerMutation.mutateAsync(id)
+                toast.success("Banner deleted successfully!")
+            } catch (error) {
+                toast.error("Failed to delete banner")
+                console.error("Error deleting banner:", error)
+            }
+        }
+    }
+
+    const handleCreateBanner = () => {
+        setNewBanner({ title: "", description: "", image: null, imagePreview: "", linkType: "external", externalLink: "", providerId: "", isActive: false })
+        setEditingBannerIndex(null)
+        setIsAddBannerOpen(true)
+    }
+
+    const handleCancelEdit = () => {
+        setIsAddBannerOpen(false)
+        setEditingBannerIndex(null)
+        setNewBanner({ title: "", description: "", image: null, imagePreview: "", linkType: "external", externalLink: "", providerId: "", isActive: false })
     }
 
     const handlePermissionToggle = (permissionId: string) => {
@@ -1042,141 +1082,248 @@ export default function SettingsPage() {
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
                                         <Megaphone className="h-5 w-5" />
-                                        Ad Banner Configuration
+                                        Ad Banner Management
                                     </CardTitle>
                                     <p className="text-sm text-muted-foreground">
-                                        Configure promotional banners and links
+                                        Manage promotional banners and links
                                     </p>
+                                    <Button onClick={handleCreateBanner} className="mt-2">
+                                        <UserPlus className="h-4 w-4 mr-2" />
+                                        Add New Banner
+                                    </Button>
                                 </CardHeader>
-                                <CardContent className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <Label className="text-sm font-medium">Banner Title *</Label>
-                                            <Input
-                                                placeholder="Enter banner title"
-                                                value={adBannerConfig.title}
-                                                onChange={(e) => setAdBannerConfig(prev => ({ ...prev, title: e.target.value }))}
-                                                className="mt-1"
-                                            />
+                                <CardContent>
+                                    {bannerLoading ? (
+                                        <div className="text-center py-8">
+                                            <div className="text-muted-foreground">Loading banners...</div>
                                         </div>
-                                        <div>
-                                            <Label className="text-sm font-medium">Description *</Label>
-                                            <Input
-                                                placeholder="Enter banner description"
-                                                value={adBannerConfig.description}
-                                                onChange={(e) => setAdBannerConfig(prev => ({ ...prev, description: e.target.value }))}
-                                                className="mt-1"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <Label className="text-sm font-medium">Banner Image</Label>
-                                        <div className="space-y-3 mt-2">
-                                            {adBannerConfig.imagePreview ? (
-                                                <div className="relative inline-block">
-                                                    <img
-                                                        src={adBannerConfig.imagePreview}
-                                                        alt="Banner Preview"
-                                                        className="h-32 w-auto rounded-lg object-cover"
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
-                                                        onClick={handleRemoveImage}
-                                                    >
-                                                        <X className="h-3 w-3" />
-                                                    </Button>
-                                                </div>
-                                            ) : (
-                                                <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                                                    <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                                                    <p className="text-sm text-gray-600 mb-2">Upload banner image</p>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => fileInputRef.current?.click()}
-                                                    >
-                                                        Choose File
-                                                    </Button>
-                                                </div>
-                                            )}
-                                            <input
-                                                ref={fileInputRef}
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={handleFileSelect}
-                                                className="hidden"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <Label className="text-sm font-medium">Link Type</Label>
-                                        <Select
-                                            value={adBannerConfig.linkType}
-                                            onValueChange={(value) => setAdBannerConfig(prev => ({ ...prev, linkType: value as "external" | "provider" }))}
-                                        >
-                                            <SelectTrigger className="mt-1">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="external">External Link</SelectItem>
-                                                <SelectItem value="provider">Provider Page</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    {adBannerConfig.linkType === "external" ? (
-                                        <div>
-                                            <Label className="text-sm font-medium">External Link *</Label>
-                                            <Input
-                                                placeholder="https://example.com"
-                                                value={adBannerConfig.externalLink}
-                                                onChange={(e) => setAdBannerConfig(prev => ({ ...prev, externalLink: e.target.value }))}
-                                                className="mt-1"
-                                            />
-                                        </div>
+                                    ) : adBanners.length > 0 ? (
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Image</TableHead>
+                                                    <TableHead>Title</TableHead>
+                                                    <TableHead>Description</TableHead>
+                                                    <TableHead>Link Type</TableHead>
+                                                    <TableHead>Status</TableHead>
+                                                    <TableHead>Created</TableHead>
+                                                    <TableHead className="text-right">Actions</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {adBanners.map((banner, index) => (
+                                                    <TableRow key={banner.id}>
+                                                        <TableCell>
+                                                            {banner.imageUrl ? (
+                                                                <img
+                                                                    src={getImageUrl(banner.imageUrl)}
+                                                                    alt={banner.title}
+                                                                    className="h-16 w-auto rounded object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className="h-16 w-24 bg-gray-100 rounded flex items-center justify-center">
+                                                                    <span className="text-xs text-gray-500">No Image</span>
+                                                                </div>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="font-medium">{banner.title}</TableCell>
+                                                        <TableCell className="max-w-xs truncate">{banner.description}</TableCell>
+                                                        <TableCell>
+                                                            <Badge variant="outline">
+                                                                {banner.linkType === "external" ? "External Link" : "Provider Page"}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge variant={banner.isActive ? "default" : "secondary"}>
+                                                                {banner.isActive ? "Active" : "Inactive"}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {new Date(banner.createdAt).toLocaleDateString()}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => handleEditBanner(index)}
+                                                                >
+                                                                    <FileText className="h-4 w-4" />
+                                                                </Button>
+                                                                {banner.id && (
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        onClick={() => handleDeleteBanner(banner.id)}
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                )}
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
                                     ) : (
-                                        <div>
-                                            <Label className="text-sm font-medium">Select Provider *</Label>
-                                            <Select
-                                                value={adBannerConfig.providerId}
-                                                onValueChange={(value) => setAdBannerConfig(prev => ({ ...prev, providerId: value }))}
-                                            >
-                                                <SelectTrigger className="mt-1">
-                                                    <SelectValue placeholder="Choose a provider" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="1">Provider 1</SelectItem>
-                                                    <SelectItem value="2">Provider 2</SelectItem>
-                                                    <SelectItem value="3">Provider 3</SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                        <div className="text-center py-8">
+                                            <div className="text-muted-foreground">No banners found</div>
+                                            <Button onClick={handleCreateBanner} className="mt-2">
+                                                Create Your First Banner
+                                            </Button>
                                         </div>
                                     )}
-
-                                    <div className="flex items-center space-x-2">
-                                        <Checkbox
-                                            id="banner-active"
-                                            checked={adBannerConfig.isActive}
-                                            onCheckedChange={(checked) => setAdBannerConfig(prev => ({ ...prev, isActive: checked as boolean }))}
-                                        />
-                                        <Label htmlFor="banner-active" className="text-sm font-medium">
-                                            Activate this banner
-                                        </Label>
-                                    </div>
-
-                                    <Button onClick={handleSaveAdBanner} className="w-full">
-                                        <Save className="h-4 w-4 mr-2" />
-                                        Save Ad Banner Configuration
-                                    </Button>
                                 </CardContent>
                             </Card>
 
+                            {/* Add/Edit Banner Dialog */}
+                            <Dialog open={isAddBannerOpen} onOpenChange={setIsAddBannerOpen}>
+                                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                                    <DialogHeader>
+                                        <DialogTitle>
+                                            {editingBannerIndex !== null ? "Edit Banner" : "Add New Banner"}
+                                        </DialogTitle>
+                                        <DialogDescription>
+                                            {editingBannerIndex !== null
+                                                ? "Update the banner information below"
+                                                : "Fill in the banner information below"
+                                            }
+                                        </DialogDescription>
+                                    </DialogHeader>
 
+                                    <div className="space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <Label className="text-sm font-medium">Banner Title *</Label>
+                                                <Input
+                                                    placeholder="Enter banner title"
+                                                    value={newBanner.title}
+                                                    onChange={(e) => setNewBanner(prev => ({ ...prev, title: e.target.value }))}
+                                                    className="mt-1"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label className="text-sm font-medium">Description *</Label>
+                                                <Input
+                                                    placeholder="Enter banner description"
+                                                    value={newBanner.description}
+                                                    onChange={(e) => setNewBanner(prev => ({ ...prev, description: e.target.value }))}
+                                                    className="mt-1"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <Label className="text-sm font-medium">Banner Image</Label>
+                                            <div className="space-y-3 mt-2">
+                                                {newBanner.imagePreview ? (
+                                                    <div className="relative inline-block">
+                                                        <img
+                                                            src={newBanner.imagePreview}
+                                                            alt="Banner Preview"
+                                                            className="h-32 w-auto rounded-lg object-cover"
+                                                        />
+                                                        <Button
+                                                            type="button"
+                                                            variant="destructive"
+                                                            size="sm"
+                                                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                                                            onClick={handleRemoveImage}
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </Button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                                                        <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                                                        <p className="text-sm text-gray-600 mb-2">Upload banner image</p>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => fileInputRef.current?.click()}
+                                                        >
+                                                            Choose File
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                                <input
+                                                    ref={fileInputRef}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleFileSelect}
+                                                    className="hidden"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <Label className="text-sm font-medium">Link Type</Label>
+                                            <Select
+                                                value={newBanner.linkType}
+                                                onValueChange={(value) => setNewBanner(prev => ({ ...prev, linkType: value as "external" | "provider" }))}
+                                            >
+                                                <SelectTrigger className="mt-1">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="external">External Link</SelectItem>
+                                                    <SelectItem value="provider">Provider Page</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        {newBanner.linkType === "external" ? (
+                                            <div>
+                                                <Label className="text-sm font-medium">External Link *</Label>
+                                                <Input
+                                                    placeholder="https://example.com"
+                                                    value={newBanner.externalLink}
+                                                    onChange={(e) => setNewBanner(prev => ({ ...prev, externalLink: e.target.value }))}
+                                                    className="mt-1"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <Label className="text-sm font-medium">Select Provider *</Label>
+                                                <Select
+                                                    value={newBanner.providerId}
+                                                    onValueChange={(value) => setNewBanner(prev => ({ ...prev, providerId: value }))}
+                                                >
+                                                    <SelectTrigger className="mt-1">
+                                                        <SelectValue placeholder="Choose a provider" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="1">Provider 1</SelectItem>
+                                                        <SelectItem value="2">Provider 2</SelectItem>
+                                                        <SelectItem value="3">Provider 3</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id="banner-active"
+                                                checked={newBanner.isActive}
+                                                onCheckedChange={(checked) => setNewBanner(prev => ({ ...prev, isActive: checked as boolean }))}
+                                            />
+                                            <Label htmlFor="banner-active" className="text-sm font-medium">
+                                                Activate this banner
+                                            </Label>
+                                        </div>
+
+                                        <div className="flex justify-end gap-2">
+                                            <Button variant="outline" onClick={handleCancelEdit}>
+                                                Cancel
+                                            </Button>
+                                            <Button onClick={handleSaveAdBanner}>
+                                                <Save className="h-4 w-4 mr-2" />
+                                                {editingBannerIndex !== null ? "Update Banner" : "Create Banner"}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
                         </TabsContent>
                     </Tabs>
                 </div>
