@@ -135,10 +135,159 @@ export default function ProviderVerificationPage() {
     const { data: unverifiedProviders, isLoading: unverifiedProvidersLoading } = useAdminUnverifiedProviders()
 
     // Hooks for join requests
-    const { data: joinRequestsResponse, isLoading: joinRequestsLoading } = useAdminPendingJoinRequests()
+    const { data: joinRequestsResponse, isLoading: joinRequestsLoading, error: joinRequestsError } = useAdminPendingJoinRequests()
 
-    // Extract data from responses
-    const joinRequests = (Array.isArray(joinRequestsResponse) ? joinRequestsResponse : joinRequestsResponse?.data) as AdminProviderJoinRequest[] || []
+    // NOTE: The API endpoint /admin/join-requests/pending might be returning provider data instead of join request data
+    // This is a workaround to handle the data structure mismatch
+    // In the future, the API should be updated to return proper join request objects
+    // Extract data from responses with debugging
+    console.log('Raw joinRequestsResponse:', joinRequestsResponse)
+    console.log('Join requests error:', joinRequestsError)
+    console.log('Response type:', typeof joinRequestsResponse)
+    console.log('Is array:', Array.isArray(joinRequestsResponse))
+    if (joinRequestsResponse && typeof joinRequestsResponse === 'object') {
+        console.log('Response keys:', Object.keys(joinRequestsResponse))
+        if (Array.isArray(joinRequestsResponse) && joinRequestsResponse.length > 0) {
+            console.log('First item type:', typeof joinRequestsResponse[0])
+            console.log('First item keys:', Object.keys(joinRequestsResponse[0]))
+        }
+    }
+
+    // Handle different response structures
+    let joinRequests: AdminProviderJoinRequest[] = []
+
+    if (joinRequestsResponse) {
+        if (Array.isArray(joinRequestsResponse)) {
+            // If it's an array, check if it contains providers or join requests
+            if (joinRequestsResponse.length > 0) {
+                const firstItem = joinRequestsResponse[0] as any
+                if (firstItem.providerId && firstItem.requestDate) {
+                    // It's already in the correct format
+                    joinRequests = joinRequestsResponse
+                } else if (firstItem.id && firstItem.name && firstItem.isVerified === false) {
+                    // It's an array of unverified providers, convert to join requests
+                    joinRequests = joinRequestsResponse.map(provider => ({
+                        id: provider.id,
+                        providerId: provider.id,
+                        requestDate: provider.createdAt || new Date().toISOString(),
+                        status: 'pending',
+                        adminNotes: null,
+                        provider: {
+                            id: provider.id,
+                            name: provider.name,
+                            email: provider.email,
+                            phone: provider.phone,
+                            description: provider.description,
+                            image: provider.image,
+                            state: provider.state,
+                            isActive: provider.isActive,
+                            officialDocuments: provider.officialDocuments,
+                            providerServices: provider.providerServices || [],
+                            _count: {
+                                providerServices: provider._count?.providerServices || 0
+                            }
+                        }
+                    }))
+                }
+            }
+        } else if (joinRequestsResponse.data && Array.isArray(joinRequestsResponse.data)) {
+            // Handle nested data structure
+            const data = joinRequestsResponse.data
+            if (data.length > 0) {
+                const firstItem = data[0] as any
+                if (firstItem.providerId && firstItem.requestDate) {
+                    joinRequests = data
+                } else if (firstItem.id && firstItem.name && firstItem.isVerified === false) {
+                    joinRequests = data.map(provider => ({
+                        id: provider.id,
+                        providerId: provider.id,
+                        requestDate: provider.createdAt || new Date().toISOString(),
+                        status: 'pending',
+                        adminNotes: null,
+                        provider: {
+                            id: provider.id,
+                            name: provider.name,
+                            email: provider.email,
+                            phone: provider.phone,
+                            description: provider.description,
+                            image: provider.image,
+                            state: provider.state,
+                            isActive: provider.isActive,
+                            officialDocuments: provider.officialDocuments,
+                            providerServices: provider.providerServices || [],
+                            _count: {
+                                providerServices: provider._count?.providerServices || 0
+                            }
+                        }
+                    }))
+                }
+            }
+        } else if (joinRequestsResponse.joinRequests && Array.isArray(joinRequestsResponse.joinRequests)) {
+            joinRequests = joinRequestsResponse.joinRequests
+        } else if (typeof joinRequestsResponse === 'object') {
+            // If it's a single provider object with joinRequests array
+            const provider = joinRequestsResponse as any
+            if (provider.joinRequests && Array.isArray(provider.joinRequests)) {
+                joinRequests = provider.joinRequests
+            } else if (provider.id && provider.name && provider.isVerified === false) {
+                // If it's a single unverified provider, create a join request object
+                joinRequests = [{
+                    id: provider.id,
+                    providerId: provider.id,
+                    requestDate: provider.createdAt || new Date().toISOString(),
+                    status: 'pending',
+                    adminNotes: null,
+                    provider: {
+                        id: provider.id,
+                        name: provider.name,
+                        email: provider.email,
+                        phone: provider.phone,
+                        description: provider.description,
+                        image: provider.image,
+                        state: provider.state,
+                        isActive: provider.isActive,
+                        officialDocuments: provider.officialDocuments,
+                        providerServices: provider.providerServices || [],
+                        _count: {
+                            providerServices: provider._count?.providerServices || 0
+                        }
+                    }
+                }]
+            }
+        }
+    }
+
+    // If no join requests found, try to create them from unverified providers
+    if (joinRequests.length === 0 && unverifiedProviders && unverifiedProviders.length > 0) {
+        console.log('No join requests found, creating from unverified providers:', unverifiedProviders)
+        joinRequests = unverifiedProviders
+            .filter(provider => !provider.isVerified) // Only include unverified providers
+            .map(provider => ({
+                id: provider.id,
+                providerId: provider.id,
+                requestDate: provider.createdAt || new Date().toISOString(),
+                status: 'pending',
+                adminNotes: null,
+                provider: {
+                    id: provider.id,
+                    name: provider.name,
+                    email: provider.email,
+                    phone: provider.phone,
+                    description: provider.description,
+                    image: provider.image,
+                    state: provider.state,
+                    isActive: provider.isActive,
+                    officialDocuments: provider.officialDocuments,
+                    providerServices: provider.providerServices || [],
+                    _count: {
+                        providerServices: provider._count?.providerServices || 0
+                    }
+                }
+            }))
+        console.log('Created join requests from unverified providers:', joinRequests)
+    }
+
+    console.log('Processed joinRequests:', joinRequests)
 
     // Admin provider management hooks
     const activateProviderMutation = useAdminActivateProvider()
@@ -262,13 +411,26 @@ export default function ProviderVerificationPage() {
     }
 
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        })
+        if (!dateString) return 'No date provided'
+
+        try {
+            const date = new Date(dateString)
+            if (isNaN(date.getTime())) {
+                console.warn('Invalid date string:', dateString)
+                return 'Invalid date'
+            }
+
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+        } catch (error) {
+            console.error('Error formatting date:', error, 'Date string:', dateString)
+            return 'Invalid date'
+        }
     }
 
     const renderCurrency = (amount: number) => {
@@ -686,13 +848,21 @@ export default function ProviderVerificationPage() {
 
                         {/* Provider Join Requests Tab */}
                         <TabsContent value="join-requests" className="space-y-6">
-                            {joinRequestsLoading ? (
-                                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                    {Array.from({ length: 6 }).map((_, i) => (
-                                        <ProviderCardSkeleton key={i} />
-                                    ))}
-                                </div>
-                            ) : (
+                            {/* Loading state */}
+                            {joinRequestsLoading && (
+                                <Card className="border-0 shadow-lg">
+                                    <CardContent className="p-12 text-center">
+                                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Loading join requests...</h3>
+                                        <p className="text-muted-foreground">
+                                            Please wait while we fetch the latest data
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            {/* Join Requests Table */}
+                            {joinRequests.length > 0 && !joinRequestsLoading && (
                                 <Card className="border-0 shadow-lg">
                                     <Table>
                                         <TableHeader>
@@ -710,27 +880,46 @@ export default function ProviderVerificationPage() {
                                                     <TableCell>
                                                         <div className="flex items-center space-x-3">
                                                             <Avatar className="h-10 w-10">
-                                                                <AvatarImage src={request.provider?.image} alt={request.provider?.name} />
-                                                                <AvatarFallback>{request.provider?.name?.charAt(0)}</AvatarFallback>
+                                                                <AvatarImage src={request.provider?.image} alt={request.provider?.name || 'Provider'} />
+                                                                <AvatarFallback>
+                                                                    {request.provider?.name?.charAt(0) || 'P'}
+                                                                </AvatarFallback>
                                                             </Avatar>
                                                             <div className="space-y-1">
-                                                                <div className="font-medium text-gray-900">{request.provider?.name}</div>
-                                                                <div className="text-sm text-muted-foreground">{request.provider?.description}</div>
+                                                                <div className="font-medium text-gray-900">
+                                                                    {request.provider?.name || 'Unknown Provider'}
+                                                                </div>
+                                                                <div className="text-sm text-muted-foreground">
+                                                                    {request.provider?.description || 'No description available'}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="space-y-1">
-                                                            <div className="text-sm font-medium">{request.provider?.phone}</div>
+                                                            <div className="text-sm font-medium">
+                                                                {request.provider?.phone || 'No phone'}
+                                                            </div>
                                                             {request.provider?.email && (
                                                                 <div className="text-sm text-muted-foreground">{request.provider.email}</div>
+                                                            )}
+                                                            {!request.provider?.email && (
+                                                                <div className="text-sm text-muted-foreground">No email</div>
                                                             )}
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="space-y-1">
-                                                            <div className="text-sm">Categories: N/A</div>
-                                                            <div className="text-sm text-muted-foreground">Services: N/A</div>
+                                                            <div className="text-sm">
+                                                                Categories: {request.provider?.providerServices?.length > 0 ?
+                                                                    request.provider.providerServices.map(ps => ps.service?.category?.titleEn).filter(Boolean).join(', ') :
+                                                                    'N/A'}
+                                                            </div>
+                                                            <div className="text-sm text-muted-foreground">
+                                                                Services: {request.provider?.providerServices?.length > 0 ?
+                                                                    request.provider.providerServices.map(ps => ps.service?.title).filter(Boolean).join(', ') :
+                                                                    'N/A'}
+                                                            </div>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
@@ -752,7 +941,7 @@ export default function ProviderVerificationPage() {
                                                                     <AlertDialogHeader>
                                                                         <AlertDialogTitle>Approve Join Request</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            Are you sure you want to approve {request.provider?.name} join request?
+                                                                            Are you sure you want to approve {request.provider?.name || 'this provider'} join request?
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
@@ -780,7 +969,7 @@ export default function ProviderVerificationPage() {
                                                                     <AlertDialogHeader>
                                                                         <AlertDialogTitle>Reject Join Request</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            Are you sure you want to reject {request.provider?.name} join request?
+                                                                            Are you sure you want to reject {request.provider?.name || 'this provider'} join request?
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
@@ -811,6 +1000,52 @@ export default function ProviderVerificationPage() {
                                         <p className="text-muted-foreground">
                                             All provider join requests have been processed
                                         </p>
+                                        {unverifiedProviders && unverifiedProviders.length > 0 && (
+                                            <p className="text-sm text-blue-600 mt-2">
+                                                Found {unverifiedProviders.length} unverified providers that may need attention
+                                            </p>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            {/* Debug section for development */}
+                            {process.env.NODE_ENV === 'development' && (
+                                <Card className="border-0 shadow-lg">
+                                    <CardContent className="p-4">
+                                        <details className="text-sm">
+                                            <summary className="cursor-pointer font-medium text-gray-700 mb-2">
+                                                Debug Info (Development Only)
+                                            </summary>
+                                            <div className="space-y-2 text-xs font-mono bg-gray-100 p-3 rounded">
+                                                <div><strong>Raw Response:</strong> {JSON.stringify(joinRequestsResponse, null, 2)}</div>
+                                                <div><strong>Processed Requests:</strong> {JSON.stringify(joinRequests, null, 2)}</div>
+                                                <div><strong>Loading State:</strong> {joinRequestsLoading ? 'true' : 'false'}</div>
+                                                <div><strong>Error:</strong> {joinRequestsError ? JSON.stringify(joinRequestsError, null, 2) : 'None'}</div>
+                                                <div><strong>Unverified Providers Count:</strong> {unverifiedProviders?.length || 0}</div>
+                                                <div><strong>Final Join Requests Count:</strong> {joinRequests.length}</div>
+                                                <div><strong>Data Source:</strong> {joinRequests.length > 0 ?
+                                                    (joinRequests[0].providerId === joinRequests[0].id ? 'Converted from providers' : 'Direct join requests') :
+                                                    'None'}</div>
+                                            </div>
+                                        </details>
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            {/* Error handling */}
+                            {joinRequestsError && (
+                                <Card className="border-0 shadow-lg border-red-200 bg-red-50">
+                                    <CardContent className="p-4">
+                                        <div className="flex items-center space-x-2 text-red-700">
+                                            <XCircle className="h-5 w-5" />
+                                            <div>
+                                                <h4 className="font-medium">Error loading join requests</h4>
+                                                <p className="text-sm text-red-600">
+                                                    {joinRequestsError instanceof Error ? joinRequestsError.message : 'Failed to load join requests'}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </CardContent>
                                 </Card>
                             )}

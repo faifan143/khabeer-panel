@@ -34,6 +34,20 @@ import {
 import { useMemo, useState } from "react"
 import toast from "react-hot-toast"
 
+// Oman Governorates constant
+const OMAN_GOVERNORATES = [
+    { value: "Muscat", label: "Muscat - مسقط" },
+    { value: "Dhofar", label: "Dhofar - ظفار" },
+    { value: "Musandam", label: "Musandam - مسندم" },
+    { value: "Buraimi", label: "Buraimi - البريمي" },
+    { value: "Dakhiliyah", label: "Dakhiliyah - الداخلية" },
+    { value: "North Al Batinah", label: "North Al Batinah - شمال الباطنة" },
+    { value: "South Al Batinah", label: "South Al Batinah - جنوب الباطنة" },
+    { value: "North Al Sharqiyah", label: "North Al Sharqiyah - شمال الشرقية" },
+    { value: "South Al Sharqiyah", label: "South Al Sharqiyah - جنوب الشرقية" },
+    { value: "Al Wusta", label: "Al Wusta - الوسطى" }
+]
+
 // Loading Skeleton Components
 const CategoryCardSkeleton = () => (
     <Card className="animate-pulse">
@@ -277,10 +291,10 @@ export default function CategoriesServicesPage() {
             setIsServiceDialogOpen(false)
             resetServiceForm()
             refetchServices()
-                 } catch (error: unknown) {
-             const errorMessage = error instanceof Error ? error.message : "Failed to save service"
-             toast.error(errorMessage)
-         }
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to save service"
+            toast.error(errorMessage)
+        }
     }
 
     const handleCategoryEdit = (category: Category) => {
@@ -313,10 +327,10 @@ export default function CategoriesServicesPage() {
             toast.success("Category and all related data deleted successfully!")
             refetchCategories()
             refetchServices() // Also refetch services since some might be deleted
-                 } catch (error: unknown) {
-             const errorMessage = error instanceof Error ? error.message : "Failed to delete category"
-             toast.error(errorMessage)
-         }
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to delete category"
+            toast.error(errorMessage)
+        }
     }
 
     const handleServiceDelete = async (id: number) => {
@@ -324,10 +338,10 @@ export default function CategoriesServicesPage() {
             await deleteServiceMutation.mutateAsync(id)
             toast.success("Service and all related data deleted successfully!")
             refetchServices()
-                 } catch (error: unknown) {
-             const errorMessage = error instanceof Error ? error.message : "Failed to delete service"
-             toast.error(errorMessage)
-         }
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to delete service"
+            toast.error(errorMessage)
+        }
     }
 
     const handleImageUpload = (file: File, type: 'category' | 'service') => {
@@ -503,16 +517,11 @@ export default function CategoriesServicesPage() {
                                                             <SelectValue placeholder="Select a state" />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            <SelectItem value="Muscat">Muscat - مسقط</SelectItem>
-                                                            <SelectItem value="Dhofar">Dhofar - ظفار</SelectItem>
-                                                            <SelectItem value="Musandam">Musandam - مسندم</SelectItem>
-                                                            <SelectItem value="Buraimi">Buraimi - البريمي</SelectItem>
-                                                            <SelectItem value="Dakhiliyah">Dakhiliyah - الداخلية</SelectItem>
-                                                            <SelectItem value="North Al Batinah">North Al Batinah - شمال الباطنة</SelectItem>
-                                                            <SelectItem value="South Al Batinah">South Al Batinah - جنوب الباطنة</SelectItem>
-                                                            <SelectItem value="North Al Sharqiyah">North Al Sharqiyah - شمال الشرقية</SelectItem>
-                                                            <SelectItem value="South Al Sharqiyah">South Al Sharqiyah - جنوب الشرقية</SelectItem>
-                                                            <SelectItem value="Al Wusta">Al Wusta - الوسطى</SelectItem>
+                                                            {OMAN_GOVERNORATES.map((governorate) => (
+                                                                <SelectItem key={governorate.value} value={governorate.value}>
+                                                                    {governorate.label}
+                                                                </SelectItem>
+                                                            ))}
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
@@ -752,7 +761,7 @@ export default function CategoriesServicesPage() {
                                                                     <AlertDialogHeader>
                                                                         <AlertDialogTitle>Delete Category</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                                                                                                         Are you sure you want to delete &quot;{category.titleEn}&quot;? This action cannot be undone and will permanently delete:
+                                                                            Are you sure you want to delete &quot;{category.titleEn}&quot;? This action cannot be undone and will permanently delete:
                                                                             <br />• All services in this category
                                                                             <br />• All invoices and orders related to those services
                                                                             <br />• All provider services and offers
