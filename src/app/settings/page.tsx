@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useAdBanners, useCreateAdBanner, useCreateSubAdmin, useDeleteSubAdmin, useSubAdmins, useSystemSettings, useUpdateAdBanner, useUpdateSystemSetting, useUploadBannerImage, useUploadLegalDocuments, useDeleteAdBanner } from "@/lib/api/hooks/useAdmin"
+import { useAdBanners, useCreateAdBanner, useCreateSubAdmin, useDeleteSubAdmin, useSubAdmins, useSystemSettings, useUpdateAdBanner, useUpdateSystemSetting, useUploadBannerImage, useUploadLegalDocuments, useDeleteAdBanner, useAdminProviders } from "@/lib/api/hooks/useAdmin"
 import { getImageUrl } from "@/lib/utils/image"
 import { AdBanner } from "@/lib/types/admin"
 import {
@@ -56,6 +56,9 @@ export default function SettingsPage() {
     const createAdBannerMutation = useCreateAdBanner()
     const updateAdBannerMutation = useUpdateAdBanner()
     const deleteAdBannerMutation = useDeleteAdBanner()
+
+    // Get active and verified providers for banner selection
+    const { data: providers, isLoading: providersLoading } = useAdminProviders()
 
     // Terms & Conditions state
     const [termsEn, setTermsEn] = useState<File | null>(null)
@@ -1293,9 +1296,19 @@ export default function SettingsPage() {
                                                         <SelectValue placeholder="Choose a provider" />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="1">Provider 1</SelectItem>
-                                                        <SelectItem value="2">Provider 2</SelectItem>
-                                                        <SelectItem value="3">Provider 3</SelectItem>
+                                                        {providersLoading ? (
+                                                            <SelectItem value="" disabled>Loading providers...</SelectItem>
+                                                        ) : providers && providers.length > 0 ? (
+                                                            providers
+                                                                .filter(provider => provider.isActive && provider.isVerified)
+                                                                .map(provider => (
+                                                                    <SelectItem key={provider.id} value={provider.id.toString()}>
+                                                                        {provider.name} - {provider.state}
+                                                                    </SelectItem>
+                                                                ))
+                                                        ) : (
+                                                            <SelectItem value="" disabled>No active providers available</SelectItem>
+                                                        )}
                                                     </SelectContent>
                                                 </Select>
                                             </div>

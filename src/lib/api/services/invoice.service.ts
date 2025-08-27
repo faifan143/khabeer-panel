@@ -81,6 +81,122 @@ const mockInvoices: Invoice[] = [
         price: 200.00
       }
     }
+  },
+  {
+    id: 3,
+    orderId: 103,
+    totalAmount: 300.00,
+    discount: 25.00,
+    netAmount: 275.00,
+    commission: 30.00,
+    paymentStatus: 'unpaid',
+    isVerified: false,
+    payoutStatus: 'pending',
+    createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+    updatedAt: new Date().toISOString(),
+    order: {
+      id: 103,
+      status: 'completed',
+      totalAmount: 300.00,
+      commissionAmount: 30.00,
+      user: {
+        id: 3,
+        name: 'Omar Al-Sayed',
+        email: 'omar@example.com',
+        phone: '+968 9345 6789'
+      },
+      provider: {
+        id: 3,
+        name: 'Salalah Tech Solutions',
+        email: 'info@salalahtech.com',
+        phone: '+968 2678 9012'
+      },
+      service: {
+        id: 3,
+        title: 'Electrical Installation',
+        description: 'Complete electrical system installation',
+        price: 300.00
+      }
+    }
+  },
+  {
+    id: 4,
+    orderId: 104,
+    totalAmount: 120.00,
+    discount: 0.00,
+    netAmount: 120.00,
+    commission: 12.00,
+    paymentStatus: 'failed',
+    isVerified: false,
+    payoutStatus: 'failed',
+    createdAt: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
+    updatedAt: new Date().toISOString(),
+    order: {
+      id: 104,
+      status: 'completed',
+      totalAmount: 120.00,
+      commissionAmount: 12.00,
+      user: {
+        id: 4,
+        name: 'Layla Al-Mansouri',
+        email: 'layla@example.com',
+        phone: '+968 9456 7890'
+      },
+      provider: {
+        id: 4,
+        name: 'Nizwa Home Services',
+        email: 'contact@nizwahome.com',
+        phone: '+968 2789 0123'
+      },
+      service: {
+        id: 4,
+        title: 'Carpet Cleaning',
+        description: 'Professional carpet cleaning service',
+        price: 120.00
+      }
+    }
+  },
+  {
+    id: 5,
+    orderId: 105,
+    totalAmount: 450.00,
+    discount: 50.00,
+    netAmount: 400.00,
+    commission: 45.00,
+    paymentStatus: 'paid',
+    paymentDate: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
+    paymentMethod: 'Credit Card',
+    isVerified: true,
+    verifiedBy: 1,
+    verifiedAt: new Date().toISOString(),
+    payoutStatus: 'paid',
+    payoutDate: new Date().toISOString(),
+    createdAt: new Date(Date.now() - 345600000).toISOString(),
+    updatedAt: new Date().toISOString(),
+    order: {
+      id: 105,
+      status: 'completed',
+      totalAmount: 450.00,
+      commissionAmount: 45.00,
+      user: {
+        id: 5,
+        name: 'Khalid Al-Rashid',
+        email: 'khalid@example.com',
+        phone: '+968 9567 8901'
+      },
+      provider: {
+        id: 5,
+        name: 'Sohar Construction',
+        email: 'info@soharconstruction.com',
+        phone: '+968 2890 1234'
+      },
+      service: {
+        id: 5,
+        title: 'Kitchen Renovation',
+        description: 'Complete kitchen renovation service',
+        price: 450.00
+      }
+    }
   }
 ]
 
@@ -91,17 +207,17 @@ export class InvoiceService {
       // TODO: Replace with actual API call when backend is ready
       // const response = await api.get('/admin/invoices', { params: filters })
       // return response.data
-      
+
       // Mock implementation
       let filteredInvoices = [...mockInvoices]
-      
+
       // Apply filters
       if (filters.paymentStatus && filters.paymentStatus !== 'all') {
-        filteredInvoices = filteredInvoices.filter(invoice => 
+        filteredInvoices = filteredInvoices.filter(invoice =>
           invoice.paymentStatus === filters.paymentStatus
         )
       }
-      
+
       if (filters.search) {
         const searchTerm = filters.search.toLowerCase()
         filteredInvoices = filteredInvoices.filter(invoice =>
@@ -110,26 +226,26 @@ export class InvoiceService {
           invoice.order?.service.title.toLowerCase().includes(searchTerm)
         )
       }
-      
+
       if (filters.startDate) {
         filteredInvoices = filteredInvoices.filter(invoice =>
           new Date(invoice.createdAt) >= new Date(filters.startDate!)
         )
       }
-      
+
       if (filters.endDate) {
         filteredInvoices = filteredInvoices.filter(invoice =>
           new Date(invoice.createdAt) <= new Date(filters.endDate!)
         )
       }
-      
+
       // Pagination
       const page = filters.page || 1
       const limit = filters.limit || 10
       const startIndex = (page - 1) * limit
       const endIndex = startIndex + limit
       const paginatedInvoices = filteredInvoices.slice(startIndex, endIndex)
-      
+
       return {
         data: paginatedInvoices,
         total: filteredInvoices.length
@@ -146,7 +262,7 @@ export class InvoiceService {
       // TODO: Replace with actual API call when backend is ready
       // const response = await api.get(`/admin/invoices/${id}`)
       // return response.data
-      
+
       // Mock implementation
       const invoice = mockInvoices.find(inv => inv.id === id)
       if (!invoice) {
@@ -165,7 +281,7 @@ export class InvoiceService {
       // TODO: Replace with actual API call when backend is ready
       // const response = await api.post('/admin/invoices', data)
       // return response.data
-      
+
       // Mock implementation
       const newInvoice: Invoice = {
         id: Math.max(...mockInvoices.map(inv => inv.id)) + 1,
@@ -180,7 +296,7 @@ export class InvoiceService {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }
-      
+
       mockInvoices.push(newInvoice)
       return newInvoice
     } catch (error) {
@@ -195,19 +311,19 @@ export class InvoiceService {
       // TODO: Replace with actual API call when backend is ready
       // const response = await api.put(`/admin/invoices/${id}`, data)
       // return response.data
-      
+
       // Mock implementation
       const invoiceIndex = mockInvoices.findIndex(inv => inv.id === id)
       if (invoiceIndex === -1) {
         throw new Error('Invoice not found')
       }
-      
+
       const updatedInvoice = {
         ...mockInvoices[invoiceIndex],
         ...data,
         updatedAt: new Date().toISOString()
       }
-      
+
       mockInvoices[invoiceIndex] = updatedInvoice
       return updatedInvoice
     } catch (error) {
@@ -224,7 +340,7 @@ export class InvoiceService {
         paymentDate: paymentStatus === 'paid' ? new Date().toISOString() : undefined,
         paymentMethod
       }
-      
+
       return await this.updateInvoice(id, updateData)
     } catch (error) {
       console.error('Error updating payment status:', error)
@@ -248,13 +364,13 @@ export class InvoiceService {
       // TODO: Replace with actual API call when backend is ready
       // const response = await api.get('/admin/invoices/stats')
       // return response.data
-      
+
       // Mock implementation
       const total = mockInvoices.length
       const unpaid = mockInvoices.filter(inv => inv.paymentStatus === 'unpaid').length
       const paid = mockInvoices.filter(inv => inv.paymentStatus === 'paid').length
       const failed = mockInvoices.filter(inv => inv.paymentStatus === 'failed').length
-      
+
       const totalAmount = mockInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0)
       const paidAmount = mockInvoices
         .filter(inv => inv.paymentStatus === 'paid')
@@ -262,7 +378,7 @@ export class InvoiceService {
       const pendingAmount = mockInvoices
         .filter(inv => inv.paymentStatus === 'unpaid')
         .reduce((sum, inv) => sum + inv.totalAmount, 0)
-      
+
       return {
         total,
         unpaid,
@@ -283,13 +399,13 @@ export class InvoiceService {
     try {
       // TODO: Replace with actual API call when backend is ready
       // await api.delete(`/admin/invoices/${id}`)
-      
+
       // Mock implementation
       const invoiceIndex = mockInvoices.findIndex(inv => inv.id === id)
       if (invoiceIndex === -1) {
         throw new Error('Invoice not found')
       }
-      
+
       mockInvoices.splice(invoiceIndex, 1)
     } catch (error) {
       console.error('Error deleting invoice:', error)
