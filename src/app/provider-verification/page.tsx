@@ -124,6 +124,8 @@ export default function ProviderVerificationPage() {
     const [selectedProvider, setSelectedProvider] = useState<AdminProvider | null>(null)
     const [isProviderDialogOpen, setIsProviderDialogOpen] = useState(false)
     const [isDocumentDialogOpen, setIsDocumentDialogOpen] = useState(false)
+    const [isIncomeDialogOpen, setIsIncomeDialogOpen] = useState(false)
+    const [isServicesDialogOpen, setIsServicesDialogOpen] = useState(false)
     const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
     const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
     const [approveNotes, setApproveNotes] = useState("")
@@ -351,18 +353,29 @@ export default function ProviderVerificationPage() {
             return {
                 total: 0,
                 afterDiscounts: 0,
-                offerDiscounts: 0
+                offerDiscounts: 0,
+                totalCommission: 0,
+                netIncome: 0
             }
         }
 
         const totalIncome = provider.orders?.reduce((sum, order) => sum + order.totalAmount, 0) || 0
+        const totalCommission = provider.orders?.reduce((sum, order) => sum + order.commissionAmount, 0) || 0
+        const providerAmount = provider.orders?.reduce((sum, order) => sum + order.providerAmount, 0) || 0
+
+        // Calculate offer discounts from provider services and offers
         const offerDiscounts = provider.offers?.reduce((sum, offer) => sum + (offer.originalPrice - offer.offerPrice), 0) || 0
+
         const afterDiscounts = totalIncome - offerDiscounts
+        const netIncome = totalIncome - totalCommission
 
         return {
             total: totalIncome,
             afterDiscounts: afterDiscounts,
-            offerDiscounts: offerDiscounts
+            offerDiscounts: offerDiscounts,
+            totalCommission: totalCommission,
+            providerAmount: providerAmount,
+            netIncome: netIncome
         }
     }
 
@@ -701,7 +714,7 @@ export default function ProviderVerificationPage() {
                                                         <TableCell>
                                                             <div className="flex items-center space-x-3">
                                                                 <Avatar className="h-10 w-10">
-                                                                    <AvatarImage src={provider.image} alt={provider.name} />
+                                                                    <AvatarImage src={process.env.NEXT_PUBLIC_API_URL_IMAGE + provider.image} alt={provider.name} />
                                                                     <AvatarFallback>{provider.name.charAt(0)}</AvatarFallback>
                                                                 </Avatar>
                                                                 <div className="space-y-1">
@@ -712,25 +725,50 @@ export default function ProviderVerificationPage() {
                                                         </TableCell>
                                                         <TableCell>
                                                             <div className="space-y-1">
+                                                                <div className="text-sm font-medium">{provider.email}</div>
                                                                 <div className="text-sm font-medium">{provider.phone}</div>
                                                                 <div className="text-sm text-muted-foreground">{provider.state}</div>
                                                             </div>
                                                         </TableCell>
                                                         <TableCell>
                                                             <div className="space-y-1">
-                                                                <div className="text-sm">Categories: N/A</div>
-                                                                <div className="text-sm text-muted-foreground">Services: N/A</div>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        setSelectedProvider(provider)
+                                                                        setIsServicesDialogOpen(true)
+                                                                    }}
+                                                                    className="h-8 px-3 hover:bg-blue-100 text-left justify-start cursor-pointer"
+                                                                >
+                                                                    <Package className="h-4 w-4 mr-2" />
+                                                                    <span className="text-sm">
+                                                                        {provider.providerServices.length > 0
+                                                                            ? `${provider.providerServices.length} service${provider.providerServices.length > 1 ? 's' : ''}`
+                                                                            : 'No services'
+                                                                        }
+                                                                    </span>
+                                                                </Button>
                                                             </div>
                                                         </TableCell>
                                                         <TableCell>
                                                             <div className="text-sm font-medium">0 orders</div>
                                                         </TableCell>
                                                         <TableCell>
-                                                            <div className="space-y-1">
-                                                                <div className="text-sm font-medium text-green-600">Total: {renderCurrency(income.total)}</div>
-                                                                <div className="text-sm text-muted-foreground">After discounts: {renderCurrency(income.afterDiscounts)}</div>
-                                                                <div className="text-xs text-muted-foreground">Offer discounts: {renderCurrency(income.offerDiscounts)}</div>
-                                                            </div>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => {
+                                                                    setSelectedProvider(provider)
+                                                                    setIsIncomeDialogOpen(true)
+                                                                }}
+                                                                className="h-8 px-3 hover:bg-green-100 text-left justify-start cursor-pointer"
+                                                            >
+                                                                <DollarSign className="h-4 w-4 mr-2" />
+                                                                <span className="text-sm font-medium text-green-600">
+                                                                    {renderCurrency(income.total)}
+                                                                </span>
+                                                            </Button>
                                                         </TableCell>
                                                         <TableCell>
                                                             <Button
@@ -869,7 +907,7 @@ export default function ProviderVerificationPage() {
                                             <TableRow className="bg-gray-50">
                                                 <TableHead className="font-semibold">Provider</TableHead>
                                                 <TableHead className="font-semibold">Contact Info</TableHead>
-                                                <TableHead className="font-semibold">Categories & Services</TableHead>
+                                                <TableHead className="font-semibold">State</TableHead>
                                                 <TableHead className="font-semibold">Request Date</TableHead>
                                                 <TableHead className="font-semibold text-right">Actions</TableHead>
                                             </TableRow>
@@ -880,7 +918,7 @@ export default function ProviderVerificationPage() {
                                                     <TableCell>
                                                         <div className="flex items-center space-x-3">
                                                             <Avatar className="h-10 w-10">
-                                                                <AvatarImage src={request.provider?.image} alt={request.provider?.name || 'Provider'} />
+                                                                <AvatarImage src={process.env.NEXT_PUBLIC_API_URL_IMAGE + request.provider?.image} alt={request.provider?.name || 'Provider'} />
                                                                 <AvatarFallback>
                                                                     {request.provider?.name?.charAt(0) || 'P'}
                                                                 </AvatarFallback>
@@ -908,7 +946,7 @@ export default function ProviderVerificationPage() {
                                                             )}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell>
+                                                    {/* <TableCell>
                                                         <div className="space-y-1">
                                                             <div className="text-sm">
                                                                 Categories: {request.provider?.providerServices?.length > 0 ?
@@ -921,6 +959,9 @@ export default function ProviderVerificationPage() {
                                                                     'N/A'}
                                                             </div>
                                                         </div>
+                                                    </TableCell> */}
+                                                    <TableCell>
+                                                        <div className="text-sm text-muted-foreground">{request.provider.state}</div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="text-sm">{formatDate(request.requestDate)}</div>
@@ -1009,29 +1050,7 @@ export default function ProviderVerificationPage() {
                                 </Card>
                             )}
 
-                            {/* Debug section for development */}
-                            {process.env.NODE_ENV === 'development' && (
-                                <Card className="border-0 shadow-lg">
-                                    <CardContent className="p-4">
-                                        <details className="text-sm">
-                                            <summary className="cursor-pointer font-medium text-gray-700 mb-2">
-                                                Debug Info (Development Only)
-                                            </summary>
-                                            <div className="space-y-2 text-xs font-mono bg-gray-100 p-3 rounded">
-                                                <div><strong>Raw Response:</strong> {JSON.stringify(joinRequestsResponse, null, 2)}</div>
-                                                <div><strong>Processed Requests:</strong> {JSON.stringify(joinRequests, null, 2)}</div>
-                                                <div><strong>Loading State:</strong> {joinRequestsLoading ? 'true' : 'false'}</div>
-                                                <div><strong>Error:</strong> {joinRequestsError ? JSON.stringify(joinRequestsError, null, 2) : 'None'}</div>
-                                                <div><strong>Unverified Providers Count:</strong> {unverifiedProviders?.length || 0}</div>
-                                                <div><strong>Final Join Requests Count:</strong> {joinRequests.length}</div>
-                                                <div><strong>Data Source:</strong> {joinRequests.length > 0 ?
-                                                    (joinRequests[0].providerId === joinRequests[0].id ? 'Converted from providers' : 'Direct join requests') :
-                                                    'None'}</div>
-                                            </div>
-                                        </details>
-                                    </CardContent>
-                                </Card>
-                            )}
+
 
                             {/* Error handling */}
                             {joinRequestsError && (
@@ -1265,6 +1284,205 @@ export default function ProviderVerificationPage() {
                         isOpen={isDocumentDialogOpen}
                         onClose={() => setIsDocumentDialogOpen(false)}
                     />
+
+                    {/* Income Details Dialog */}
+                    <Dialog open={isIncomeDialogOpen} onOpenChange={setIsIncomeDialogOpen}>
+                        <DialogContent className="sm:max-w-[600px]">
+                            <DialogHeader>
+                                <DialogTitle>Income Details</DialogTitle>
+                                <DialogDescription>
+                                    Detailed income breakdown for {selectedProvider?.name}
+                                </DialogDescription>
+                            </DialogHeader>
+                            {selectedProvider && (
+                                <div className="space-y-4">
+                                    {(() => {
+                                        const income = calculateProviderIncome(selectedProvider.id)
+                                        return (
+                                            <>
+                                                <div className="grid grid-cols-1 gap-4">
+                                                    <div className="p-4 bg-green-50 rounded-lg">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-sm font-medium text-green-700">Total Income</span>
+                                                            <span className="text-lg font-bold text-green-800">{renderCurrency(income.total)}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-4 bg-blue-50 rounded-lg">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-sm font-medium text-blue-700">Provider Amount</span>
+                                                            <span className="text-lg font-bold text-blue-800">{renderCurrency(income.providerAmount)}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-4 bg-orange-50 rounded-lg">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-sm font-medium text-orange-700">Total Commission</span>
+                                                            <span className="text-lg font-bold text-orange-800">{renderCurrency(income.totalCommission)}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-4 bg-purple-50 rounded-lg">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-sm font-medium text-purple-700">Net Income</span>
+                                                            <span className="text-lg font-bold text-purple-800">{renderCurrency(income.netIncome)}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-4 bg-yellow-50 rounded-lg">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-sm font-medium text-yellow-700">Offer Discounts</span>
+                                                            <span className="text-lg font-bold text-yellow-800">{renderCurrency(income.offerDiscounts)}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )
+                                    })()}
+                                </div>
+                            )}
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsIncomeDialogOpen(false)}>
+                                    Close
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    {/* Services & Categories Dialog */}
+                    <Dialog open={isServicesDialogOpen} onOpenChange={setIsServicesDialogOpen}>
+                        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-hidden">
+                            <DialogHeader>
+                                <DialogTitle>Services & Categories</DialogTitle>
+                                <DialogDescription>
+                                    All services and categories offered by {selectedProvider?.name}
+                                </DialogDescription>
+                            </DialogHeader>
+                            {selectedProvider && (
+                                <div className="space-y-6 overflow-y-auto max-h-[calc(80vh-140px)] pr-2">
+                                    {selectedProvider.providerServices && selectedProvider.providerServices.length > 0 ? (
+                                        <div className="space-y-4">
+                                            {/* Group by categories */}
+                                            {(() => {
+                                                const groupedServices = selectedProvider.providerServices.reduce((acc, ps) => {
+                                                    const categoryTitle = ps.service?.category?.titleEn || 'Uncategorized'
+                                                    if (!acc[categoryTitle]) {
+                                                        acc[categoryTitle] = []
+                                                    }
+                                                    acc[categoryTitle].push(ps)
+                                                    return acc
+                                                }, {} as Record<string, typeof selectedProvider.providerServices>)
+
+                                                return Object.entries(groupedServices).map(([category, services]) => (
+                                                    <div key={category} className="border rounded-lg p-4">
+                                                        <h3 className="font-semibold text-lg text-gray-900 mb-3 flex items-center">
+                                                            <Package className="h-5 w-5 mr-2 text-blue-600" />
+                                                            {category}
+                                                        </h3>
+                                                        <div className="grid gap-3">
+                                                            {services.map((ps, index) => {
+                                                                // Find if this service has an offer
+                                                                const offer = selectedProvider?.offers?.find(o =>
+                                                                    o.originalPrice === ps.price
+                                                                )
+
+                                                                // Calculate commission amount
+                                                                const commissionAmount = (ps.price * (ps.service?.commission || 0)) / 100
+                                                                const totalWithCommission = ps.price + commissionAmount
+
+                                                                return (
+                                                                    <div key={index} className="bg-gray-50 rounded-lg p-3">
+                                                                        <div className="space-y-3">
+                                                                            {/* Service Header */}
+                                                                            <div className="flex items-center justify-between">
+                                                                                <div className="flex-1">
+                                                                                    <h4 className="font-medium text-gray-900">{ps.service?.title}</h4>
+                                                                                    <p className="text-sm text-muted-foreground mt-1">
+                                                                                        {ps.service?.description || 'No description available'}
+                                                                                    </p>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            {/* Pricing Grid */}
+                                                                            <div className="grid grid-cols-2 gap-4">
+                                                                                {/* Left Column - Base Price & Commission */}
+                                                                                <div className="space-y-2">
+                                                                                    <div className="flex items-center justify-between">
+                                                                                        <span className="text-sm font-medium text-gray-600">Base Price:</span>
+                                                                                        <span className="text-sm font-semibold text-gray-900">
+                                                                                            {formatCurrency(ps.price)}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <div className="flex items-center justify-between">
+                                                                                        <span className="text-sm font-medium text-gray-600">Commission ({ps.service?.commission || 0}%):</span>
+                                                                                        <span className="text-sm font-semibold text-orange-600">
+                                                                                            {formatCurrency(commissionAmount)}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <div className="flex items-center justify-between border-t pt-2">
+                                                                                        <span className="text-sm font-medium text-gray-700">Total:</span>
+                                                                                        <span className="text-sm font-bold text-green-700">
+                                                                                            {formatCurrency(totalWithCommission)}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                {/* Right Column - Offers */}
+                                                                                <div className="space-y-2">
+                                                                                    {offer ? (
+                                                                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+                                                                                            <div className="text-xs font-medium text-yellow-800 mb-1">Special Offer!</div>
+                                                                                            <div className="space-y-1">
+                                                                                                <div className="flex items-center justify-between">
+                                                                                                    <span className="text-xs text-yellow-700">Original:</span>
+                                                                                                    <span className="text-xs line-through text-yellow-600">
+                                                                                                        {formatCurrency(offer.originalPrice)}
+                                                                                                    </span>
+                                                                                                </div>
+                                                                                                <div className="flex items-center justify-between">
+                                                                                                    <span className="text-xs text-yellow-700">Offer Price:</span>
+                                                                                                    <span className="text-xs font-bold text-green-600">
+                                                                                                        {formatCurrency(offer.offerPrice)}
+                                                                                                    </span>
+                                                                                                </div>
+                                                                                                <div className="flex items-center justify-between">
+                                                                                                    <span className="text-xs text-yellow-700">You Save:</span>
+                                                                                                    <span className="text-xs font-bold text-green-600">
+                                                                                                        {formatCurrency(offer.originalPrice - offer.offerPrice)}
+                                                                                                    </span>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    ) : (
+                                                                                        <div className="text-center py-2">
+                                                                                            <span className="text-xs text-muted-foreground">No offers</span>
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                )
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            })()}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-8">
+                                            <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                                            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Services Available</h3>
+                                            <p className="text-muted-foreground">
+                                                This provider hasn't added any services yet.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            <DialogFooter className="flex-shrink-0 pt-4 border-t">
+                                <Button variant="outline" onClick={() => setIsServicesDialogOpen(false)}>
+                                    Close
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </AdminLayout>
         </ProtectedRoute>

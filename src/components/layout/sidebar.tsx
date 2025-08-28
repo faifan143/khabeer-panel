@@ -66,12 +66,12 @@ const navigationItems = [
         icon: Users,
         description: "Manage user accounts"
     },
-    {
-        title: "Income & Finance",
-        href: "/income",
-        icon: DollarSign,
-        description: "Revenue, commissions, and financial reports"
-    },
+    // {
+    //     title: "Income & Finance",
+    //     href: "/income",
+    //     icon: DollarSign,
+    //     description: "Revenue, commissions, and financial reports"
+    // },
     {
         title: "Invoice Management",
         href: "/invoices",

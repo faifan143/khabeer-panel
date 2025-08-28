@@ -4,31 +4,26 @@ import { ProtectedRoute } from "@/components/auth/protected-route"
 import { AdminLayout } from "@/components/layout/admin-layout"
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { useInvoices, useInvoiceStats, useUpdatePaymentStatus, useMarkAsPaid, useDeleteInvoice } from '@/lib/api/hooks/useInvoices'
-import { formatCurrency } from '@/lib/utils'
+import { useDeleteInvoice, useInvoices, useInvoiceStats, useMarkAsPaid, useUpdatePaymentStatus } from '@/lib/api/hooks/useInvoices'
 import { Invoice } from '@/lib/types/invoice'
+import { formatCurrency } from '@/lib/utils'
 import {
-  DollarSign,
-  Eye,
-  Search,
-  Filter,
-  Calendar,
-  CreditCard,
-  CheckCircle,
-  XCircle,
   AlertCircle,
+  CheckCircle,
+  DollarSign,
+  Filter,
+  RefreshCw,
   Trash2,
-  RefreshCw
+  XCircle
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
 
 // Loading Skeleton Components
@@ -113,8 +108,10 @@ export default function InvoicesPage() {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
-  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [isMarkPaidDialogOpen, setIsMarkPaidDialogOpen] = useState(false)
+  const [isMarkFailedDialogOpen, setIsMarkFailedDialogOpen] = useState(false)
+  const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('')
   const [activeTab, setActiveTab] = useState('all')
 
@@ -127,7 +124,7 @@ export default function InvoicesPage() {
     page: 1,
     limit: 1000
   })
-  
+
   const { data: stats } = useInvoiceStats()
 
   // Mutations
@@ -157,22 +154,7 @@ export default function InvoicesPage() {
 
   const currentInvoices = getCurrentInvoices()
 
-  const handlePaymentStatusUpdate = async (invoiceId: number, newStatus: string) => {
-    try {
-      await updatePaymentStatusMutation.mutateAsync({
-        id: invoiceId,
-        paymentStatus: newStatus,
-        paymentMethod: paymentMethod || 'Admin Update'
-      })
-      setIsPaymentDialogOpen(false)
-      setSelectedInvoice(null)
-      setPaymentMethod('')
-      refetch()
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to update payment status"
-      toast.error(errorMessage)
-    }
-  }
+
 
   const handleMarkAsPaid = async (invoiceId: number) => {
     try {
@@ -180,15 +162,52 @@ export default function InvoicesPage() {
         id: invoiceId,
         paymentMethod: paymentMethod || 'Admin Payment'
       })
-      setIsPaymentDialogOpen(false)
+      setIsMarkPaidDialogOpen(false)
       setSelectedInvoice(null)
       setPaymentMethod('')
       refetch()
+      toast.success('Invoice marked as paid successfully')
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to mark invoice as paid"
       toast.error(errorMessage)
     }
   }
+
+  const handleMarkAsFailed = async (invoiceId: number) => {
+    try {
+      await updatePaymentStatusMutation.mutateAsync({
+        id: invoiceId,
+        paymentStatus: 'failed',
+        paymentMethod: 'Admin Update'
+      })
+      setIsMarkFailedDialogOpen(false)
+      setSelectedInvoice(null)
+      refetch()
+      toast.success('Invoice marked as failed successfully')
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to mark invoice as failed"
+      toast.error(errorMessage)
+    }
+  }
+
+  const handleRefund = async (invoiceId: number) => {
+    try {
+      await updatePaymentStatusMutation.mutateAsync({
+        id: invoiceId,
+        paymentStatus: 'refunded',
+        paymentMethod: 'Admin Refund'
+      })
+      setIsRefundDialogOpen(false)
+      setSelectedInvoice(null)
+      refetch()
+      toast.success('Invoice marked as refunded successfully')
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to mark invoice as refunded"
+      toast.error(errorMessage)
+    }
+  }
+
+
 
   const handleDeleteInvoice = async (invoiceId: number) => {
     try {
@@ -202,10 +221,7 @@ export default function InvoicesPage() {
     }
   }
 
-  const openPaymentDialog = (invoice: Invoice) => {
-    setSelectedInvoice(invoice)
-    setIsPaymentDialogOpen(true)
-  }
+
 
   const openDeleteDialog = (invoice: Invoice) => {
     setSelectedInvoice(invoice)
@@ -215,119 +231,96 @@ export default function InvoicesPage() {
   return (
     <ProtectedRoute allowedRoles={['ADMIN']}>
       <AdminLayout>
-        <div className="container mx-auto py-6 space-y-6">
-          {/* Header */}
+        <div className="container mx-auto py-4 space-y-4">
+          {/* Compact Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Invoice Management</h1>
-              <p className="text-muted-foreground">Manage payments and invoices for completed orders</p>
+              <h1 className="text-2xl font-bold">Invoice Management</h1>
             </div>
-            <Button onClick={() => refetch()} disabled={isLoading}>
+            <Button size="sm" onClick={() => refetch()} disabled={isLoading}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
           </div>
 
-          {/* Statistics Cards */}
+          {/* Compact Statistics Row */}
           {stats && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard
-                title="Total Invoices"
-                value={stats.total}
-                icon={DollarSign}
-                color="bg-blue-500"
-              />
-              <StatCard
-                title="Unpaid Amount"
-                value={formatCurrency(stats.pendingAmount)}
-                icon={AlertCircle}
-                color="bg-yellow-500"
-                subtitle={`${stats.unpaid} invoices`}
-              />
-              <StatCard
-                title="Paid Amount"
-                value={formatCurrency(stats.paidAmount)}
-                icon={CheckCircle}
-                color="bg-green-500"
-                subtitle={`${stats.paid} invoices`}
-              />
-              <StatCard
-                title="Total Revenue"
-                value={formatCurrency(stats.totalAmount)}
-                icon={DollarSign}
-                color="bg-purple-500"
-              />
+            <div className="grid grid-cols-4 gap-3">
+              <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                <DollarSign className="h-5 w-5 text-blue-600" />
+                <div>
+                  <p className="text-sm font-medium text-blue-900">{stats.total}</p>
+                  <p className="text-xs text-blue-700">Total</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
+                <AlertCircle className="h-5 w-5 text-yellow-600" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-900">{formatCurrency(stats.pendingAmount)}</p>
+                  <p className="text-xs text-yellow-700">{stats.unpaid} unpaid</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="text-sm font-medium text-green-900">{formatCurrency(stats.paidAmount)}</p>
+                  <p className="text-xs text-green-700">{stats.paid} paid</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
+                <DollarSign className="h-5 w-5 text-purple-600" />
+                <div>
+                  <p className="text-sm font-medium text-purple-900">{formatCurrency(stats.totalAmount)}</p>
+                  <p className="text-xs text-purple-700">Revenue</p>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Filters */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Filter className="h-5 w-5" />
-                Filters
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <Label htmlFor="search">Search</Label>
-                  <Input
-                    id="search"
-                    placeholder="Search invoices..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Statuses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="unpaid">Unpaid</SelectItem>
-                      <SelectItem value="paid">Paid</SelectItem>
-                      <SelectItem value="failed">Failed</SelectItem>
-                      <SelectItem value="refunded">Refunded</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="endDate">End Date</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Compact Filters */}
+          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+            <Filter className="h-4 w-4 text-gray-600" />
+            <Input
+              placeholder="Search invoices..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-64"
+            />
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="unpaid">Unpaid</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+                <SelectItem value="refunded">Refunded</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-36"
+            />
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-36"
+            />
+          </div>
 
           {/* Invoices Table */}
           <Card>
-            <CardHeader>
-              <CardTitle>Invoices</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="all">All ({invoices.length})</TabsTrigger>
-                  <TabsTrigger value="unpaid">Unpaid ({unpaidInvoices.length})</TabsTrigger>
-                  <TabsTrigger value="paid">Paid ({paidInvoices.length})</TabsTrigger>
-                  <TabsTrigger value="failed">Failed ({failedInvoices.length})</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-4 h-9">
+                  <TabsTrigger value="all" className="text-sm">All ({invoices.length})</TabsTrigger>
+                  <TabsTrigger value="unpaid" className="text-sm">Unpaid ({unpaidInvoices.length})</TabsTrigger>
+                  <TabsTrigger value="paid" className="text-sm">Paid ({paidInvoices.length})</TabsTrigger>
+                  <TabsTrigger value="failed" className="text-sm">Failed ({failedInvoices.length})</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value={activeTab} className="mt-6">
@@ -404,30 +397,79 @@ export default function InvoicesPage() {
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => openPaymentDialog(invoice)}
-                                >
-                                  <CreditCard className="h-4 w-4 mr-1" />
-                                  Payment
-                                </Button>
+                                {/* Mark as Paid - Only for unpaid invoices */}
                                 {invoice.paymentStatus === 'unpaid' && (
                                   <Button
                                     variant="default"
                                     size="sm"
-                                    onClick={() => handleMarkAsPaid(invoice.id)}
+                                    className="h-8 px-3 bg-green-600 hover:bg-green-700"
+                                    onClick={() => {
+                                      setSelectedInvoice(invoice)
+                                      setIsMarkPaidDialogOpen(true)
+                                    }}
                                   >
                                     <CheckCircle className="h-4 w-4 mr-1" />
                                     Mark Paid
                                   </Button>
                                 )}
+
+                                {/* Mark as Failed - Only for unpaid invoices */}
+                                {invoice.paymentStatus === 'unpaid' && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 px-3 bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
+                                    onClick={() => {
+                                      setSelectedInvoice(invoice)
+                                      setIsMarkFailedDialogOpen(true)
+                                    }}
+                                  >
+                                    <XCircle className="h-4 w-4 mr-1" />
+                                    Mark Failed
+                                  </Button>
+                                )}
+
+                                {/* Refund - Only for paid invoices */}
+                                {invoice.paymentStatus === 'paid' && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 px-3 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
+                                    onClick={() => {
+                                      setSelectedInvoice(invoice)
+                                      setIsRefundDialogOpen(true)
+                                    }}
+                                  >
+                                    <RefreshCw className="h-4 w-4 mr-1" />
+                                    Refund
+                                  </Button>
+                                )}
+
+                                {/* Reactivate - For failed invoices */}
+                                {invoice.paymentStatus === 'failed' && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 px-3 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200"
+                                    onClick={() => {
+                                      setSelectedInvoice(invoice)
+                                      setIsMarkPaidDialogOpen(true)
+                                    }}
+                                  >
+                                    <CheckCircle className="h-4 w-4 mr-1" />
+                                    Reactivate
+                                  </Button>
+                                )}
+
+                                {/* Delete - Available for all statuses */}
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  className="h-8 px-3 hover:bg-red-100"
                                   onClick={() => openDeleteDialog(invoice)}
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  Delete
                                 </Button>
                               </div>
                             </TableCell>
@@ -442,13 +484,23 @@ export default function InvoicesPage() {
           </Card>
         </div>
 
-        {/* Payment Status Update Dialog */}
-        <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-          <DialogContent>
+
+
+        {/* Mark as Paid Confirmation Dialog */}
+        <Dialog open={isMarkPaidDialogOpen} onOpenChange={setIsMarkPaidDialogOpen}>
+          <DialogContent className="sm:max-w-[400px]">
             <DialogHeader>
-              <DialogTitle>Update Payment Status</DialogTitle>
+              <DialogTitle>Confirm Mark as Paid</DialogTitle>
               <DialogDescription>
-                Update the payment status for invoice #{selectedInvoice?.id}
+                Are you sure you want to mark invoice #{selectedInvoice?.id} as paid?
+                {selectedInvoice && (
+                  <div className="mt-2 p-3 bg-green-50 rounded-lg">
+                    <div className="text-sm text-green-800">
+                      <p><strong>Customer:</strong> {selectedInvoice.order?.user.name}</p>
+                      <p><strong>Amount:</strong> {formatCurrency(selectedInvoice.totalAmount)}</p>
+                    </div>
+                  </div>
+                )}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -461,25 +513,103 @@ export default function InvoicesPage() {
                   onChange={(e) => setPaymentMethod(e.target.value)}
                 />
               </div>
-              <div className="flex gap-2">
+
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsMarkPaidDialogOpen(false)
+                    setPaymentMethod('')
+                  }}
+                >
+                  Cancel
+                </Button>
                 <Button
                   variant="default"
-                  onClick={() => handlePaymentStatusUpdate(selectedInvoice!.id, 'paid')}
-                  disabled={updatePaymentStatusMutation.isPending}
+                  onClick={() => handleMarkAsPaid(selectedInvoice!.id)}
+                  disabled={markAsPaidMutation.isPending}
+                  className="bg-green-600 hover:bg-green-700"
                 >
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  Mark as Paid
+                  Confirm Mark as Paid
                 </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => handlePaymentStatusUpdate(selectedInvoice!.id, 'failed')}
-                  disabled={updatePaymentStatusMutation.isPending}
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Mark as Failed
-                </Button>
-              </div>
+              </DialogFooter>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Mark as Failed Confirmation Dialog */}
+        <Dialog open={isMarkFailedDialogOpen} onOpenChange={setIsMarkFailedDialogOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Confirm Mark as Failed</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to mark invoice #{selectedInvoice?.id} as failed?
+                {selectedInvoice && (
+                  <div className="mt-2 p-3 bg-red-50 rounded-lg">
+                    <div className="text-sm text-red-800">
+                      <p><strong>Customer:</strong> {selectedInvoice.order?.user.name}</p>
+                      <p><strong>Amount:</strong> {formatCurrency(selectedInvoice.totalAmount)}</p>
+                      <p className="mt-2 text-xs">This will mark the payment as failed and update the order status.</p>
+                    </div>
+                  </div>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsMarkFailedDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => handleMarkAsFailed(selectedInvoice!.id)}
+                disabled={updatePaymentStatusMutation.isPending}
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Confirm Mark as Failed
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Refund Confirmation Dialog */}
+        <Dialog open={isRefundDialogOpen} onOpenChange={setIsRefundDialogOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle>Confirm Refund</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to refund invoice #{selectedInvoice?.id}?
+                {selectedInvoice && (
+                  <div className="mt-2 p-3 bg-blue-50 rounded-lg">
+                    <div className="text-sm text-blue-800">
+                      <p><strong>Customer:</strong> {selectedInvoice.order?.user.name}</p>
+                      <p><strong>Amount:</strong> {formatCurrency(selectedInvoice.totalAmount)}</p>
+                      <p className="mt-2 text-xs">This will mark the invoice as refunded and process the refund.</p>
+                    </div>
+                  </div>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsRefundDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => handleRefund(selectedInvoice!.id)}
+                disabled={updatePaymentStatusMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Confirm Refund
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 
@@ -490,6 +620,14 @@ export default function InvoicesPage() {
               <DialogTitle>Delete Invoice</DialogTitle>
               <DialogDescription>
                 Are you sure you want to delete invoice #{selectedInvoice?.id}? This action cannot be undone.
+                {selectedInvoice && (
+                  <div className="mt-2 p-3 bg-red-50 rounded-lg">
+                    <div className="text-sm text-red-800">
+                      <p><strong>Customer:</strong> {selectedInvoice.order?.user.name}</p>
+                      <p><strong>Amount:</strong> {formatCurrency(selectedInvoice.totalAmount)}</p>
+                    </div>
+                  </div>
+                )}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

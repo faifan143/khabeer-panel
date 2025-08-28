@@ -141,6 +141,8 @@ export interface AdminProvider {
       id: number
       title: string
       description: string
+      commission: number
+      whatsapp: string
       category: {
         id: number
         titleEn: string
@@ -190,6 +192,8 @@ export interface AdminProviderJoinRequest {
         id: number
         title: string
         description: string
+        commission: number
+        whatsapp: string
         category: {
           id: number
           titleEn: string

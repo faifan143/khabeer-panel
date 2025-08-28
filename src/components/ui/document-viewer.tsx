@@ -11,7 +11,8 @@ import {
   X,
   Download,
   Calendar,
-  User
+  User,
+  Eye
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -82,7 +83,7 @@ export function DocumentViewer({
 
   const downloadDocument = (document: Document) => {
     // Fix the URL to point to the documents subdirectory for all provider files
-    const backendUrl = 'http://localhost:3001'
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL_IMAGE
     let fullUrl = document.url.startsWith('http')
       ? document.url
       : `${backendUrl}${document.url}`
@@ -178,8 +179,8 @@ export function DocumentViewer({
                     onClick={() => downloadDocument(document)}
                     className="w-full h-8 text-xs"
                   >
-                    <Download className="h-3 w-3 mr-1" />
-                    Download
+                    <Eye className="h-3 w-3 mr-1" />
+                    Open
                   </Button>
                 </div>
               </div>

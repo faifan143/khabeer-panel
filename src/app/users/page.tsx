@@ -192,8 +192,8 @@ export default function UsersManagementPage() {
                                                 <TableHead>Name</TableHead>
                                                 <TableHead>Phone</TableHead>
                                                 <TableHead>Address</TableHead>
-                                                <TableHead>Orders</TableHead>
                                                 <TableHead>State</TableHead>
+                                                <TableHead>Orders</TableHead>
                                                 <TableHead>Payments</TableHead>
                                                 <TableHead>Actions</TableHead>
                                             </TableRow>
@@ -204,7 +204,7 @@ export default function UsersManagementPage() {
                                                     <TableCell>
                                                         <div className="flex items-center space-x-3">
                                                             <Avatar className="h-10 w-10">
-                                                                <AvatarImage src={user.image || ""} alt={user.name} />
+                                                                <AvatarImage src={process.env.NEXT_PUBLIC_API_URL_IMAGE + user.image || ""} alt={user.name} />
                                                                 <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                                                             </Avatar>
                                                             <div className="font-medium">{user.name}</div>
@@ -219,13 +219,13 @@ export default function UsersManagementPage() {
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
+                                                        <div className="text-sm">{user.state || "N/A"}</div>
+                                                    </TableCell>
+                                                    <TableCell>
                                                         <div className="flex items-center space-x-1">
                                                             <Package className="h-3 w-3 text-muted-foreground" />
                                                             <span className="text-sm font-medium">{user.completedOrders}</span>
                                                         </div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="text-sm">{user.state || "N/A"}</div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center space-x-1">
