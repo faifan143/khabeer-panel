@@ -1470,7 +1470,7 @@ export default function ProviderVerificationPage() {
                                             <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                                             <h3 className="text-lg font-semibold text-gray-900 mb-2">No Services Available</h3>
                                             <p className="text-muted-foreground">
-                                                This provider hasn't added any services yet.
+                                                This provider hasn&apos;t added any services yet.
                                             </p>
                                         </div>
                                     )}
