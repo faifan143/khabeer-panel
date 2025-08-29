@@ -155,8 +155,25 @@ export default function NotificationsPage() {
         }
     }
 
-    const getAudienceBadges = (audience: string[]) => {
-        return audience.map(aud => (
+    const getAudienceBadges = (audience: string[] | string | any) => {
+        // Handle case where audience might be a JSON string or undefined
+        let audienceArray: string[] = []
+
+        if (Array.isArray(audience)) {
+            audienceArray = audience
+        } else if (typeof audience === 'string') {
+            try {
+                audienceArray = JSON.parse(audience)
+            } catch (e) {
+                // If parsing fails, treat as single value
+                audienceArray = [audience]
+            }
+        } else if (audience) {
+            // Fallback for any other type
+            audienceArray = [String(audience)]
+        }
+
+        return audienceArray.map(aud => (
             <Badge key={aud} variant="outline" className="text-xs">
                 {aud === "customers" ? "Customers" : "Providers"}
             </Badge>

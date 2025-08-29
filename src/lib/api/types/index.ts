@@ -115,6 +115,7 @@ export interface Service extends BaseEntity {
   whatsapp: string
   categoryId?: number
   category?: Category
+  state?: string
 }
 
 export interface CreateServiceDto {
@@ -123,6 +124,7 @@ export interface CreateServiceDto {
   commission: number
   whatsapp: string
   categoryId?: number
+  state?: string
 }
 
 export interface UpdateServiceDto {
@@ -131,6 +133,7 @@ export interface UpdateServiceDto {
   commission?: number
   whatsapp?: string
   categoryId?: number
+  state?: string
 }
 
 // Order types

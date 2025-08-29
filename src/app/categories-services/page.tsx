@@ -220,7 +220,8 @@ export default function CategoriesServicesPage() {
         description: "",
         commission: 0,
         whatsapp: "",
-        categoryId: undefined
+        categoryId: undefined,
+        state: undefined
     })
 
     const resetCategoryForm = () => {
@@ -239,7 +240,8 @@ export default function CategoriesServicesPage() {
             description: "",
             commission: 0,
             whatsapp: "",
-            categoryId: undefined
+            categoryId: undefined,
+            state: undefined
         })
         setSelectedService(null)
         setServiceImageFile(null)
@@ -273,6 +275,13 @@ export default function CategoriesServicesPage() {
 
     const handleServiceSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+
+        // Validation: Either category or state must be selected
+        if (!serviceForm.categoryId && !serviceForm.state) {
+            toast.error("Please select either a category or a state for the service")
+            return
+        }
+
         try {
             if (selectedService) {
                 await updateServiceMutation.mutateAsync({
@@ -315,7 +324,8 @@ export default function CategoriesServicesPage() {
             description: service.description,
             commission: service.commission,
             whatsapp: service.whatsapp,
-            categoryId: service.categoryId
+            categoryId: service.categoryId,
+            state: service.state
         })
         setServiceImageFile(null)
         setIsServiceDialogOpen(true)
@@ -558,6 +568,31 @@ export default function CategoriesServicesPage() {
                                                 </DialogDescription>
                                             </DialogHeader>
                                             <form onSubmit={handleServiceSubmit} className="space-y-6">
+                                                {/* Selection Summary */}
+                                                <div className={`p-3 border rounded-lg ${serviceForm.categoryId || serviceForm.state
+                                                    ? 'bg-blue-50 border-blue-200'
+                                                    : 'bg-amber-50 border-amber-200'
+                                                    }`}>
+                                                    <p className={`text-sm ${serviceForm.categoryId || serviceForm.state
+                                                        ? 'text-blue-800'
+                                                        : 'text-amber-800'
+                                                        }`}>
+                                                        <strong>
+                                                            {serviceForm.categoryId || serviceForm.state
+                                                                ? 'Currently selected:'
+                                                                : 'Selection required:'
+                                                            }
+                                                        </strong>
+                                                        {serviceForm.categoryId ? (
+                                                            <span> Category: {categories.find(c => c.id === serviceForm.categoryId)?.titleEn}</span>
+                                                        ) : serviceForm.state ? (
+                                                            <span> State: {serviceForm.state}</span>
+                                                        ) : (
+                                                            <span> Please select either a category or a state</span>
+                                                        )}
+                                                    </p>
+                                                </div>
+
                                                 <div className="space-y-2">
                                                     <Label htmlFor="serviceTitle" className="text-sm font-medium">Service Title</Label>
                                                     <Input
@@ -604,23 +639,84 @@ export default function CategoriesServicesPage() {
                                                         />
                                                     </div>
                                                 </div>
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="categoryId" className="text-sm font-medium">Category</Label>
-                                                    <Select
-                                                        value={serviceForm.categoryId?.toString() || ""}
-                                                        onValueChange={(value) => setServiceForm({ ...serviceForm, categoryId: value ? parseInt(value) : undefined })}
-                                                    >
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Select a category (optional)" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {categories.map((category) => (
-                                                                <SelectItem key={category.id} value={category.id.toString()}>
-                                                                    {category.titleEn}
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="categoryId" className="text-sm font-medium">
+                                                            Category
+                                                            {serviceForm.categoryId && (
+                                                                <span className="text-green-600 ml-2">✓ Selected</span>
+                                                            )}
+                                                        </Label>
+                                                        <Select
+                                                            value={serviceForm.categoryId?.toString() || ""}
+                                                            onValueChange={(value) => {
+                                                                if (value === "__clear__") {
+                                                                    setServiceForm({ ...serviceForm, categoryId: undefined, state: undefined })
+                                                                } else if (value) {
+                                                                    setServiceForm({ ...serviceForm, categoryId: parseInt(value), state: undefined })
+                                                                }
+                                                            }}
+                                                        >
+                                                            <SelectTrigger className={serviceForm.categoryId ? "border-green-200 bg-green-50" : ""}>
+                                                                <SelectValue placeholder="Select a category (optional)" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="__clear__" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                                                                    <span className="flex items-center gap-2">
+                                                                        <span>✕</span>
+                                                                        Clear selection
+                                                                    </span>
                                                                 </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
+                                                                {categories.map((category) => (
+                                                                    <SelectItem key={category.id} value={category.id.toString()}>
+                                                                        {category.titleEn}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            Select a category or state below
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="state" className="text-sm font-medium">
+                                                            State
+                                                            {serviceForm.state && (
+                                                                <span className="text-green-600 ml-2">✓ Selected</span>
+                                                            )}
+                                                        </Label>
+                                                        <Select
+                                                            value={serviceForm.state || ""}
+                                                            onValueChange={(value) => {
+                                                                if (value === "__clear__") {
+                                                                    setServiceForm({ ...serviceForm, state: undefined, categoryId: undefined })
+                                                                } else if (value) {
+                                                                    setServiceForm({ ...serviceForm, state: value, categoryId: undefined })
+                                                                }
+                                                            }}
+                                                        >
+                                                            <SelectTrigger className={serviceForm.state ? "border-green-200 bg-green-50" : ""}>
+                                                                <SelectValue placeholder="Select a state (optional)" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="__clear__" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                                                                    <span className="flex items-center gap-2">
+                                                                        <span>✕</span>
+                                                                        Clear selection
+                                                                    </span>
+                                                                </SelectItem>
+                                                                {OMAN_GOVERNORATES.map((governorate) => (
+                                                                    <SelectItem key={governorate.value} value={governorate.value}>
+                                                                        {governorate.label}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            Select a state or category above
+                                                        </p>
+                                                    </div>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label htmlFor="serviceImage" className="text-sm font-medium">Service Image</Label>
