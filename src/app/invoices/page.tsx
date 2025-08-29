@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -19,6 +18,7 @@ import {
   CheckCircle,
   DollarSign,
   Filter,
+  MoreHorizontal,
   RefreshCw,
   Trash2,
   XCircle
@@ -112,7 +112,7 @@ export default function InvoicesPage() {
   const [isMarkPaidDialogOpen, setIsMarkPaidDialogOpen] = useState(false)
   const [isMarkFailedDialogOpen, setIsMarkFailedDialogOpen] = useState(false)
   const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState('')
+  const [isActionsDialogOpen, setIsActionsDialogOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('all')
 
   // Fetch invoices and stats
@@ -160,11 +160,10 @@ export default function InvoicesPage() {
     try {
       await markAsPaidMutation.mutateAsync({
         id: invoiceId,
-        paymentMethod: paymentMethod || 'Admin Payment'
+        paymentMethod: 'cash'
       })
       setIsMarkPaidDialogOpen(false)
       setSelectedInvoice(null)
-      setPaymentMethod('')
       refetch()
       toast.success('Invoice marked as paid successfully')
     } catch (error: unknown) {
@@ -396,82 +395,18 @@ export default function InvoicesPage() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className="flex items-center gap-2">
-                                {/* Mark as Paid - Only for unpaid invoices */}
-                                {invoice.paymentStatus === 'unpaid' && (
-                                  <Button
-                                    variant="default"
-                                    size="sm"
-                                    className="h-8 px-3 bg-green-600 hover:bg-green-700"
-                                    onClick={() => {
-                                      setSelectedInvoice(invoice)
-                                      setIsMarkPaidDialogOpen(true)
-                                    }}
-                                  >
-                                    <CheckCircle className="h-4 w-4 mr-1" />
-                                    Mark Paid
-                                  </Button>
-                                )}
-
-                                {/* Mark as Failed - Only for unpaid invoices */}
-                                {invoice.paymentStatus === 'unpaid' && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 px-3 bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
-                                    onClick={() => {
-                                      setSelectedInvoice(invoice)
-                                      setIsMarkFailedDialogOpen(true)
-                                    }}
-                                  >
-                                    <XCircle className="h-4 w-4 mr-1" />
-                                    Mark Failed
-                                  </Button>
-                                )}
-
-                                {/* Refund - Only for paid invoices */}
-                                {invoice.paymentStatus === 'paid' && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 px-3 bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
-                                    onClick={() => {
-                                      setSelectedInvoice(invoice)
-                                      setIsRefundDialogOpen(true)
-                                    }}
-                                  >
-                                    <RefreshCw className="h-4 w-4 mr-1" />
-                                    Refund
-                                  </Button>
-                                )}
-
-                                {/* Reactivate - For failed invoices */}
-                                {invoice.paymentStatus === 'failed' && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 px-3 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200"
-                                    onClick={() => {
-                                      setSelectedInvoice(invoice)
-                                      setIsMarkPaidDialogOpen(true)
-                                    }}
-                                  >
-                                    <CheckCircle className="h-4 w-4 mr-1" />
-                                    Reactivate
-                                  </Button>
-                                )}
-
-                                {/* Delete - Available for all statuses */}
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 px-3 hover:bg-red-100"
-                                  onClick={() => openDeleteDialog(invoice)}
-                                >
-                                  <Trash2 className="h-4 w-4 mr-1" />
-                                  Delete
-                                </Button>
-                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 px-3"
+                                onClick={() => {
+                                  setSelectedInvoice(invoice)
+                                  setIsActionsDialogOpen(true)
+                                }}
+                              >
+                                <MoreHorizontal className="h-4 w-4 mr-1" />
+                                Actions
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -503,38 +438,23 @@ export default function InvoicesPage() {
                 )}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="paymentMethod">Payment Method</Label>
-                <Input
-                  id="paymentMethod"
-                  placeholder="e.g., Bank Transfer, Cash, etc."
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                />
-              </div>
-
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsMarkPaidDialogOpen(false)
-                    setPaymentMethod('')
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="default"
-                  onClick={() => handleMarkAsPaid(selectedInvoice!.id)}
-                  disabled={markAsPaidMutation.isPending}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Confirm Mark as Paid
-                </Button>
-              </DialogFooter>
-            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setIsMarkPaidDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => handleMarkAsPaid(selectedInvoice!.id)}
+                disabled={markAsPaidMutation.isPending}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Mark as Paid
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 
@@ -569,7 +489,7 @@ export default function InvoicesPage() {
                 disabled={updatePaymentStatusMutation.isPending}
               >
                 <XCircle className="h-4 w-4 mr-2" />
-                Confirm Mark as Failed
+                Mark as Failed
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -607,7 +527,7 @@ export default function InvoicesPage() {
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Confirm Refund
+                Refund
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -646,6 +566,109 @@ export default function InvoicesPage() {
                 Delete
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Compact Actions Dialog */}
+        <Dialog open={isActionsDialogOpen} onOpenChange={setIsActionsDialogOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle className="text-lg">Actions - #{selectedInvoice?.id}</DialogTitle>
+              {selectedInvoice && (
+                <div className="text-sm text-muted-foreground">
+                  {selectedInvoice.order?.user.name} • {formatCurrency(selectedInvoice.totalAmount)} • {selectedInvoice.paymentStatus}
+                </div>
+              )}
+            </DialogHeader>
+
+            <div className="space-y-2">
+              {/* Available Actions Based on Current Status */}
+              {selectedInvoice?.paymentStatus === 'unpaid' && (
+                <>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start h-12 bg-green-50 border-green-200 hover:bg-green-100"
+                    onClick={() => {
+                      setIsActionsDialogOpen(false)
+                      setIsMarkPaidDialogOpen(true)
+                    }}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-3 text-green-600" />
+                    <div className="text-left">
+                      <div className="font-medium">Mark as Paid</div>
+                      <div className="text-xs text-green-600">+{formatCurrency((selectedInvoice.totalAmount - (selectedInvoice.discount || 0)) * 0.1)} commission</div>
+                    </div>
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start h-12 bg-red-50 border-red-200 hover:bg-red-100"
+                    onClick={() => {
+                      setIsActionsDialogOpen(false)
+                      setIsMarkFailedDialogOpen(true)
+                    }}
+                  >
+                    <XCircle className="h-4 w-4 mr-3 text-red-600" />
+                    <div className="text-left">
+                      <div className="font-medium">Mark as Failed</div>
+                      <div className="text-xs text-red-600">No commission earned</div>
+                    </div>
+                  </Button>
+                </>
+              )}
+
+              {selectedInvoice?.paymentStatus === 'paid' && (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-12 bg-blue-50 border-blue-200 hover:bg-blue-100"
+                  onClick={() => {
+                    setIsActionsDialogOpen(false)
+                    setIsRefundDialogOpen(true)
+                  }}
+                >
+                  <RefreshCw className="h-4 w-4 mr-3 text-blue-600" />
+                  <div className="text-left">
+                    <div className="font-medium">Refund</div>
+                    <div className="text-xs text-blue-600">Reverse all financial commitments</div>
+                  </div>
+                </Button>
+              )}
+
+              {selectedInvoice?.paymentStatus === 'failed' && (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-12 bg-yellow-50 border-yellow-200 hover:bg-yellow-100"
+                  onClick={() => {
+                    setIsActionsDialogOpen(false)
+                    setIsMarkPaidDialogOpen(true)
+                  }}
+                >
+                  <CheckCircle className="h-4 w-4 mr-3 text-yellow-600" />
+                  <div className="text-left">
+                    <div className="font-medium">Reactivate</div>
+                    <div className="text-xs text-yellow-600">Ready for payment</div>
+                  </div>
+                </Button>
+              )}
+
+              {/* Delete Action - Available for all statuses */}
+              <Button
+                variant="outline"
+                className="w-full justify-start h-12 bg-red-50 border-red-200 hover:bg-red-100"
+                onClick={() => {
+                  setIsActionsDialogOpen(false)
+                  openDeleteDialog(selectedInvoice!)
+                }}
+              >
+                <Trash2 className="h-4 w-4 mr-3 text-red-600" />
+                <div className="text-left">
+                  <div className="font-medium">Delete Invoice</div>
+                  <div className="text-xs text-red-600">
+                    {selectedInvoice?.paymentStatus === 'paid' ? 'Reverse financial commitments' : 'No financial impact'}
+                  </div>
+                </div>
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </AdminLayout>

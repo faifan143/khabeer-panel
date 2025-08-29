@@ -182,7 +182,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                         </div>
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="p-3 cursor-pointer hover:bg-accent">
+                                    {/* <DropdownMenuItem className="p-3 cursor-pointer hover:bg-accent">
                                         <User className="mr-3 h-4 w-4" />
                                         <div className="flex flex-col">
                                             <span className="text-sm font-medium">Profile</span>
@@ -195,8 +195,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                             <span className="text-sm font-medium">Settings</span>
                                             <span className="text-xs text-muted-foreground">Configure preferences</span>
                                         </div>
-                                    </DropdownMenuItem>
+                                    </DropdownMenuItem> 
                                     <DropdownMenuSeparator />
+                                    */}
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-3 cursor-pointer hover:bg-accent">

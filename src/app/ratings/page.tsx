@@ -243,7 +243,6 @@ export default function RatingsPage() {
                                             <TableHead className="font-semibold">Rating</TableHead>
                                             <TableHead className="font-semibold">Comment</TableHead>
                                             <TableHead className="font-semibold">Date</TableHead>
-                                            <TableHead className="font-semibold">Status</TableHead>
                                             <TableHead className="font-semibold text-right">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -265,19 +264,19 @@ export default function RatingsPage() {
                                                     <TableCell>
                                                         <div className="flex items-center space-x-3">
                                                             <Avatar className="h-8 w-8">
-                                                                <AvatarImage src={rating.user?.image} alt={rating.user?.name} />
+                                                                <AvatarImage src={process.env.NEXT_PUBLIC_API_URL_IMAGE + rating.user?.image} alt={rating.user?.name} />
                                                                 <AvatarFallback>{getInitials(rating.user?.name || "U")}</AvatarFallback>
                                                             </Avatar>
                                                             <div>
                                                                 <div className="font-medium">{rating.user?.name || "Unknown"}</div>
-                                                                <div className="text-sm text-muted-foreground">{rating.user?.email || "N/A"}</div>
+                                                                <div className="text-sm text-muted-foreground">{rating.user?.phone || "N/A"}</div>
                                                             </div>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex items-center space-x-3">
                                                             <Avatar className="h-8 w-8">
-                                                                <AvatarImage src={rating.provider?.image} alt={rating.provider?.name} />
+                                                                <AvatarImage src={process.env.NEXT_PUBLIC_API_URL_IMAGE + rating.provider?.image} alt={rating.provider?.name} />
                                                                 <AvatarFallback>{getInitials(rating.provider?.name || "P")}</AvatarFallback>
                                                             </Avatar>
                                                             <div>
@@ -289,7 +288,7 @@ export default function RatingsPage() {
                                                     <TableCell>
                                                         <div>
                                                             <div className="font-medium">{rating.order?.service?.title || "N/A"}</div>
-                                                            <div className="text-sm text-muted-foreground">{rating.order?.service?.category?.titleEn || "N/A"}</div>
+                                                            <div className="text-sm text-muted-foreground">{rating.order?.service?.category?.titleEn || "N/A"}-{rating.order?.service?.category?.titleAr || "N/A"}</div>
                                                             {rating.order?.bookingId && (
                                                                 <div className="text-xs text-muted-foreground">#{rating.order.bookingId}</div>
                                                             )}
@@ -310,15 +309,7 @@ export default function RatingsPage() {
                                                     <TableCell>
                                                         <div className="text-sm">{formatDate(rating.ratingDate)}</div>
                                                     </TableCell>
-                                                    <TableCell>
-                                                        <div className="flex items-center space-x-2">
-                                                            {rating.orderId && (
-                                                                <Badge variant="default" className="text-xs">
-                                                                    Verified
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-                                                    </TableCell>
+
                                                     <TableCell className="text-right">
                                                         <Dialog>
                                                             <DialogTrigger asChild>
@@ -343,12 +334,12 @@ export default function RatingsPage() {
                                                                         <div className="flex items-center justify-between">
                                                                             <div className="flex items-center space-x-3">
                                                                                 <Avatar className="h-12 w-12">
-                                                                                    <AvatarImage src={selectedRating.user?.image} alt={selectedRating.user?.name} />
+                                                                                    <AvatarImage src={process.env.NEXT_PUBLIC_API_URL_IMAGE + selectedRating.user?.image} alt={selectedRating.user?.name} />
                                                                                     <AvatarFallback>{getInitials(selectedRating.user?.name || "U")}</AvatarFallback>
                                                                                 </Avatar>
                                                                                 <div>
                                                                                     <div className="font-medium">{selectedRating.user?.name || "Unknown"}</div>
-                                                                                    <div className="text-sm text-muted-foreground">{selectedRating.user?.email || "N/A"}</div>
+                                                                                    <div className="text-sm text-muted-foreground">{selectedRating.user?.phone || "N/A"}</div>
                                                                                 </div>
                                                                             </div>
                                                                             <div className="text-right">
@@ -384,7 +375,7 @@ export default function RatingsPage() {
                                                                                     </div>
                                                                                     <div>
                                                                                         <span className="text-muted-foreground">Order ID:</span>
-                                                                                        <div className="font-medium">#{selectedRating.order.bookingId}</div>
+                                                                                        <div className="font-medium">#{selectedRating.order.id}</div>
                                                                                     </div>
                                                                                     <div>
                                                                                         <span className="text-muted-foreground">Rating Date:</span>
@@ -399,15 +390,6 @@ export default function RatingsPage() {
                                                                             <h4 className="font-medium mb-2">Customer Comment</h4>
                                                                             <div className="bg-gray-50 p-4 rounded-lg">
                                                                                 <p className="text-sm">{selectedRating.comment || "No comment provided"}</p>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        {/* Status */}
-                                                                        <div className="flex items-center justify-between text-sm">
-                                                                            <div className="flex items-center space-x-2">
-                                                                                {selectedRating.orderId && (
-                                                                                    <Badge variant="default">Verified Purchase</Badge>
-                                                                                )}
                                                                             </div>
                                                                         </div>
                                                                     </div>
