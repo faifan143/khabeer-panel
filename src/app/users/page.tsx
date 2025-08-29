@@ -204,7 +204,7 @@ export default function UsersManagementPage() {
                                                     <TableCell>
                                                         <div className="flex items-center space-x-3">
                                                             <Avatar className="h-10 w-10">
-                                                                <AvatarImage src={process.env.NEXT_PUBLIC_API_URL_IMAGE + user.image || ""} alt={user.name} />
+                                                                <AvatarImage src={user.image && process.env.NEXT_PUBLIC_API_URL_IMAGE ? process.env.NEXT_PUBLIC_API_URL_IMAGE + user.image : ""} alt={user.name} />
                                                                 <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                                                             </Avatar>
                                                             <div className="font-medium">{user.name}</div>
