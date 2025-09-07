@@ -31,19 +31,21 @@ import {
 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import toast from "react-hot-toast"
-
-const availablePermissions = [
-    { id: "dashboard", label: "Dashboard Access", description: "View dashboard statistics" },
-    { id: "orders", label: "Orders Management", description: "Manage and view orders" },
-    { id: "users", label: "Users Management", description: "Manage customer accounts" },
-    { id: "providers", label: "Provider Management", description: "Manage service providers" },
-    { id: "income", label: "Income & Finance", description: "View financial reports" },
-    { id: "ratings", label: "Ratings & Reviews", description: "Manage ratings and reviews" },
-    { id: "notifications", label: "Notifications", description: "Send system notifications" },
-    { id: "settings", label: "System Settings", description: "Manage system configuration" }
-]
+import { useTranslation } from 'react-i18next'
 
 export default function SettingsPage() {
+    const { t } = useTranslation()
+
+    const availablePermissions = [
+        { id: "dashboard", label: t('settings.dashboardAccess'), description: t('settings.viewDashboardStatistics') },
+        { id: "orders", label: t('settings.ordersManagement'), description: t('settings.manageAndViewOrders') },
+        { id: "users", label: t('settings.usersManagement'), description: t('settings.manageCustomerAccounts') },
+        { id: "providers", label: t('settings.providerManagement'), description: t('settings.manageServiceProviders') },
+        { id: "income", label: t('settings.incomeFinance'), description: t('settings.viewFinancialReports') },
+        { id: "ratings", label: t('settings.ratingsReviews'), description: t('settings.manageRatingsReviews') },
+        { id: "notifications", label: t('settings.notifications'), description: t('settings.sendSystemNotifications') },
+        { id: "settings", label: t('settings.systemSettings'), description: t('settings.manageSystemConfiguration') }
+    ]
     // API Hooks
     const { data: systemSettings, isLoading: settingsLoading } = useSystemSettings()
     const updateSettingMutation = useUpdateSystemSetting()
@@ -166,12 +168,12 @@ export default function SettingsPage() {
         const file = event.target.files?.[0]
         if (file) {
             if (!file.type.startsWith('image/')) {
-                toast.error('Please select an image file')
+                toast.error(t('settings.pleaseSelectImageFile'))
                 return
             }
 
             if (file.size > 5 * 1024 * 1024) {
-                toast.error('Image size should be less than 5MB')
+                toast.error(t('settings.imageSizeLimit'))
                 return
             }
 
@@ -199,12 +201,12 @@ export default function SettingsPage() {
         if (file) {
             // Check if it's a PDF or text file
             if (!file.type.includes('pdf') && !file.type.includes('text') && !file.type.includes('document')) {
-                toast.error('Please select a PDF or document file')
+                toast.error(t('settings.pleaseSelectPDFDocument'))
                 return
             }
 
             if (file.size > 10 * 1024 * 1024) {
-                toast.error('File size should be less than 10MB')
+                toast.error(t('settings.fileSizeLimit'))
                 return
             }
 
@@ -249,7 +251,7 @@ export default function SettingsPage() {
     // Save functions
     const handleSaveTerms = async () => {
         if (!termsEn || !termsAr) {
-            toast.error("Please upload both English and Arabic versions")
+            toast.error(t('settings.pleaseUploadBothVersions'))
             return
         }
 
@@ -272,15 +274,15 @@ export default function SettingsPage() {
                     category: 'legal'
                 })
             ])
-            toast.success("Terms & Conditions saved successfully!")
+            toast.success(t('settings.termsConditionsSaved'))
         } catch (error) {
-            toast.error("Failed to save Terms & Conditions")
+            toast.error(t('settings.failedToSaveTermsConditions'))
         }
     }
 
     const handleSavePrivacy = async () => {
         if (!privacyEn || !privacyAr) {
-            toast.error("Please upload both English and Arabic versions")
+            toast.error(t('settings.pleaseUploadBothVersions'))
             return
         }
 
@@ -303,9 +305,9 @@ export default function SettingsPage() {
                     category: 'legal'
                 })
             ])
-            toast.success("Privacy Policy saved successfully!")
+            toast.success(t('settings.privacyPolicySaved'))
         } catch (error) {
-            toast.error("Failed to save Privacy Policy")
+            toast.error(t('settings.failedToSavePrivacyPolicy'))
         }
     }
 
@@ -319,9 +321,9 @@ export default function SettingsPage() {
                 description: 'Social media links configuration',
                 category: 'social'
             })
-            toast.success("Social media links saved successfully!")
+            toast.success(t('settings.socialMediaLinksSaved'))
         } catch (error) {
-            toast.error("Failed to save social media links")
+            toast.error(t('settings.failedToSaveSocialMediaLinks'))
         }
     }
 
@@ -333,15 +335,15 @@ export default function SettingsPage() {
                 description: 'WhatsApp support link',
                 category: 'support'
             })
-            toast.success("Support links saved successfully!")
+            toast.success(t('settings.supportLinksSaved'))
         } catch (error) {
-            toast.error("Failed to save support links")
+            toast.error(t('settings.failedToSaveSupportLinks'))
         }
     }
 
     const handleAddSubAdmin = async () => {
         if (!newSubAdmin.name || !newSubAdmin.email || !newSubAdmin.password || newSubAdmin.permissions.length === 0) {
-            toast.error("Please fill all required fields")
+            toast.error(t('settings.pleaseFillAllRequiredFields'))
             return
         }
 
@@ -354,34 +356,34 @@ export default function SettingsPage() {
             })
             setNewSubAdmin({ name: "", email: "", password: "", permissions: [] })
             setIsAddSubAdminOpen(false)
-            toast.success("Sub-admin added successfully!")
+            toast.success(t('settings.subAdminAddedSuccessfully'))
         } catch (error) {
-            toast.error("Failed to add sub-admin")
+            toast.error(t('settings.failedToAddSubAdmin'))
         }
     }
 
     const handleDeleteSubAdmin = async (id: number) => {
         try {
             await deleteSubAdminMutation.mutateAsync(id)
-            toast.success("Sub-admin removed successfully!")
+            toast.success(t('settings.subAdminRemovedSuccessfully'))
         } catch (error) {
-            toast.error("Failed to remove sub-admin")
+            toast.error(t('settings.failedToRemoveSubAdmin'))
         }
     }
 
     const handleSaveAdBanner = async () => {
         if (!newBanner.title.trim() || !newBanner.description.trim()) {
-            toast.error("Please fill all required fields")
+            toast.error(t('settings.pleaseFillAllRequiredFields'))
             return
         }
 
         if (newBanner.linkType === "external" && !newBanner.externalLink.trim()) {
-            toast.error("Please provide external link")
+            toast.error(t('settings.pleaseProvideExternalLink'))
             return
         }
 
         if (newBanner.linkType === "provider" && !newBanner.providerId) {
-            toast.error("Please select a provider")
+            toast.error(t('settings.pleaseSelectProvider'))
             return
         }
 
@@ -410,12 +412,12 @@ export default function SettingsPage() {
                 await createAdBannerMutation.mutateAsync(bannerData)
             }
 
-            toast.success("Ad banner configuration saved successfully!")
+            toast.success(t('settings.adBannerConfigurationSaved'))
             setIsAddBannerOpen(false)
             setEditingBannerIndex(null)
             setNewBanner({ title: "", description: "", image: null, imagePreview: "", linkType: "external", externalLink: "", providerId: "", isActive: false })
         } catch (error) {
-            toast.error("Failed to save ad banner configuration")
+            toast.error(t('settings.failedToSaveAdBanner'))
             console.error("Error saving ad banner:", error)
         }
     }
@@ -437,12 +439,12 @@ export default function SettingsPage() {
     }
 
     const handleDeleteBanner = async (id: number) => {
-        if (confirm("Are you sure you want to delete this banner?")) {
+        if (confirm(t('settings.areYouSureDeleteBanner'))) {
             try {
                 await deleteAdBannerMutation.mutateAsync(id)
-                toast.success("Banner deleted successfully!")
+                toast.success(t('settings.bannerDeletedSuccessfully'))
             } catch (error) {
-                toast.error("Failed to delete banner")
+                toast.error(t('settings.failedToDeleteBanner'))
                 console.error("Error deleting banner:", error)
             }
         }
@@ -485,11 +487,11 @@ export default function SettingsPage() {
 
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                         <TabsList className="grid w-full grid-cols-5">
-                            <TabsTrigger value="legal">Legal</TabsTrigger>
-                            <TabsTrigger value="social">Social Media</TabsTrigger>
-                            <TabsTrigger value="support">Support</TabsTrigger>
-                            <TabsTrigger value="subadmins">Sub-Admins</TabsTrigger>
-                            <TabsTrigger value="ads">Ad Banners</TabsTrigger>
+                            <TabsTrigger value="legal">{t('settings.legal')}</TabsTrigger>
+                            <TabsTrigger value="social">{t('settings.social')}</TabsTrigger>
+                            <TabsTrigger value="support">{t('settings.support')}</TabsTrigger>
+                            <TabsTrigger value="subadmins">{t('settings.subadmins')}</TabsTrigger>
+                            <TabsTrigger value="ads">{t('settings.ads')}</TabsTrigger>
                         </TabsList>
 
                         {/* Legal Documents */}
@@ -500,12 +502,12 @@ export default function SettingsPage() {
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
                                             <FileText className="h-5 w-5" />
-                                            Terms & Conditions
+                                            {t('settings.termsAndConditions')}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div>
-                                            <Label className="text-sm font-medium">English Version</Label>
+                                            <Label className="text-sm font-medium">{t('settings.englishVersion')}</Label>
                                             <div className="space-y-3 mt-2">
                                                 {termsEn ? (
                                                     <div className="flex items-center justify-between p-3 border rounded-lg">
@@ -530,7 +532,7 @@ export default function SettingsPage() {
                                                         <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
                                                             <div className="flex items-center space-x-2">
                                                                 <FileText className="h-5 w-5 text-green-500" />
-                                                                <span className="text-sm font-medium">Terms & Conditions (English)</span>
+                                                                <span className="text-sm font-medium">{t('settings.termsAndConditions')} ({t('settings.englishVersion')})</span>
                                                                 <span className="text-xs text-muted-foreground">(Current)</span>
                                                             </div>
                                                             <div className="flex items-center space-x-2">
@@ -546,26 +548,26 @@ export default function SettingsPage() {
                                                         </div>
                                                         <div className="border-2 border-dashed rounded-lg p-4 text-center">
                                                             <Upload className="h-6 w-6 text-gray-400 mx-auto mb-2" />
-                                                            <p className="text-sm text-gray-600 mb-2">Upload new file to replace current</p>
+                                                            <p className="text-sm text-gray-600 mb-2">{t('settings.uploadNewFileToReplace')}</p>
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
                                                                 onClick={() => termsEnInputRef.current?.click()}
                                                             >
-                                                                Choose New File
+                                                                {t('settings.chooseNewFile')}
                                                             </Button>
                                                         </div>
                                                     </div>
                                                 ) : (
                                                     <div className="border-2 border-dashed rounded-lg p-6 text-center">
                                                         <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                                                        <p className="text-sm text-gray-600 mb-2">Upload Terms & Conditions (English)</p>
+                                                        <p className="text-sm text-gray-600 mb-2">{t('settings.uploadTermsConditions')} ({t('settings.englishVersion')})</p>
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
                                                             onClick={() => termsEnInputRef.current?.click()}
                                                         >
-                                                            Choose File
+                                                            {t('settings.chooseFile')}
                                                         </Button>
                                                     </div>
                                                 )}
@@ -579,7 +581,7 @@ export default function SettingsPage() {
                                             </div>
                                         </div>
                                         <div>
-                                            <Label className="text-sm font-medium">Arabic Version</Label>
+                                            <Label className="text-sm font-medium">{t('settings.arabicVersion')}</Label>
                                             <div className="space-y-3 mt-2">
                                                 {termsAr ? (
                                                     <div className="flex items-center justify-between p-3 border rounded-lg">
@@ -604,7 +606,7 @@ export default function SettingsPage() {
                                                         <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
                                                             <div className="flex items-center space-x-2">
                                                                 <FileText className="h-5 w-5 text-green-500" />
-                                                                <span className="text-sm font-medium">Terms & Conditions (Arabic)</span>
+                                                                <span className="text-sm font-medium">{t('settings.termsAndConditions')} ({t('settings.arabicVersion')})</span>
                                                                 <span className="text-xs text-muted-foreground">(Current)</span>
                                                             </div>
                                                             <div className="flex items-center space-x-2">
@@ -620,26 +622,26 @@ export default function SettingsPage() {
                                                         </div>
                                                         <div className="border-2 border-dashed rounded-lg p-4 text-center">
                                                             <Upload className="h-6 w-6 text-gray-400 mx-auto mb-2" />
-                                                            <p className="text-sm text-gray-600 mb-2">Upload new file to replace current</p>
+                                                            <p className="text-sm text-gray-600 mb-2">{t('settings.uploadNewFileToReplace')}</p>
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
                                                                 onClick={() => termsArInputRef.current?.click()}
                                                             >
-                                                                Choose New File
+                                                                {t('settings.chooseNewFile')}
                                                             </Button>
                                                         </div>
                                                     </div>
                                                 ) : (
                                                     <div className="border-2 border-dashed rounded-lg p-6 text-center">
                                                         <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                                                        <p className="text-sm text-gray-600 mb-2">Upload Terms & Conditions (Arabic)</p>
+                                                        <p className="text-sm text-gray-600 mb-2">{t('settings.uploadTermsConditions')} ({t('settings.arabicVersion')})</p>
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
                                                             onClick={() => termsArInputRef.current?.click()}
                                                         >
-                                                            Choose File
+                                                            {t('settings.chooseFile')}
                                                         </Button>
                                                     </div>
                                                 )}
@@ -654,7 +656,7 @@ export default function SettingsPage() {
                                         </div>
                                         <Button onClick={handleSaveTerms} className="w-full">
                                             <Save className="h-4 w-4 mr-2" />
-                                            Save Terms & Conditions
+                                            {t('settings.saveTermsConditions')}
                                         </Button>
                                     </CardContent>
                                 </Card>
@@ -664,12 +666,12 @@ export default function SettingsPage() {
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
                                             <Shield className="h-5 w-5" />
-                                            Privacy Policy
+                                            {t('settings.privacyPolicy')}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <div>
-                                            <Label className="text-sm font-medium">English Version</Label>
+                                            <Label className="text-sm font-medium">{t('settings.englishVersion')}</Label>
                                             <div className="space-y-3 mt-2">
                                                 {privacyEn ? (
                                                     <div className="flex items-center justify-between p-3 border rounded-lg">
@@ -694,7 +696,7 @@ export default function SettingsPage() {
                                                         <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
                                                             <div className="flex items-center space-x-2">
                                                                 <FileText className="h-5 w-5 text-green-500" />
-                                                                <span className="text-sm font-medium">Privacy Policy (English)</span>
+                                                                <span className="text-sm font-medium">{t('settings.privacyPolicy')} ({t('settings.englishVersion')})</span>
                                                                 <span className="text-xs text-muted-foreground">(Current)</span>
                                                             </div>
                                                             <div className="flex items-center space-x-2">
@@ -723,13 +725,13 @@ export default function SettingsPage() {
                                                 ) : (
                                                     <div className="border-2 border-dashed rounded-lg p-6 text-center">
                                                         <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                                                        <p className="text-sm text-gray-600 mb-2">Upload Privacy Policy (English)</p>
+                                                        <p className="text-sm text-gray-600 mb-2">{t('settings.uploadPrivacyPolicy')} ({t('settings.englishVersion')})</p>
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
                                                             onClick={() => privacyEnInputRef.current?.click()}
                                                         >
-                                                            Choose File
+                                                            {t('settings.chooseFile')}
                                                         </Button>
                                                     </div>
                                                 )}
@@ -743,7 +745,7 @@ export default function SettingsPage() {
                                             </div>
                                         </div>
                                         <div>
-                                            <Label className="text-sm font-medium">Arabic Version</Label>
+                                            <Label className="text-sm font-medium">{t('settings.arabicVersion')}</Label>
                                             <div className="space-y-3 mt-2">
                                                 {privacyAr ? (
                                                     <div className="flex items-center justify-between p-3 border rounded-lg">
@@ -768,7 +770,7 @@ export default function SettingsPage() {
                                                         <div className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
                                                             <div className="flex items-center space-x-2">
                                                                 <FileText className="h-5 w-5 text-green-500" />
-                                                                <span className="text-sm font-medium">Privacy Policy (Arabic)</span>
+                                                                <span className="text-sm font-medium">{t('settings.privacyPolicy')} ({t('settings.arabicVersion')})</span>
                                                                 <span className="text-xs text-muted-foreground">(Current)</span>
                                                             </div>
                                                             <div className="flex items-center space-x-2">
@@ -784,26 +786,26 @@ export default function SettingsPage() {
                                                         </div>
                                                         <div className="border-2 border-dashed rounded-lg p-4 text-center">
                                                             <Upload className="h-6 w-6 text-gray-400 mx-auto mb-2" />
-                                                            <p className="text-sm text-gray-600 mb-2">Upload new file to replace current</p>
+                                                            <p className="text-sm text-gray-600 mb-2">{t('settings.uploadNewFileToReplace')}</p>
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
                                                                 onClick={() => privacyArInputRef.current?.click()}
                                                             >
-                                                                Choose New File
+                                                                {t('settings.chooseNewFile')}
                                                             </Button>
                                                         </div>
                                                     </div>
                                                 ) : (
                                                     <div className="border-2 border-dashed rounded-lg p-6 text-center">
                                                         <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                                                        <p className="text-sm text-gray-600 mb-2">Upload Privacy Policy (Arabic)</p>
+                                                        <p className="text-sm text-gray-600 mb-2">{t('settings.uploadPrivacyPolicy')} ({t('settings.arabicVersion')})</p>
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
                                                             onClick={() => privacyArInputRef.current?.click()}
                                                         >
-                                                            Choose File
+                                                            {t('settings.chooseFile')}
                                                         </Button>
                                                     </div>
                                                 )}
@@ -818,7 +820,7 @@ export default function SettingsPage() {
                                         </div>
                                         <Button onClick={handleSavePrivacy} className="w-full">
                                             <Save className="h-4 w-4 mr-2" />
-                                            Save Privacy Policy
+                                            {t('settings.savePrivacyPolicy')}
                                         </Button>
                                     </CardContent>
                                 </Card>
@@ -831,16 +833,16 @@ export default function SettingsPage() {
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
                                         <Share2 className="h-5 w-5" />
-                                        Social Media Links
+                                        {t('settings.socialMediaLinks')}
                                     </CardTitle>
                                     <p className="text-sm text-muted-foreground">
-                                        Configure your social media presence links
+                                        {t('settings.configureSocialMedia')}
                                     </p>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <Label className="text-sm font-medium">WhatsApp</Label>
+                                            <Label className="text-sm font-medium">{t('settings.whatsapp')}</Label>
                                             <Input
                                                 placeholder="https://wa.me/your-number"
                                                 value={socialLinks.whatsapp}
@@ -849,7 +851,7 @@ export default function SettingsPage() {
                                             />
                                         </div>
                                         <div>
-                                            <Label className="text-sm font-medium">Instagram</Label>
+                                            <Label className="text-sm font-medium">{t('settings.instagram')}</Label>
                                             <Input
                                                 placeholder="https://instagram.com/your-handle"
                                                 value={socialLinks.instagram}
@@ -858,7 +860,7 @@ export default function SettingsPage() {
                                             />
                                         </div>
                                         <div>
-                                            <Label className="text-sm font-medium">Facebook</Label>
+                                            <Label className="text-sm font-medium">{t('settings.facebook')}</Label>
                                             <Input
                                                 placeholder="https://facebook.com/your-page"
                                                 value={socialLinks.facebook}
@@ -867,7 +869,7 @@ export default function SettingsPage() {
                                             />
                                         </div>
                                         <div>
-                                            <Label className="text-sm font-medium">TikTok</Label>
+                                            <Label className="text-sm font-medium">{t('settings.tiktok')}</Label>
                                             <Input
                                                 placeholder="https://tiktok.com/@your-handle"
                                                 value={socialLinks.tiktok}
@@ -876,7 +878,7 @@ export default function SettingsPage() {
                                             />
                                         </div>
                                         <div>
-                                            <Label className="text-sm font-medium">Snapchat</Label>
+                                            <Label className="text-sm font-medium">{t('settings.snapchat')}</Label>
                                             <Input
                                                 placeholder="https://snapchat.com/add/your-handle"
                                                 value={socialLinks.snapchat}
@@ -887,7 +889,7 @@ export default function SettingsPage() {
                                     </div>
                                     <Button onClick={handleSaveSocialLinks} className="w-full">
                                         <Save className="h-4 w-4 mr-2" />
-                                        Save Social Media Links
+                                        {t('settings.saveSocialMediaLinks')}
                                     </Button>
                                 </CardContent>
                             </Card>
@@ -899,15 +901,15 @@ export default function SettingsPage() {
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
                                         <HeadphonesIcon className="h-5 w-5" />
-                                        Technical Support
+                                        {t('settings.technicalSupport')}
                                     </CardTitle>
                                     <p className="text-sm text-muted-foreground">
-                                        Configure support contact information
+                                        {t('settings.configureSupportContact')}
                                     </p>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div>
-                                        <Label className="text-sm font-medium">WhatsApp Support</Label>
+                                        <Label className="text-sm font-medium">{t('settings.whatsappSupport')}</Label>
                                         <Input
                                             placeholder="https://wa.me/support-number"
                                             value={supportWhatsapp}
@@ -915,12 +917,12 @@ export default function SettingsPage() {
                                             className="mt-1"
                                         />
                                         <p className="text-xs text-muted-foreground mt-1">
-                                            This link will be used for customer support inquiries
+                                            {t('settings.supportLinkDescription')}
                                         </p>
                                     </div>
                                     <Button onClick={handleSaveSupport} className="w-full">
                                         <Save className="h-4 w-4 mr-2" />
-                                        Save Support Links
+                                        {t('settings.saveSupportLinks')}
                                     </Button>
                                 </CardContent>
                             </Card>
@@ -934,55 +936,55 @@ export default function SettingsPage() {
                                         <div>
                                             <CardTitle className="flex items-center gap-2">
                                                 <Users className="h-5 w-5" />
-                                                Sub-Administrators
+                                                {t('settings.subAdministrators')}
                                             </CardTitle>
                                             <p className="text-sm text-muted-foreground">
-                                                Manage sub-administrators with limited permissions
+                                                {t('settings.manageSubAdmins')}
                                             </p>
                                         </div>
                                         <Dialog open={isAddSubAdminOpen} onOpenChange={setIsAddSubAdminOpen}>
                                             <DialogTrigger asChild>
                                                 <Button>
-                                                    <UserPlus className="h-4 w-4 mr-2" />
-                                                    Add Sub-Admin
+                                                    <UserPlus className="h-4 w-2" />
+                                                    {t('settings.addSubAdmin')}
                                                 </Button>
                                             </DialogTrigger>
                                             <DialogContent className="max-w-2xl">
                                                 <DialogHeader>
-                                                    <DialogTitle>Add New Sub-Administrator</DialogTitle>
+                                                    <DialogTitle>{t('settings.addNewSubAdministrator')}</DialogTitle>
                                                     <DialogDescription>
-                                                        Create a new sub-admin with specific permissions
+                                                        {t('settings.createSubAdminDescription')}
                                                     </DialogDescription>
                                                 </DialogHeader>
                                                 <div className="space-y-4">
                                                     <div>
-                                                        <Label>Name *</Label>
+                                                        <Label>{t('settings.name')} *</Label>
                                                         <Input
-                                                            placeholder="Enter full name"
+                                                            placeholder={t('settings.enterFullName')}
                                                             value={newSubAdmin.name}
                                                             onChange={(e) => setNewSubAdmin(prev => ({ ...prev, name: e.target.value }))}
                                                         />
                                                     </div>
                                                     <div>
-                                                        <Label>Email *</Label>
+                                                        <Label>{t('settings.email')} *</Label>
                                                         <Input
                                                             type="email"
-                                                            placeholder="Enter email address"
+                                                            placeholder={t('settings.enterEmailAddress')}
                                                             value={newSubAdmin.email}
                                                             onChange={(e) => setNewSubAdmin(prev => ({ ...prev, email: e.target.value }))}
                                                         />
                                                     </div>
                                                     <div>
-                                                        <Label>Password *</Label>
+                                                        <Label>{t('settings.password')} *</Label>
                                                         <Input
                                                             type="password"
-                                                            placeholder="Enter password"
+                                                            placeholder={t('settings.enterPassword')}
                                                             value={newSubAdmin.password}
                                                             onChange={(e) => setNewSubAdmin(prev => ({ ...prev, password: e.target.value }))}
                                                         />
                                                     </div>
                                                     <div>
-                                                        <Label>Permissions *</Label>
+                                                        <Label>{t('settings.permissions')} *</Label>
                                                         <div className="space-y-2 mt-2 max-h-60 overflow-y-auto border rounded-md p-3">
                                                             {availablePermissions.map((permission) => (
                                                                 <div key={permission.id} className="flex items-center space-x-2">
@@ -1005,10 +1007,10 @@ export default function SettingsPage() {
                                                     </div>
                                                     <div className="flex justify-end gap-2 pt-4">
                                                         <Button variant="outline" onClick={() => setIsAddSubAdminOpen(false)}>
-                                                            Cancel
+                                                            {t('settings.cancel')}
                                                         </Button>
                                                         <Button onClick={handleAddSubAdmin}>
-                                                            Add Sub-Admin
+                                                            {t('settings.addSubAdmin')}
                                                         </Button>
                                                     </div>
                                                 </div>
@@ -1020,19 +1022,19 @@ export default function SettingsPage() {
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead>Name</TableHead>
-                                                <TableHead>Email</TableHead>
-                                                <TableHead>Permissions</TableHead>
-                                                <TableHead>Status</TableHead>
-                                                <TableHead>Created</TableHead>
-                                                <TableHead className="text-right">Actions</TableHead>
+                                                <TableHead>{t('settings.name')}</TableHead>
+                                                <TableHead>{t('settings.email')}</TableHead>
+                                                <TableHead>{t('settings.permissions')}</TableHead>
+                                                <TableHead>{t('settings.status')}</TableHead>
+                                                <TableHead>{t('settings.created')}</TableHead>
+                                                <TableHead className="text-right">{t('settings.actions')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {subAdminsLoading ? (
                                                 <TableRow>
                                                     <TableCell colSpan={6} className="text-center py-8">
-                                                        <div className="text-muted-foreground">Loading sub-admins...</div>
+                                                        <div className="text-muted-foreground">{t('settings.loadingSubAdmins')}</div>
                                                     </TableCell>
                                                 </TableRow>
                                             ) : subAdmins && subAdmins.length > 0 ? (
@@ -1051,7 +1053,7 @@ export default function SettingsPage() {
                                                         </TableCell>
                                                         <TableCell>
                                                             <Badge variant={admin.isActive ? "default" : "secondary"}>
-                                                                {admin.isActive ? "active" : "inactive"}
+                                                                {admin.isActive ? t('settings.active') : t('settings.inactive')}
                                                             </Badge>
                                                         </TableCell>
                                                         <TableCell>{formatDate(admin.createdAt)}</TableCell>
@@ -1069,7 +1071,7 @@ export default function SettingsPage() {
                                             ) : (
                                                 <TableRow>
                                                     <TableCell colSpan={6} className="text-center py-8">
-                                                        <div className="text-muted-foreground">No sub-admins found</div>
+                                                        <div className="text-muted-foreground">{t('settings.noSubAdminsFound')}</div>
                                                     </TableCell>
                                                 </TableRow>
                                             )}
@@ -1085,32 +1087,32 @@ export default function SettingsPage() {
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
                                         <Megaphone className="h-5 w-5" />
-                                        Ad Banner Management
+                                        {t('settings.adBannerManagement')}
                                     </CardTitle>
                                     <p className="text-sm text-muted-foreground">
-                                        Manage promotional banners and links
+                                        {t('settings.managePromotionalBanners')}
                                     </p>
                                     <Button onClick={handleCreateBanner} className="mt-2">
                                         <UserPlus className="h-4 w-4 mr-2" />
-                                        Add New Banner
+                                        {t('settings.addNewBanner')}
                                     </Button>
                                 </CardHeader>
                                 <CardContent>
                                     {bannerLoading ? (
                                         <div className="text-center py-8">
-                                            <div className="text-muted-foreground">Loading banners...</div>
+                                            <div className="text-muted-foreground">{t('settings.loadingBanners')}</div>
                                         </div>
                                     ) : adBanners.length > 0 ? (
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
-                                                    <TableHead>Image</TableHead>
-                                                    <TableHead>Title</TableHead>
-                                                    <TableHead>Description</TableHead>
-                                                    <TableHead>Link Type</TableHead>
-                                                    <TableHead>Status</TableHead>
-                                                    <TableHead>Created</TableHead>
-                                                    <TableHead className="text-right">Actions</TableHead>
+                                                    <TableHead>{t('settings.image')}</TableHead>
+                                                    <TableHead>{t('settings.title')}</TableHead>
+                                                    <TableHead>{t('settings.description')}</TableHead>
+                                                    <TableHead>{t('settings.linkType')}</TableHead>
+                                                    <TableHead>{t('settings.status')}</TableHead>
+                                                    <TableHead>{t('settings.created')}</TableHead>
+                                                    <TableHead className="text-right">{t('settings.actions')}</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
@@ -1125,7 +1127,7 @@ export default function SettingsPage() {
                                                                 />
                                                             ) : (
                                                                 <div className="h-16 w-24 bg-gray-100 rounded flex items-center justify-center">
-                                                                    <span className="text-xs text-gray-500">No Image</span>
+                                                                    <span className="text-xs text-gray-500">{t('settings.noImage')}</span>
                                                                 </div>
                                                             )}
                                                         </TableCell>
@@ -1133,12 +1135,12 @@ export default function SettingsPage() {
                                                         <TableCell className="max-w-xs truncate">{banner.description}</TableCell>
                                                         <TableCell>
                                                             <Badge variant="outline">
-                                                                {banner.linkType === "external" ? "External Link" : "Provider Page"}
+                                                                {banner.linkType === "external" ? t('settings.externalLink') : t('settings.providerPage')}
                                                             </Badge>
                                                         </TableCell>
                                                         <TableCell>
                                                             <Badge variant={banner.isActive ? "default" : "secondary"}>
-                                                                {banner.isActive ? "Active" : "Inactive"}
+                                                                {banner.isActive ? t('settings.active') : t('settings.inactive')}
                                                             </Badge>
                                                         </TableCell>
                                                         <TableCell>
@@ -1170,9 +1172,9 @@ export default function SettingsPage() {
                                         </Table>
                                     ) : (
                                         <div className="text-center py-8">
-                                            <div className="text-muted-foreground">No banners found</div>
+                                            <div className="text-muted-foreground">{t('settings.noBannersFound')}</div>
                                             <Button onClick={handleCreateBanner} className="mt-2">
-                                                Create Your First Banner
+                                                {t('settings.createYourFirstBanner')}
                                             </Button>
                                         </div>
                                     )}
@@ -1184,12 +1186,12 @@ export default function SettingsPage() {
                                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                                     <DialogHeader>
                                         <DialogTitle>
-                                            {editingBannerIndex !== null ? "Edit Banner" : "Add New Banner"}
+                                            {editingBannerIndex !== null ? t('settings.editBanner') : t('settings.addNewBanner')}
                                         </DialogTitle>
                                         <DialogDescription>
                                             {editingBannerIndex !== null
-                                                ? "Update the banner information below"
-                                                : "Fill in the banner information below"
+                                                ? t('settings.updateBannerInformation')
+                                                : t('settings.fillBannerInformation')
                                             }
                                         </DialogDescription>
                                     </DialogHeader>
@@ -1197,18 +1199,18 @@ export default function SettingsPage() {
                                     <div className="space-y-6">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
-                                                <Label className="text-sm font-medium">Banner Title *</Label>
+                                                <Label className="text-sm font-medium">{t('settings.bannerTitle')} *</Label>
                                                 <Input
-                                                    placeholder="Enter banner title"
+                                                    placeholder={t('settings.enterBannerTitle')}
                                                     value={newBanner.title}
                                                     onChange={(e) => setNewBanner(prev => ({ ...prev, title: e.target.value }))}
                                                     className="mt-1"
                                                 />
                                             </div>
                                             <div>
-                                                <Label className="text-sm font-medium">Description *</Label>
+                                                <Label className="text-sm font-medium">{t('settings.description')} *</Label>
                                                 <Input
-                                                    placeholder="Enter banner description"
+                                                    placeholder={t('settings.enterBannerDescription')}
                                                     value={newBanner.description}
                                                     onChange={(e) => setNewBanner(prev => ({ ...prev, description: e.target.value }))}
                                                     className="mt-1"
@@ -1217,7 +1219,7 @@ export default function SettingsPage() {
                                         </div>
 
                                         <div>
-                                            <Label className="text-sm font-medium">Banner Image</Label>
+                                            <Label className="text-sm font-medium">{t('settings.bannerImage')}</Label>
                                             <div className="space-y-3 mt-2">
                                                 {newBanner.imagePreview ? (
                                                     <div className="relative inline-block">
@@ -1239,13 +1241,13 @@ export default function SettingsPage() {
                                                 ) : (
                                                     <div className="border-2 border-dashed rounded-lg p-6 text-center">
                                                         <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                                                        <p className="text-sm text-gray-600 mb-2">Upload banner image</p>
+                                                        <p className="text-sm text-gray-600 mb-2">{t('settings.uploadBannerImage')}</p>
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
                                                             onClick={() => fileInputRef.current?.click()}
                                                         >
-                                                            Choose File
+                                                            {t('settings.chooseFile')}
                                                         </Button>
                                                     </div>
                                                 )}
@@ -1260,7 +1262,7 @@ export default function SettingsPage() {
                                         </div>
 
                                         <div>
-                                            <Label className="text-sm font-medium">Link Type</Label>
+                                            <Label className="text-sm font-medium">{t('settings.linkType')}</Label>
                                             <Select
                                                 value={newBanner.linkType}
                                                 onValueChange={(value) => setNewBanner(prev => ({ ...prev, linkType: value as "external" | "provider" }))}
@@ -1269,15 +1271,15 @@ export default function SettingsPage() {
                                                     <SelectValue />
                                                 </SelectTrigger>
                                                 <SelectContent>
-                                                    <SelectItem value="external">External Link</SelectItem>
-                                                    <SelectItem value="provider">Provider Page</SelectItem>
+                                                    <SelectItem value="external">{t('settings.externalLink')}</SelectItem>
+                                                    <SelectItem value="provider">{t('settings.providerPage')}</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
 
                                         {newBanner.linkType === "external" ? (
                                             <div>
-                                                <Label className="text-sm font-medium">External Link *</Label>
+                                                <Label className="text-sm font-medium">{t('settings.externalLink')} *</Label>
                                                 <Input
                                                     placeholder="https://example.com"
                                                     value={newBanner.externalLink}
@@ -1287,17 +1289,17 @@ export default function SettingsPage() {
                                             </div>
                                         ) : (
                                             <div>
-                                                <Label className="text-sm font-medium">Select Provider *</Label>
+                                                <Label className="text-sm font-medium">{t('settings.selectProvider')} *</Label>
                                                 <Select
                                                     value={newBanner.providerId}
                                                     onValueChange={(value) => setNewBanner(prev => ({ ...prev, providerId: value }))}
                                                 >
                                                     <SelectTrigger className="mt-1">
-                                                        <SelectValue placeholder="Choose a provider" />
+                                                        <SelectValue placeholder={t('settings.chooseProvider')} />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         {providersLoading ? (
-                                                            <SelectItem value="" disabled>Loading providers...</SelectItem>
+                                                            <SelectItem value="" disabled>{t('settings.loadingProviders')}</SelectItem>
                                                         ) : providers && providers.length > 0 ? (
                                                             providers
                                                                 .filter(provider => provider.isActive && provider.isVerified)
@@ -1307,7 +1309,7 @@ export default function SettingsPage() {
                                                                     </SelectItem>
                                                                 ))
                                                         ) : (
-                                                            <SelectItem value="" disabled>No active providers available</SelectItem>
+                                                            <SelectItem value="" disabled>{t('settings.noActiveProviders')}</SelectItem>
                                                         )}
                                                     </SelectContent>
                                                 </Select>
@@ -1321,17 +1323,17 @@ export default function SettingsPage() {
                                                 onCheckedChange={(checked) => setNewBanner(prev => ({ ...prev, isActive: checked as boolean }))}
                                             />
                                             <Label htmlFor="banner-active" className="text-sm font-medium">
-                                                Activate this banner
+                                                {t('settings.activateThisBanner')}
                                             </Label>
                                         </div>
 
                                         <div className="flex justify-end gap-2">
                                             <Button variant="outline" onClick={handleCancelEdit}>
-                                                Cancel
+                                                {t('settings.cancel')}
                                             </Button>
                                             <Button onClick={handleSaveAdBanner}>
                                                 <Save className="h-4 w-4 mr-2" />
-                                                {editingBannerIndex !== null ? "Update Banner" : "Create Banner"}
+                                                {editingBannerIndex !== null ? t('settings.updateBanner') : t('settings.createBanner')}
                                             </Button>
                                         </div>
                                     </div>

@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useTranslation } from 'react-i18next'
 import {
     FolderOpen,
     Edit,
@@ -121,17 +122,18 @@ const formatTimeAgo = (date: Date) => {
     const now = new Date()
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
 
-    if (diffInMinutes < 1) return 'Just now'
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`
+    if (diffInMinutes < 1) return t('dashboard.recentActivity.justNow')
+    if (diffInMinutes < 60) return t('dashboard.recentActivity.minutesAgo', { minutes: diffInMinutes })
 
     const diffInHours = Math.floor(diffInMinutes / 60)
-    if (diffInHours < 24) return `${diffInHours}h ago`
+    if (diffInHours < 24) return t('dashboard.recentActivity.hoursAgo', { hours: diffInHours })
 
     const diffInDays = Math.floor(diffInHours / 24)
-    return `${diffInDays}d ago`
+    return t('dashboard.recentActivity.daysAgo', { days: diffInDays })
 }
 
 export function RecentActivity() {
+    const { t } = useTranslation()
     const { data: activities, isLoading, error } = useQuery({
         queryKey: ['recent-activities'],
         queryFn: fetchActivities,
@@ -141,8 +143,8 @@ export function RecentActivity() {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Recent Activity</CardTitle>
-                    <CardDescription>Latest updates from your team</CardDescription>
+                    <CardTitle>{t('dashboard.recentActivity.title')}</CardTitle>
+                    <CardDescription>{t('dashboard.recentActivity.description')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
@@ -165,11 +167,11 @@ export function RecentActivity() {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Recent Activity</CardTitle>
-                    <CardDescription>Latest updates from your team</CardDescription>
+                    <CardTitle>{t('dashboard.recentActivity.title')}</CardTitle>
+                    <CardDescription>{t('dashboard.recentActivity.description')}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-destructive">Failed to load recent activities</p>
+                    <p className="text-destructive">{t('dashboard.recentActivity.failedToLoad')}</p>
                 </CardContent>
             </Card>
         )
@@ -178,8 +180,8 @@ export function RecentActivity() {
     return (
         <Card className="glass-card-hover">
             <CardHeader>
-                <CardTitle className="cyber-gradient-text">Recent Activity</CardTitle>
-                <CardDescription className="text-gray-400">Latest updates from your team</CardDescription>
+                <CardTitle className="cyber-gradient-text">{t('dashboard.recentActivity.title')}</CardTitle>
+                <CardDescription className="text-gray-400">{t('dashboard.recentActivity.description')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">

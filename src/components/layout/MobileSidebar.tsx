@@ -1,10 +1,11 @@
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { useTranslation } from "react-i18next"
 
 export function MobileSidebar({ onLinkClick, onLogoClick, navigationItems }: { onLinkClick: () => void, onLogoClick: () => void, navigationItems: { href: string, title: string, description: string, icon: React.ElementType }[] }) {
     const pathname = usePathname()
-
+    const { t } = useTranslation()
     return (
         <div className="flex flex-col min-h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-2xl">
             {/* Enhanced Mobile Header */}
@@ -15,10 +16,10 @@ export function MobileSidebar({ onLinkClick, onLogoClick, navigationItems }: { o
                         className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500/50"
                         title="Close sidebar"
                     >
-                        <span className="text-white font-bold text-lg">K</span>
+                        <span className="text-white font-bold text-lg">{t("khabeer.name")}</span>
                     </button>
                     <div className="flex flex-col">
-                        <span className="text-white font-bold text-lg leading-tight">Khabeer</span>
+                        <span className="text-white font-bold text-lg leading-tight">{t("khabeer.name")}</span>
                         <span className="text-slate-400 text-xs">Admin Panel</span>
                     </div>
                 </div>
@@ -57,7 +58,7 @@ export function MobileSidebar({ onLinkClick, onLogoClick, navigationItems }: { o
                                         )}>
                                             <item.icon className="h-5 w-5" />
                                         </div>
-                                        <div className="flex-1 ml-4">
+                                        <div className="flex-1 mx-4">
                                             <span className="block font-semibold">{item.title}</span>
                                             <span className={cn(
                                                 "text-xs mt-0.5 block transition-colors",
@@ -69,7 +70,7 @@ export function MobileSidebar({ onLinkClick, onLogoClick, navigationItems }: { o
                                             </span>
                                         </div>
                                         {isActive && (
-                                            <div className="w-2 h-2 bg-white rounded-full ml-auto" />
+                                            <div className="w-2 h-2 bg-white rounded-full mx-auto" />
                                         )}
                                     </div>
                                 </Link>

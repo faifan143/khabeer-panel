@@ -17,6 +17,7 @@ import { useAdminActivateProvider, useAdminDeactivateProvider, useAdminVerifyPro
 import { AdminProvider, AdminProviderJoinRequest } from "@/lib/types/admin"
 import { formatCurrency } from "@/lib/utils"
 import { DocumentManagementDialog } from "@/components/documents/document-management-dialog"
+import { SearchBox } from "@/components/ui/search-box"
 import {
     CheckCircle,
     Clock,
@@ -46,6 +47,8 @@ import {
 } from "lucide-react"
 import { useState, useMemo } from "react"
 import toast from "react-hot-toast"
+import { useTranslation } from "react-i18next"
+import { useLanguage } from "@/lib/hooks/useLanguage"
 
 // Loading Skeleton Components
 const ProviderCardSkeleton = () => (
@@ -113,11 +116,14 @@ const getStatusIcon = (isActive: boolean) => {
     return isActive ? <UserCheck className="h-4 w-4" /> : <UserX className="h-4 w-4" />
 }
 
-const getStatusText = (isActive: boolean) => {
-    return isActive ? 'Active' : 'Inactive'
-}
-
 export default function ProviderVerificationPage() {
+    const { t } = useTranslation()
+    const { isRTL } = useLanguage()
+
+    const getStatusText = (isActive: boolean) => {
+        return isActive ? t('providers.active') : t('providers.inactive')
+    }
+
     const [activeTab, setActiveTab] = useState("verified")
     const [searchTerm, setSearchTerm] = useState("")
     const [viewMode, setViewMode] = useState<"grid" | "list">("list")
@@ -382,9 +388,9 @@ export default function ProviderVerificationPage() {
     const handleActivateProvider = async (providerId: number) => {
         try {
             await activateProviderMutation.mutateAsync(providerId)
-            toast.success("Provider activated successfully")
+            toast.success(t('providers.providerActivated'))
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to activate provider"
+            const errorMessage = error instanceof Error ? error.message : t('providers.failedToActivate')
             toast.error(errorMessage)
         }
     }
@@ -392,9 +398,9 @@ export default function ProviderVerificationPage() {
     const handleDeactivateProvider = async (providerId: number) => {
         try {
             await deactivateProviderMutation.mutateAsync(providerId)
-            toast.success("Provider deactivated successfully")
+            toast.success(t('providers.providerDeactivated'))
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to deactivate provider"
+            const errorMessage = error instanceof Error ? error.message : t('providers.failedToDeactivate')
             toast.error(errorMessage)
         }
     }
@@ -402,11 +408,11 @@ export default function ProviderVerificationPage() {
     const handleApproveJoinRequest = async (requestId: number) => {
         try {
             await approveJoinRequestMutation.mutateAsync({ id: requestId, notes: approveNotes })
-            toast.success("Join request approved successfully")
+            toast.success(t('providers.joinRequestApproved'))
             setIsApproveDialogOpen(false)
             setApproveNotes("")
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to approve join request"
+            const errorMessage = error instanceof Error ? error.message : t('providers.failedToApprove')
             toast.error(errorMessage)
         }
     }
@@ -414,23 +420,23 @@ export default function ProviderVerificationPage() {
     const handleRejectJoinRequest = async (requestId: number) => {
         try {
             await rejectJoinRequestMutation.mutateAsync({ id: requestId, notes: rejectReason })
-            toast.success("Join request rejected successfully")
+            toast.success(t('providers.joinRequestRejected'))
             setIsRejectDialogOpen(false)
             setRejectReason("")
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to reject join request"
+            const errorMessage = error instanceof Error ? error.message : t('providers.failedToReject')
             toast.error(errorMessage)
         }
     }
 
     const formatDate = (dateString: string) => {
-        if (!dateString) return 'No date provided'
+        if (!dateString) return t('providers.noDateProvided')
 
         try {
             const date = new Date(dateString)
             if (isNaN(date.getTime())) {
                 console.warn('Invalid date string:', dateString)
-                return 'Invalid date'
+                return t('providers.invalidDate')
             }
 
             return date.toLocaleDateString('en-US', {
@@ -442,17 +448,17 @@ export default function ProviderVerificationPage() {
             })
         } catch (error) {
             console.error('Error formatting date:', error, 'Date string:', dateString)
-            return 'Invalid date'
+            return t('providers.invalidDate')
         }
     }
 
     const renderCurrency = (amount: number) => {
-        const currencyString = formatCurrency(amount)
-        const parts = currencyString.split(' OMR')
+        const currencyString = formatCurrency(amount, 'ar') // Use Arabic locale for RTL
+        const parts = currencyString.split(' ر.ع.')
         return (
             <span className="font-semibold">
                 {parts[0]}
-                <span className="text-sm text-muted-foreground ml-1 font-normal">OMR</span>
+                <span className="text-sm text-muted-foreground ml-1 font-normal">ر.ع.</span>
             </span>
         )
     }
@@ -464,39 +470,39 @@ export default function ProviderVerificationPage() {
                     {/* Enhanced Stats Display */}
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                         <StatCard
-                            title="Verified Providers"
+                            title={t('providers.verifiedProviders')}
                             value={providerStats.total}
                             icon={ShieldCheck}
                             color="bg-gradient-to-br from-green-500 to-emerald-600"
-                            description="Document verified"
+                            description={t('providers.documentVerified')}
                         />
                         <StatCard
-                            title="Active Providers"
+                            title={t('providers.activeProviders')}
                             value={providerStats.active}
                             icon={UserCheck}
                             color="bg-gradient-to-br from-blue-500 to-indigo-600"
-                            description="Currently active"
+                            description={t('providers.currentlyActive')}
                         />
                         <StatCard
-                            title="Inactive Providers"
+                            title={t('providers.inactiveProviders')}
                             value={providerStats.inactive}
                             icon={UserX}
                             color="bg-gradient-to-br from-red-500 to-pink-600"
-                            description="Deactivated"
+                            description={t('providers.deactivated')}
                         />
                         <StatCard
-                            title="Total Income"
-                            value={`${providerStats.totalIncome} OMR`}
+                            title={t('providers.totalIncome')}
+                            value={`${providerStats.totalIncome} ر.ع.`}
                             icon={DollarSign}
                             color="bg-gradient-to-br from-emerald-500 to-teal-600"
-                            description="All time earnings"
+                            description={t('providers.allTimeEarnings')}
                         />
                         <StatCard
-                            title="Pending Requests"
+                            title={t('providers.pendingRequests')}
                             value={providerStats.pendingRequests}
                             icon={Clock}
                             color="bg-gradient-to-br from-yellow-500 to-orange-600"
-                            description="Awaiting approval"
+                            description={t('providers.awaitingApproval')}
                         />
                     </div>
 
@@ -508,27 +514,34 @@ export default function ProviderVerificationPage() {
                                     value="verified"
                                     className="px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
                                 >
-                                    Verified Providers
+                                    {t('providers.verifiedProviders')}
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="join-requests"
                                     className="px-6 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
                                 >
-                                    Provider Join Requests
+                                    {t('providers.providerJoinRequests')}
                                 </TabsTrigger>
                             </TabsList>
 
                             <div className="flex items-center space-x-3">
+                                {/* Search Box */}
+                                <SearchBox
+                                    placeholder={activeTab === "verified" ? t('providers.searchProviders') : t('providers.searchRequests')}
+                                    value={searchTerm}
+                                    onChange={setSearchTerm}
+                                    className="w-64"
+                                />
                                 {/* Status Filter - only for verified providers */}
                                 {activeTab === "verified" && (
                                     <Select value={statusFilter} onValueChange={setStatusFilter}>
                                         <SelectTrigger className="w-40">
-                                            <SelectValue placeholder="Filter by status" />
+                                            <SelectValue placeholder={t('providers.filterByStatus')} />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">All Status</SelectItem>
-                                            <SelectItem value="active">Active</SelectItem>
-                                            <SelectItem value="inactive">Inactive</SelectItem>
+                                            <SelectItem value="all">{t('providers.allStatus')}</SelectItem>
+                                            <SelectItem value="active">{t('providers.active')}</SelectItem>
+                                            <SelectItem value="inactive">{t('providers.inactive')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 )}
@@ -580,7 +593,9 @@ export default function ProviderVerificationPage() {
                                                                 <Shield className="h-4 w-4 text-green-600" />
                                                             </div>
                                                             <h3 className="font-semibold text-gray-900 mb-1">{provider.name}</h3>
-                                                            <p className="text-sm text-muted-foreground mb-3">{provider.description}</p>
+                                                            <p className="text-sm text-muted-foreground mb-3">
+                                                                {provider.description || t('providers.professionalProvider')}
+                                                            </p>
                                                         </div>
                                                     </div>
 
@@ -595,11 +610,11 @@ export default function ProviderVerificationPage() {
                                                         </div>
                                                         <div className="flex items-center space-x-2 text-sm">
                                                             <DollarSign className="h-4 w-4 text-muted-foreground" />
-                                                            <span className="text-muted-foreground">Total: {renderCurrency(income.total)}</span>
+                                                            <span className="text-muted-foreground">{t('providers.total')}: {renderCurrency(income.total)}</span>
                                                         </div>
                                                         <div className="flex items-center space-x-2 text-sm">
                                                             <Percent className="h-4 w-4 text-muted-foreground" />
-                                                            <span className="text-muted-foreground">Discounts: {renderCurrency(income.offerDiscounts)}</span>
+                                                            <span className="text-muted-foreground">{t('providers.offerDiscounts')}: {renderCurrency(income.offerDiscounts)}</span>
                                                         </div>
                                                     </div>
 
@@ -639,18 +654,18 @@ export default function ProviderVerificationPage() {
                                                                 </AlertDialogTrigger>
                                                                 <AlertDialogContent>
                                                                     <AlertDialogHeader>
-                                                                        <AlertDialogTitle>Activate Provider</AlertDialogTitle>
+                                                                        <AlertDialogTitle>{t('providers.activateProvider')}</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            Are you sure you want to activate {provider.name}?
+                                                                            {t('providers.activateProviderConfirm').replace('{name}', provider.name)}
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
-                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogCancel>{t('providers.cancel')}</AlertDialogCancel>
                                                                         <AlertDialogAction
                                                                             onClick={() => handleActivateProvider(provider.id)}
                                                                             className="bg-green-600 hover:bg-green-700"
                                                                         >
-                                                                            Activate
+                                                                            {t('providers.activate')}
                                                                         </AlertDialogAction>
                                                                     </AlertDialogFooter>
                                                                 </AlertDialogContent>
@@ -668,18 +683,18 @@ export default function ProviderVerificationPage() {
                                                                 </AlertDialogTrigger>
                                                                 <AlertDialogContent>
                                                                     <AlertDialogHeader>
-                                                                        <AlertDialogTitle>Deactivate Provider</AlertDialogTitle>
+                                                                        <AlertDialogTitle>{t('providers.deactivateProvider')}</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            Are you sure you want to deactivate {provider.name}?
+                                                                            {t('providers.deactivateProviderConfirm').replace('{name}', provider.name)}
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
-                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogCancel>{t('providers.cancel')}</AlertDialogCancel>
                                                                         <AlertDialogAction
                                                                             onClick={() => handleDeactivateProvider(provider.id)}
                                                                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                                                         >
-                                                                            Deactivate
+                                                                            {t('providers.deactivate')}
                                                                         </AlertDialogAction>
                                                                     </AlertDialogFooter>
                                                                 </AlertDialogContent>
@@ -696,14 +711,14 @@ export default function ProviderVerificationPage() {
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-gray-50">
-                                                <TableHead className="font-semibold">Provider</TableHead>
-                                                <TableHead className="font-semibold">Contact & Location</TableHead>
-                                                <TableHead className="font-semibold">Categories & Services</TableHead>
-                                                <TableHead className="font-semibold">Incoming Orders</TableHead>
-                                                <TableHead className="font-semibold">Detailed Income</TableHead>
-                                                <TableHead className="font-semibold">Documents</TableHead>
-                                                <TableHead className="font-semibold">Status</TableHead>
-                                                <TableHead className="font-semibold text-right">Actions</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.provider')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.contactLocation')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.categoriesServices')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.incomingOrders')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.detailedIncome')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.documents')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.status')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-left' : 'text-right'}`}>{t('providers.tableHeaders.actions')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -712,14 +727,16 @@ export default function ProviderVerificationPage() {
                                                 return (
                                                     <TableRow key={provider.id} className="hover:bg-gray-50/50">
                                                         <TableCell>
-                                                            <div className="flex items-center space-x-3">
+                                                            <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
                                                                 <Avatar className="h-10 w-10">
                                                                     <AvatarImage src={process.env.NEXT_PUBLIC_API_URL_IMAGE + provider.image} alt={provider.name} />
                                                                     <AvatarFallback>{provider.name.charAt(0)}</AvatarFallback>
                                                                 </Avatar>
                                                                 <div className="space-y-1">
                                                                     <div className="font-medium text-gray-900">{provider.name}</div>
-                                                                    <div className="text-sm text-muted-foreground">{provider.description}</div>
+                                                                    <div className="text-sm text-muted-foreground">
+                                                                        {provider.description || t('providers.professionalProvider')}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </TableCell>
@@ -739,20 +756,22 @@ export default function ProviderVerificationPage() {
                                                                         setSelectedProvider(provider)
                                                                         setIsServicesDialogOpen(true)
                                                                     }}
-                                                                    className="h-8 px-3 hover:bg-blue-100 text-left justify-start cursor-pointer"
+                                                                    className={`h-8 px-3 hover:bg-blue-100 ${isRTL ? 'text-right justify-end' : 'text-left justify-start'} cursor-pointer`}
                                                                 >
-                                                                    <Package className="h-4 w-4 mr-2" />
+                                                                    <Package className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                                                                     <span className="text-sm">
                                                                         {provider.providerServices.length > 0
-                                                                            ? `${provider.providerServices.length} service${provider.providerServices.length > 1 ? 's' : ''}`
-                                                                            : 'No services'
+                                                                            ? `${provider.providerServices.length} ${t('providers.services')}`
+                                                                            : t('providers.noServices')
                                                                         }
                                                                     </span>
                                                                 </Button>
                                                             </div>
                                                         </TableCell>
                                                         <TableCell>
-                                                            <div className="text-sm font-medium">0 orders</div>
+                                                            <div className="text-sm font-medium">
+                                                                {provider.orders?.length || 0} {t('providers.orders')}
+                                                            </div>
                                                         </TableCell>
                                                         <TableCell>
                                                             <Button
@@ -762,9 +781,9 @@ export default function ProviderVerificationPage() {
                                                                     setSelectedProvider(provider)
                                                                     setIsIncomeDialogOpen(true)
                                                                 }}
-                                                                className="h-8 px-3 hover:bg-green-100 text-left justify-start cursor-pointer"
+                                                                className={`h-8 px-3 hover:bg-green-100 ${isRTL ? 'text-right justify-end' : 'text-left justify-start'} cursor-pointer`}
                                                             >
-                                                                <DollarSign className="h-4 w-4 mr-2" />
+                                                                <DollarSign className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                                                                 <span className="text-sm font-medium text-green-600">
                                                                     {renderCurrency(income.total)}
                                                                 </span>
@@ -786,11 +805,11 @@ export default function ProviderVerificationPage() {
                                                         <TableCell>
                                                             <Badge variant="outline" className={`${getStatusColor(provider.isActive)}`}>
                                                                 {getStatusIcon(provider.isActive)}
-                                                                <span className="ml-1">{getStatusText(provider.isActive)}</span>
+                                                                <span className={isRTL ? 'mr-1' : 'ml-1'}>{getStatusText(provider.isActive)}</span>
                                                             </Badge>
                                                         </TableCell>
-                                                        <TableCell className="text-right">
-                                                            <div className="flex items-center justify-end space-x-2">
+                                                        <TableCell className={isRTL ? 'text-left' : 'text-right'}>
+                                                            <div className={`flex items-center ${isRTL ? 'justify-start space-x-reverse space-x-2' : 'justify-end space-x-2'}`}>
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
@@ -815,18 +834,18 @@ export default function ProviderVerificationPage() {
                                                                         </AlertDialogTrigger>
                                                                         <AlertDialogContent>
                                                                             <AlertDialogHeader>
-                                                                                <AlertDialogTitle>Activate Provider</AlertDialogTitle>
+                                                                                <AlertDialogTitle>{t('providers.activateProvider')}</AlertDialogTitle>
                                                                                 <AlertDialogDescription>
-                                                                                    Are you sure you want to activate {provider.name}?
+                                                                                    {t('providers.activateProviderConfirm').replace('{name}', provider.name)}
                                                                                 </AlertDialogDescription>
                                                                             </AlertDialogHeader>
                                                                             <AlertDialogFooter>
-                                                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                                <AlertDialogCancel>{t('providers.cancel')}</AlertDialogCancel>
                                                                                 <AlertDialogAction
                                                                                     onClick={() => handleActivateProvider(provider.id)}
                                                                                     className="bg-green-600 hover:bg-green-700"
                                                                                 >
-                                                                                    Activate
+                                                                                    {t('providers.activate')}
                                                                                 </AlertDialogAction>
                                                                             </AlertDialogFooter>
                                                                         </AlertDialogContent>
@@ -844,18 +863,18 @@ export default function ProviderVerificationPage() {
                                                                         </AlertDialogTrigger>
                                                                         <AlertDialogContent>
                                                                             <AlertDialogHeader>
-                                                                                <AlertDialogTitle>Deactivate Provider</AlertDialogTitle>
+                                                                                <AlertDialogTitle>{t('providers.deactivateProvider')}</AlertDialogTitle>
                                                                                 <AlertDialogDescription>
-                                                                                    Are you sure you want to deactivate {provider.name}?
+                                                                                    {t('providers.deactivateProviderConfirm').replace('{name}', provider.name)}
                                                                                 </AlertDialogDescription>
                                                                             </AlertDialogHeader>
                                                                             <AlertDialogFooter>
-                                                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                                <AlertDialogCancel>{t('providers.cancel')}</AlertDialogCancel>
                                                                                 <AlertDialogAction
                                                                                     onClick={() => handleDeactivateProvider(provider.id)}
                                                                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                                                                 >
-                                                                                    Deactivate
+                                                                                    {t('providers.deactivate')}
                                                                                 </AlertDialogAction>
                                                                             </AlertDialogFooter>
                                                                         </AlertDialogContent>
@@ -875,9 +894,9 @@ export default function ProviderVerificationPage() {
                                 <Card className="border-0 shadow-lg">
                                     <CardContent className="p-12 text-center">
                                         <ShieldCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No verified providers found</h3>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('providers.noVerifiedProvidersFound')}</h3>
                                         <p className="text-muted-foreground">
-                                            {searchTerm ? `No providers match your search "${searchTerm}"` : "No verified providers available"}
+                                            {searchTerm ? t('providers.noProvidersMatchSearch').replace('{searchTerm}', searchTerm) : t('providers.noVerifiedProvidersAvailable')}
                                         </p>
                                     </CardContent>
                                 </Card>
@@ -891,9 +910,9 @@ export default function ProviderVerificationPage() {
                                 <Card className="border-0 shadow-lg">
                                     <CardContent className="p-12 text-center">
                                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Loading join requests...</h3>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('providers.loadingJoinRequests')}</h3>
                                         <p className="text-muted-foreground">
-                                            Please wait while we fetch the latest data
+                                            {t('providers.pleaseWaitFetching')}
                                         </p>
                                     </CardContent>
                                 </Card>
@@ -905,30 +924,30 @@ export default function ProviderVerificationPage() {
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-gray-50">
-                                                <TableHead className="font-semibold">Provider</TableHead>
-                                                <TableHead className="font-semibold">Contact Info</TableHead>
-                                                <TableHead className="font-semibold">State</TableHead>
-                                                <TableHead className="font-semibold">Request Date</TableHead>
-                                                <TableHead className="font-semibold text-right">Actions</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.provider')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.contactInfo')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.state')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.requestDate')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-left' : 'text-right'}`}>{t('providers.tableHeaders.actions')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {joinRequests.map((request) => (
                                                 <TableRow key={request.id} className="hover:bg-gray-50/50">
                                                     <TableCell>
-                                                        <div className="flex items-center space-x-3">
+                                                        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
                                                             <Avatar className="h-10 w-10">
-                                                                <AvatarImage src={process.env.NEXT_PUBLIC_API_URL_IMAGE + request.provider?.image} alt={request.provider?.name || 'Provider'} />
+                                                                <AvatarImage src={process.env.NEXT_PUBLIC_API_URL_IMAGE + request.provider?.image} alt={request.provider?.name || t('providers.provider')} />
                                                                 <AvatarFallback>
                                                                     {request.provider?.name?.charAt(0) || 'P'}
                                                                 </AvatarFallback>
                                                             </Avatar>
                                                             <div className="space-y-1">
                                                                 <div className="font-medium text-gray-900">
-                                                                    {request.provider?.name || 'Unknown Provider'}
+                                                                    {request.provider?.name || t('providers.unknownProvider')}
                                                                 </div>
                                                                 <div className="text-sm text-muted-foreground">
-                                                                    {request.provider?.description || 'No description available'}
+                                                                    {request.provider?.description || t('providers.noDescriptionAvailable')}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -936,13 +955,13 @@ export default function ProviderVerificationPage() {
                                                     <TableCell>
                                                         <div className="space-y-1">
                                                             <div className="text-sm font-medium">
-                                                                {request.provider?.phone || 'No phone'}
+                                                                {request.provider?.phone || t('providers.noPhone')}
                                                             </div>
                                                             {request.provider?.email && (
                                                                 <div className="text-sm text-muted-foreground">{request.provider.email}</div>
                                                             )}
                                                             {!request.provider?.email && (
-                                                                <div className="text-sm text-muted-foreground">No email</div>
+                                                                <div className="text-sm text-muted-foreground">{t('providers.noEmail')}</div>
                                                             )}
                                                         </div>
                                                     </TableCell>
@@ -966,8 +985,8 @@ export default function ProviderVerificationPage() {
                                                     <TableCell>
                                                         <div className="text-sm">{formatDate(request.requestDate)}</div>
                                                     </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <div className="flex items-center justify-end space-x-2">
+                                                    <TableCell className={isRTL ? 'text-left' : 'text-right'}>
+                                                        <div className={`flex items-center ${isRTL ? 'justify-start space-x-reverse space-x-2' : 'justify-end space-x-2'}`}>
                                                             <AlertDialog>
                                                                 <AlertDialogTrigger asChild>
                                                                     <Button
@@ -980,18 +999,18 @@ export default function ProviderVerificationPage() {
                                                                 </AlertDialogTrigger>
                                                                 <AlertDialogContent>
                                                                     <AlertDialogHeader>
-                                                                        <AlertDialogTitle>Approve Join Request</AlertDialogTitle>
+                                                                        <AlertDialogTitle>{t('providers.approveJoinRequest')}</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            Are you sure you want to approve {request.provider?.name || 'this provider'} join request?
+                                                                            {t('providers.approveJoinRequestConfirm').replace('{name}', request.provider?.name || t('providers.thisProvider'))}
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
-                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogCancel>{t('providers.cancel')}</AlertDialogCancel>
                                                                         <AlertDialogAction
                                                                             onClick={() => handleApproveJoinRequest(request.id)}
                                                                             className="bg-green-600 hover:bg-green-700"
                                                                         >
-                                                                            Approve
+                                                                            {t('providers.approve')}
                                                                         </AlertDialogAction>
                                                                     </AlertDialogFooter>
                                                                 </AlertDialogContent>
@@ -1008,18 +1027,18 @@ export default function ProviderVerificationPage() {
                                                                 </AlertDialogTrigger>
                                                                 <AlertDialogContent>
                                                                     <AlertDialogHeader>
-                                                                        <AlertDialogTitle>Reject Join Request</AlertDialogTitle>
+                                                                        <AlertDialogTitle>{t('providers.rejectJoinRequest')}</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            Are you sure you want to reject {request.provider?.name || 'this provider'} join request?
+                                                                            {t('providers.rejectJoinRequestConfirm').replace('{name}', request.provider?.name || t('providers.thisProvider'))}
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
-                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogCancel>{t('providers.cancel')}</AlertDialogCancel>
                                                                         <AlertDialogAction
                                                                             onClick={() => handleRejectJoinRequest(request.id)}
                                                                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                                                         >
-                                                                            Reject
+                                                                            {t('providers.reject')}
                                                                         </AlertDialogAction>
                                                                     </AlertDialogFooter>
                                                                 </AlertDialogContent>
@@ -1037,13 +1056,13 @@ export default function ProviderVerificationPage() {
                                 <Card className="border-0 shadow-lg">
                                     <CardContent className="p-12 text-center">
                                         <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No pending join requests</h3>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('providers.noPendingJoinRequests')}</h3>
                                         <p className="text-muted-foreground">
-                                            All provider join requests have been processed
+                                            {t('providers.allJoinRequestsProcessed')}
                                         </p>
                                         {unverifiedProviders && unverifiedProviders.length > 0 && (
                                             <p className="text-sm text-blue-600 mt-2">
-                                                Found {unverifiedProviders.length} unverified providers that may need attention
+                                                {t('providers.foundUnverifiedProviders').replace('{count}', unverifiedProviders.length.toString())}
                                             </p>
                                         )}
                                     </CardContent>
@@ -1059,9 +1078,9 @@ export default function ProviderVerificationPage() {
                                         <div className="flex items-center space-x-2 text-red-700">
                                             <XCircle className="h-5 w-5" />
                                             <div>
-                                                <h4 className="font-medium">Error loading join requests</h4>
+                                                <h4 className="font-medium">{t('providers.errorLoadingJoinRequests')}</h4>
                                                 <p className="text-sm text-red-600">
-                                                    {joinRequestsError instanceof Error ? joinRequestsError.message : 'Failed to load join requests'}
+                                                    {joinRequestsError instanceof Error ? joinRequestsError.message : t('providers.failedToLoadJoinRequests')}
                                                 </p>
                                             </div>
                                         </div>
@@ -1075,20 +1094,20 @@ export default function ProviderVerificationPage() {
                     <Dialog open={isProviderDialogOpen} onOpenChange={setIsProviderDialogOpen}>
                         <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] max-h-[90vh] w-full overflow-hidden">
                             <DialogHeader className="flex-shrink-0">
-                                <DialogTitle className="text-xl">Provider Details</DialogTitle>
+                                <DialogTitle className="text-xl">{t('providers.providerDetails')}</DialogTitle>
                                 <DialogDescription>
-                                    Complete information about this provider
+                                    {t('providers.completeInformation')}
                                 </DialogDescription>
                             </DialogHeader>
                             {selectedProvider && (
                                 <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-140px)] pr-2">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium">Provider ID</Label>
+                                            <Label className="text-sm font-medium">{t('providers.providerId')}</Label>
                                             <div className="text-sm font-mono bg-gray-100 p-2 rounded">#{selectedProvider.id}</div>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium">Status</Label>
+                                            <Label className="text-sm font-medium">{t('providers.status')}</Label>
                                             <Badge variant="outline" className={`${getStatusColor(selectedProvider.isActive)}`}>
                                                 {getStatusIcon(selectedProvider.isActive)}
                                                 <span className="ml-1">{getStatusText(selectedProvider.isActive)}</span>
@@ -1098,7 +1117,7 @@ export default function ProviderVerificationPage() {
 
                                     <div className="space-y-4">
                                         <div>
-                                            <Label className="text-sm font-medium">Provider Information</Label>
+                                            <Label className="text-sm font-medium">{t('providers.providerInformation')}</Label>
                                             <div className="mt-1 p-3 bg-gray-50 rounded-lg">
                                                 <div className="font-semibold">{selectedProvider.name}</div>
                                                 <div className="text-sm text-muted-foreground">{selectedProvider.description}</div>
@@ -1107,7 +1126,7 @@ export default function ProviderVerificationPage() {
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <Label className="text-sm font-medium">Contact Information</Label>
+                                                <Label className="text-sm font-medium">{t('providers.contactInformation')}</Label>
                                                 <div className="mt-1 p-3 bg-gray-50 rounded-lg space-y-2">
                                                     <div className="flex items-center space-x-2">
                                                         <Phone className="h-4 w-4 text-muted-foreground" />
@@ -1126,22 +1145,22 @@ export default function ProviderVerificationPage() {
                                                 </div>
                                             </div>
                                             <div>
-                                                <Label className="text-sm font-medium">Account Details</Label>
+                                                <Label className="text-sm font-medium">{t('providers.accountDetails')}</Label>
                                                 <div className="mt-1 p-3 bg-gray-50 rounded-lg space-y-2">
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-sm text-muted-foreground">Active:</span>
+                                                        <span className="text-sm text-muted-foreground">{t('providers.accountLabels.active')}</span>
                                                         <Badge variant={selectedProvider.isActive ? "default" : "secondary"}>
-                                                            {selectedProvider.isActive ? "Yes" : "No"}
+                                                            {selectedProvider.isActive ? t('providers.yes') : t('providers.no')}
                                                         </Badge>
                                                     </div>
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-sm text-muted-foreground">Verified:</span>
+                                                        <span className="text-sm text-muted-foreground">{t('providers.accountLabels.verified')}</span>
                                                         <Badge variant={selectedProvider.isVerified ? "default" : "secondary"}>
-                                                            {selectedProvider.isVerified ? "Yes" : "No"}
+                                                            {selectedProvider.isVerified ? t('providers.yes') : t('providers.no')}
                                                         </Badge>
                                                     </div>
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-sm text-muted-foreground">Joined:</span>
+                                                        <span className="text-sm text-muted-foreground">{t('providers.accountLabels.joined')}</span>
                                                         <span className="text-sm">{formatDate(selectedProvider.createdAt)}</span>
                                                     </div>
                                                 </div>
@@ -1150,18 +1169,18 @@ export default function ProviderVerificationPage() {
 
                                         {selectedProvider?.providerServices && selectedProvider.providerServices.length > 0 && (
                                             <div>
-                                                <Label className="text-sm font-medium">Services Offered</Label>
+                                                <Label className="text-sm font-medium">{t('providers.servicesOffered')}</Label>
                                                 <div className="mt-1 space-y-2">
                                                     {selectedProvider.providerServices.map((service, index: number) => (
                                                         <div key={index} className="p-3 bg-gray-50 rounded-lg">
                                                             <div className="font-semibold">{service.service?.title}</div>
                                                             <div className="text-sm text-muted-foreground">{service.service?.description}</div>
                                                             <div className="text-sm font-medium text-green-600 mt-1">
-                                                                Price: {formatCurrency(service.price)}
+                                                                {t('providers.price')} {formatCurrency(service.price, 'ar')}
                                                             </div>
                                                             {service.service?.category && (
                                                                 <div className="text-xs text-muted-foreground mt-1">
-                                                                    Category: {service.service.category.titleEn}
+                                                                    {t('providers.category')} {service.service.category.titleEn}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -1172,18 +1191,18 @@ export default function ProviderVerificationPage() {
 
                                         {selectedProvider?.orders && selectedProvider.orders.length > 0 && (
                                             <div>
-                                                <Label className="text-sm font-medium">Recent Orders</Label>
+                                                <Label className="text-sm font-medium">{t('providers.recentOrders')}</Label>
                                                 <div className="mt-1 space-y-2">
                                                     {selectedProvider.orders.slice(0, 5).map((order, index: number) => (
                                                         <div key={index} className="p-3 bg-gray-50 rounded-lg">
                                                             <div className="flex items-center justify-between">
                                                                 <div>
-                                                                    <div className="font-semibold">Order #{order.id}</div>
-                                                                    <div className="text-sm text-muted-foreground">Total: {formatCurrency(order.totalAmount)}</div>
+                                                                    <div className="font-semibold">{t('providers.orderNumber')} {order.id}</div>
+                                                                    <div className="text-sm text-muted-foreground">{t('providers.total')}: {formatCurrency(order.totalAmount, 'ar')}</div>
                                                                 </div>
                                                                 <div className="text-right">
-                                                                    <div className="font-semibold text-green-600">{formatCurrency(order.providerAmount)}</div>
-                                                                    <div className="text-sm text-muted-foreground">Commission: {formatCurrency(order.commissionAmount)}</div>
+                                                                    <div className="font-semibold text-green-600">{formatCurrency(order.providerAmount, 'ar')}</div>
+                                                                    <div className="text-sm text-muted-foreground">{t('providers.commission')} {formatCurrency(order.commissionAmount, 'ar')}</div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1196,7 +1215,7 @@ export default function ProviderVerificationPage() {
                             )}
                             <DialogFooter className="flex-shrink-0 pt-4 border-t">
                                 <Button variant="outline" onClick={() => setIsProviderDialogOpen(false)}>
-                                    Close
+                                    {t('providers.close')}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -1206,32 +1225,32 @@ export default function ProviderVerificationPage() {
                     <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
                         <DialogContent className="sm:max-w-[500px]">
                             <DialogHeader>
-                                <DialogTitle>Approve Join Request</DialogTitle>
+                                <DialogTitle>{t('providers.approveJoinRequestTitle')}</DialogTitle>
                                 <DialogDescription>
-                                    Add any notes about approving this join request (optional)
+                                    {t('providers.approveJoinRequestDescription')}
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4">
                                 <div>
-                                    <Label htmlFor="approveNotes" className="text-sm font-medium">Admin Notes (Optional)</Label>
+                                    <Label htmlFor="approveNotes" className="text-sm font-medium">{t('providers.adminNotesOptional')}</Label>
                                     <Textarea
                                         id="approveNotes"
                                         value={approveNotes}
                                         onChange={(e) => setApproveNotes(e.target.value)}
-                                        placeholder="Enter any notes about approving this request..."
+                                        placeholder={t('providers.enterApproveNotes')}
                                         rows={3}
                                     />
                                 </div>
                             </div>
                             <DialogFooter>
                                 <Button variant="outline" onClick={() => setIsApproveDialogOpen(false)}>
-                                    Cancel
+                                    {t('providers.cancel')}
                                 </Button>
                                 <Button
                                     onClick={() => setIsApproveDialogOpen(false)}
                                     className="bg-green-600 hover:bg-green-700"
                                 >
-                                    Approve Request
+                                    {t('providers.approveRequest')}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -1241,19 +1260,19 @@ export default function ProviderVerificationPage() {
                     <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
                         <DialogContent className="sm:max-w-[500px]">
                             <DialogHeader>
-                                <DialogTitle>Reject Join Request</DialogTitle>
+                                <DialogTitle>{t('providers.rejectJoinRequestTitle')}</DialogTitle>
                                 <DialogDescription>
-                                    Please provide a reason for rejecting this join request
+                                    {t('providers.rejectJoinRequestDescription')}
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4">
                                 <div>
-                                    <Label htmlFor="rejectReason" className="text-sm font-medium">Rejection Reason (Required)</Label>
+                                    <Label htmlFor="rejectReason" className="text-sm font-medium">{t('providers.rejectionReasonRequired')}</Label>
                                     <Textarea
                                         id="rejectReason"
                                         value={rejectReason}
                                         onChange={(e) => setRejectReason(e.target.value)}
-                                        placeholder="Enter reason for rejecting this request..."
+                                        placeholder={t('providers.enterRejectReason')}
                                         rows={3}
                                         required
                                     />
@@ -1261,14 +1280,14 @@ export default function ProviderVerificationPage() {
                             </div>
                             <DialogFooter>
                                 <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
-                                    Cancel
+                                    {t('providers.cancel')}
                                 </Button>
                                 <Button
                                     onClick={() => setIsRejectDialogOpen(false)}
                                     disabled={!rejectReason.trim()}
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                 >
-                                    Reject Request
+                                    {t('providers.rejectRequest')}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -1289,9 +1308,9 @@ export default function ProviderVerificationPage() {
                     <Dialog open={isIncomeDialogOpen} onOpenChange={setIsIncomeDialogOpen}>
                         <DialogContent className="sm:max-w-[600px]">
                             <DialogHeader>
-                                <DialogTitle>Income Details</DialogTitle>
+                                <DialogTitle>{t('providers.incomeDetails')}</DialogTitle>
                                 <DialogDescription>
-                                    Detailed income breakdown for {selectedProvider?.name}
+                                    {t('providers.detailedIncomeBreakdown').replace('{name}', selectedProvider?.name || '')}
                                 </DialogDescription>
                             </DialogHeader>
                             {selectedProvider && (
@@ -1303,31 +1322,31 @@ export default function ProviderVerificationPage() {
                                                 <div className="grid grid-cols-1 gap-4">
                                                     <div className="p-4 bg-green-50 rounded-lg">
                                                         <div className="flex items-center justify-between">
-                                                            <span className="text-sm font-medium text-green-700">Total Income</span>
+                                                            <span className="text-sm font-medium text-green-700">{t('providers.totalIncome')}</span>
                                                             <span className="text-lg font-bold text-green-800">{renderCurrency(income.total)}</span>
                                                         </div>
                                                     </div>
                                                     <div className="p-4 bg-blue-50 rounded-lg">
                                                         <div className="flex items-center justify-between">
-                                                            <span className="text-sm font-medium text-blue-700">Provider Amount</span>
+                                                            <span className="text-sm font-medium text-blue-700">{t('providers.providerAmount')}</span>
                                                             <span className="text-lg font-bold text-blue-800">{renderCurrency(income.providerAmount)}</span>
                                                         </div>
                                                     </div>
                                                     <div className="p-4 bg-orange-50 rounded-lg">
                                                         <div className="flex items-center justify-between">
-                                                            <span className="text-sm font-medium text-orange-700">Total Commission</span>
+                                                            <span className="text-sm font-medium text-orange-700">{t('providers.totalCommission')}</span>
                                                             <span className="text-lg font-bold text-orange-800">{renderCurrency(income.totalCommission)}</span>
                                                         </div>
                                                     </div>
                                                     <div className="p-4 bg-purple-50 rounded-lg">
                                                         <div className="flex items-center justify-between">
-                                                            <span className="text-sm font-medium text-purple-700">Net Income</span>
+                                                            <span className="text-sm font-medium text-purple-700">{t('providers.netIncome')}</span>
                                                             <span className="text-lg font-bold text-purple-800">{renderCurrency(income.netIncome)}</span>
                                                         </div>
                                                     </div>
                                                     <div className="p-4 bg-yellow-50 rounded-lg">
                                                         <div className="flex items-center justify-between">
-                                                            <span className="text-sm font-medium text-yellow-700">Offer Discounts</span>
+                                                            <span className="text-sm font-medium text-yellow-700">{t('providers.offerDiscounts')}</span>
                                                             <span className="text-lg font-bold text-yellow-800">{renderCurrency(income.offerDiscounts)}</span>
                                                         </div>
                                                     </div>
@@ -1339,7 +1358,7 @@ export default function ProviderVerificationPage() {
                             )}
                             <DialogFooter>
                                 <Button variant="outline" onClick={() => setIsIncomeDialogOpen(false)}>
-                                    Close
+                                    {t('providers.close')}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -1349,9 +1368,9 @@ export default function ProviderVerificationPage() {
                     <Dialog open={isServicesDialogOpen} onOpenChange={setIsServicesDialogOpen}>
                         <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-hidden">
                             <DialogHeader>
-                                <DialogTitle>Services & Categories</DialogTitle>
+                                <DialogTitle>{t('providers.servicesCategories')}</DialogTitle>
                                 <DialogDescription>
-                                    All services and categories offered by {selectedProvider?.name}
+                                    {t('providers.allServicesCategories').replace('{name}', selectedProvider?.name || '')}
                                 </DialogDescription>
                             </DialogHeader>
                             {selectedProvider && (
@@ -1361,7 +1380,7 @@ export default function ProviderVerificationPage() {
                                             {/* Group by categories */}
                                             {(() => {
                                                 const groupedServices = selectedProvider.providerServices.reduce((acc, ps) => {
-                                                    const categoryTitle = ps.service?.category?.titleEn || 'Uncategorized'
+                                                    const categoryTitle = ps.service?.category?.titleEn || t('providers.uncategorized')
                                                     if (!acc[categoryTitle]) {
                                                         acc[categoryTitle] = []
                                                     }
@@ -1394,7 +1413,7 @@ export default function ProviderVerificationPage() {
                                                                                 <div className="flex-1">
                                                                                     <h4 className="font-medium text-gray-900">{ps.service?.title}</h4>
                                                                                     <p className="text-sm text-muted-foreground mt-1">
-                                                                                        {ps.service?.description || 'No description available'}
+                                                                                        {ps.service?.description || t('providers.noDescriptionAvailable')}
                                                                                     </p>
                                                                                 </div>
                                                                             </div>
@@ -1404,21 +1423,21 @@ export default function ProviderVerificationPage() {
                                                                                 {/* Left Column - Base Price & Commission */}
                                                                                 <div className="space-y-2">
                                                                                     <div className="flex items-center justify-between">
-                                                                                        <span className="text-sm font-medium text-gray-600">Base Price:</span>
+                                                                                        <span className="text-sm font-medium text-gray-600">{t('providers.basePrice')}</span>
                                                                                         <span className="text-sm font-semibold text-gray-900">
-                                                                                            {formatCurrency(ps.price)}
+                                                                                            {formatCurrency(ps.price, 'ar')}
                                                                                         </span>
                                                                                     </div>
                                                                                     <div className="flex items-center justify-between">
-                                                                                        <span className="text-sm font-medium text-gray-600">Commission ({ps.service?.commission || 0}%):</span>
+                                                                                        <span className="text-sm font-medium text-gray-600">{t('providers.commission').replace('{percentage}', (ps.service?.commission || 0).toString())}</span>
                                                                                         <span className="text-sm font-semibold text-orange-600">
-                                                                                            {formatCurrency(commissionAmount)}
+                                                                                            {formatCurrency(commissionAmount, 'ar')}
                                                                                         </span>
                                                                                     </div>
                                                                                     <div className="flex items-center justify-between border-t pt-2">
-                                                                                        <span className="text-sm font-medium text-gray-700">Total:</span>
+                                                                                        <span className="text-sm font-medium text-gray-700">{t('providers.total')}</span>
                                                                                         <span className="text-sm font-bold text-green-700">
-                                                                                            {formatCurrency(totalWithCommission)}
+                                                                                            {formatCurrency(totalWithCommission, 'ar')}
                                                                                         </span>
                                                                                     </div>
                                                                                 </div>
@@ -1427,31 +1446,31 @@ export default function ProviderVerificationPage() {
                                                                                 <div className="space-y-2">
                                                                                     {offer ? (
                                                                                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
-                                                                                            <div className="text-xs font-medium text-yellow-800 mb-1">Special Offer!</div>
+                                                                                            <div className="text-xs font-medium text-yellow-800 mb-1">{t('providers.specialOffer')}</div>
                                                                                             <div className="space-y-1">
                                                                                                 <div className="flex items-center justify-between">
-                                                                                                    <span className="text-xs text-yellow-700">Original:</span>
+                                                                                                    <span className="text-xs text-yellow-700">{t('providers.original')}</span>
                                                                                                     <span className="text-xs line-through text-yellow-600">
-                                                                                                        {formatCurrency(offer.originalPrice)}
+                                                                                                        {formatCurrency(offer.originalPrice, 'ar')}
                                                                                                     </span>
                                                                                                 </div>
                                                                                                 <div className="flex items-center justify-between">
-                                                                                                    <span className="text-xs text-yellow-700">Offer Price:</span>
+                                                                                                    <span className="text-xs text-yellow-700">{t('providers.offerPrice')}</span>
                                                                                                     <span className="text-xs font-bold text-green-600">
-                                                                                                        {formatCurrency(offer.offerPrice)}
+                                                                                                        {formatCurrency(offer.offerPrice, 'ar')}
                                                                                                     </span>
                                                                                                 </div>
                                                                                                 <div className="flex items-center justify-between">
-                                                                                                    <span className="text-xs text-yellow-700">You Save:</span>
+                                                                                                    <span className="text-xs text-yellow-700">{t('providers.youSave')}</span>
                                                                                                     <span className="text-xs font-bold text-green-600">
-                                                                                                        {formatCurrency(offer.originalPrice - offer.offerPrice)}
+                                                                                                        {formatCurrency(offer.originalPrice - offer.offerPrice, 'ar')}
                                                                                                     </span>
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
                                                                                     ) : (
                                                                                         <div className="text-center py-2">
-                                                                                            <span className="text-xs text-muted-foreground">No offers</span>
+                                                                                            <span className="text-xs text-muted-foreground">{t('providers.noOffers')}</span>
                                                                                         </div>
                                                                                     )}
                                                                                 </div>
@@ -1468,9 +1487,9 @@ export default function ProviderVerificationPage() {
                                     ) : (
                                         <div className="text-center py-8">
                                             <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                                            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Services Available</h3>
+                                            <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('providers.noServicesAvailable')}</h3>
                                             <p className="text-muted-foreground">
-                                                This provider hasn&apos;t added any services yet.
+                                                {t('providers.noServicesDescription')}
                                             </p>
                                         </div>
                                     )}
@@ -1478,7 +1497,7 @@ export default function ProviderVerificationPage() {
                             )}
                             <DialogFooter className="flex-shrink-0 pt-4 border-t">
                                 <Button variant="outline" onClick={() => setIsServicesDialogOpen(false)}>
-                                    Close
+                                    {t('providers.close')}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>

@@ -16,8 +16,12 @@ import { UserReport } from "@/lib/types/admin"
 import { formatCurrency } from "@/lib/utils"
 import { Calendar, DollarSign, Eye, Package, Search, Star, UserCheck, Users, UserX } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
+import { useLanguage } from "@/lib/hooks/useLanguage"
 
 export default function UsersManagementPage() {
+    const { t } = useTranslation()
+    const { isRTL } = useLanguage()
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState<string>("all")
     const [startDate] = useState<string>("")
@@ -48,7 +52,7 @@ export default function UsersManagementPage() {
         try {
             await activateUserMutation.mutateAsync(userId)
         } catch (error) {
-            console.error("Failed to activate user:", error)
+            console.error(t('users.failedToActivateUser'), error)
         }
     }
 
@@ -56,7 +60,7 @@ export default function UsersManagementPage() {
         try {
             await deactivateUserMutation.mutateAsync(userId)
         } catch (error) {
-            console.error("Failed to deactivate user:", error)
+            console.error(t('users.failedToDeactivateUser'), error)
         }
     }
 
@@ -82,61 +86,61 @@ export default function UsersManagementPage() {
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                                <CardTitle className="text-sm font-medium">{t('users.totalUsers')}</CardTitle>
                                 <Users className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">
-                                    {statsLoading ? "..." : userStats?.total || 0}
+                                    {statsLoading ? t('users.loading') : userStats?.total || 0}
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                    All registered users
+                                    {t('users.allRegisteredUsers')}
                                 </p>
                             </CardContent>
                         </Card>
 
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+                                <CardTitle className="text-sm font-medium">{t('users.activeUsers')}</CardTitle>
                                 <UserCheck className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">
-                                    {statsLoading ? "..." : userStats?.active || 0}
+                                    {statsLoading ? t('users.loading') : userStats?.active || 0}
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                    Currently active
+                                    {t('users.currentlyActive')}
                                 </p>
                             </CardContent>
                         </Card>
 
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Inactive Users</CardTitle>
+                                <CardTitle className="text-sm font-medium">{t('users.inactiveUsers')}</CardTitle>
                                 <UserX className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">
-                                    {statsLoading ? "..." : userStats?.inactive || 0}
+                                    {statsLoading ? t('users.loading') : userStats?.inactive || 0}
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                    Deactivated accounts
+                                    {t('users.deactivatedAccounts')}
                                 </p>
                             </CardContent>
                         </Card>
 
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Avg. Orders</CardTitle>
+                                <CardTitle className="text-sm font-medium">{t('users.avgOrders')}</CardTitle>
                                 <Package className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">
-                                    {reportLoading || !userReport?.length ? "..." :
+                                    {reportLoading || !userReport?.length ? t('users.loading') :
                                         Math.round(userReport.reduce((sum: number, user: UserReport) => sum + user.completedOrders, 0) / userReport.length)}
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                    Per user
+                                    {t('users.perUser')}
                                 </p>
                             </CardContent>
                         </Card>
@@ -147,9 +151,9 @@ export default function UsersManagementPage() {
                     <Card>
                         <CardHeader className="flex items-center justify-between">
                             <div>
-                                <CardTitle>Users ({filteredUsers.length})</CardTitle>
+                                <CardTitle>{t('users.usersSection', { count: filteredUsers.length })}</CardTitle>
                                 <CardDescription>
-                                    Manage users with their contact information, orders, and payment history
+                                    {t('users.manageUsersDescription')}
                                 </CardDescription>
                             </div>
 
@@ -157,7 +161,7 @@ export default function UsersManagementPage() {
                                 <div className="relative">
                                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                     <Input
-                                        placeholder="Search by name, email, phone, address, or state..."
+                                        placeholder={t('users.searchPlaceholder')}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="pl-10"
@@ -167,12 +171,12 @@ export default function UsersManagementPage() {
                                 <div className="space-y-2">
                                     <Select value={statusFilter} onValueChange={setStatusFilter}>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Filter by status" />
+                                            <SelectValue placeholder={t('users.filterByStatus')} />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">All Users</SelectItem>
-                                            <SelectItem value="active">Active Only</SelectItem>
-                                            <SelectItem value="inactive">Inactive Only</SelectItem>
+                                            <SelectItem value="all">{t('users.allUsers')}</SelectItem>
+                                            <SelectItem value="active">{t('users.activeOnly')}</SelectItem>
+                                            <SelectItem value="inactive">{t('users.inactiveOnly')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -182,32 +186,40 @@ export default function UsersManagementPage() {
                         <CardContent>
                             {reportLoading ? (
                                 <div className="flex items-center justify-center h-32">
-                                    <div className="text-muted-foreground">Loading users...</div>
+                                    <div className="text-muted-foreground">{t('users.loadingUsers')}</div>
                                 </div>
                             ) : (
                                 <div className="rounded-md border">
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead>Name</TableHead>
-                                                <TableHead>Phone</TableHead>
-                                                <TableHead>Address</TableHead>
-                                                <TableHead>State</TableHead>
-                                                <TableHead>Orders</TableHead>
-                                                <TableHead>Payments</TableHead>
-                                                <TableHead>Actions</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('users.tableHeaders.name')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('users.tableHeaders.phone')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('users.tableHeaders.address')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('users.tableHeaders.state')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('users.tableHeaders.orders')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('users.tableHeaders.payments')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-left' : 'text-right'}`}>{t('users.tableHeaders.actions')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {filteredUsers.map((user: UserReport) => (
                                                 <TableRow key={user.userId}>
                                                     <TableCell>
-                                                        <div className="flex items-center space-x-3">
+                                                        <div className={`flex items-center ${isRTL ? 'space-x-reverse gap-3' : 'gap-3'}`}>
                                                             <Avatar className="h-10 w-10">
                                                                 <AvatarImage src={user.image && process.env.NEXT_PUBLIC_API_URL_IMAGE ? process.env.NEXT_PUBLIC_API_URL_IMAGE + user.image : ""} alt={user.name} />
                                                                 <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                                                             </Avatar>
-                                                            <div className="font-medium">{user.name}</div>
+                                                            <div className="flex flex-col">
+                                                                <div className="font-medium">{user.name}</div>
+                                                                <div className={`flex items-center gap-1 ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                                                                    <div className={`w-2 h-2 rounded-full ${user.isActive ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                                                    <span className={`text-xs ${user.isActive ? 'text-green-600' : 'text-red-600'}`}>
+                                                                        {user.isActive ? t('users.active') : t('users.inactive')}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
@@ -215,26 +227,26 @@ export default function UsersManagementPage() {
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="text-sm text-muted-foreground max-w-32 truncate">
-                                                            {user.address || "N/A"}
+                                                            {user.address || t('users.notApplicable')}
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <div className="text-sm">{user.state || "N/A"}</div>
+                                                        <div className="text-sm">{user.state || t('users.notApplicable')}</div>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <div className="flex items-center space-x-1">
+                                                        <div className={`flex items-center ${isRTL ? 'space-x-reverse gap-1' : 'gap-1'}`}>
                                                             <Package className="h-3 w-3 text-muted-foreground" />
                                                             <span className="text-sm font-medium">{user.completedOrders}</span>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <div className="flex items-center space-x-1">
+                                                        <div className={`flex items-center ${isRTL ? 'space-x-reverse gap-1' : 'gap-1'}`}>
                                                             <DollarSign className="h-3 w-3 text-muted-foreground" />
-                                                            <span className="text-sm font-medium">{formatCurrency(user.totalSpent)}</span>
+                                                            <span className="text-sm font-medium">{formatCurrency(user.totalSpent, 'ar')}</span>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <div className="flex items-center space-x-2">
+                                                        <div className={`flex items-center ${isRTL ? 'justify-start space-x-reverse gap-2' : 'justify-end gap-2'}`}>
                                                             <Dialog>
                                                                 <DialogTrigger asChild>
                                                                     <Button
@@ -246,55 +258,55 @@ export default function UsersManagementPage() {
                                                                 </DialogTrigger>
                                                                 <DialogContent className="max-w-md">
                                                                     <DialogHeader>
-                                                                        <DialogTitle>User Details</DialogTitle>
+                                                                        <DialogTitle>{t('users.userDetails')}</DialogTitle>
                                                                         <DialogDescription>
-                                                                            Detailed information about {user.name}
+                                                                            {t('users.detailedInformation', { name: user.name })}
                                                                         </DialogDescription>
                                                                     </DialogHeader>
                                                                     <div className="space-y-4">
-                                                                        <div className="flex items-center space-x-3">
+                                                                        <div className="flex items-center gap-3">
                                                                             <Avatar className="h-12 w-12">
                                                                                 <AvatarImage src={user.image || ""} alt={user.name} />
                                                                                 <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                                                                             </Avatar>
                                                                             <div>
                                                                                 <div className="font-medium">{user.name}</div>
-                                                                                <div className="text-sm text-muted-foreground">{user.role}</div>
+                                                                                <div className="text-sm text-muted-foreground">{t(`users.${user.role.toLowerCase()}`)}</div>
                                                                             </div>
                                                                         </div>
                                                                         <div className="grid grid-cols-2 gap-4 text-sm">
                                                                             <div>
-                                                                                <div className="font-medium">Email</div>
+                                                                                <div className="font-medium">{t('users.email')}</div>
                                                                                 <div className="text-muted-foreground">{user.email}</div>
                                                                             </div>
                                                                             <div>
-                                                                                <div className="font-medium">Phone</div>
+                                                                                <div className="font-medium">{t('users.phone')}</div>
                                                                                 <div className="text-muted-foreground">{user.phone}</div>
                                                                             </div>
                                                                             <div>
-                                                                                <div className="font-medium">Address</div>
-                                                                                <div className="text-muted-foreground">{user.address || "N/A"}</div>
+                                                                                <div className="font-medium">{t('users.address')}</div>
+                                                                                <div className="text-muted-foreground">{user.address || t('users.notApplicable')}</div>
                                                                             </div>
                                                                             <div>
-                                                                                <div className="font-medium">State</div>
-                                                                                <div className="text-muted-foreground">{user.state || "N/A"}</div>
+                                                                                <div className="font-medium">{t('users.state')}</div>
+                                                                                <div className="text-muted-foreground">{user.state || t('users.notApplicable')}</div>
                                                                             </div>
                                                                             <div>
-                                                                                <div className="font-medium">Orders</div>
+                                                                                <div className="font-medium">{t('users.orders')}</div>
                                                                                 <div className="text-muted-foreground">{user.completedOrders}</div>
                                                                             </div>
                                                                             <div>
-                                                                                <div className="font-medium">Total Spent</div>
-                                                                                <div className="text-muted-foreground">{formatCurrency(user.totalSpent)}</div>
+                                                                                <div className="font-medium">{t('users.totalSpent')}</div>
+                                                                                <div className="text-muted-foreground">{formatCurrency(user.totalSpent, 'ar')}</div>
                                                                             </div>
                                                                             <div>
-                                                                                <div className="font-medium">Joined</div>
+                                                                                <div className="font-medium">{t('users.joined')}</div>
                                                                                 <div className="text-muted-foreground">{formatDate(user.createdAt)}</div>
                                                                             </div>
                                                                             <div>
-                                                                                <div className="font-medium">Status</div>
+                                                                                <div className="font-medium">{t('users.status')}</div>
                                                                                 <Badge variant={user.isActive ? "default" : "secondary"}>
-                                                                                    {user.isActive ? "Active" : "Inactive"}
+                                                                                    {user.isActive ? t('users.active') : t('users.inactive')}
                                                                                 </Badge>
                                                                             </div>
                                                                         </div>
@@ -311,18 +323,18 @@ export default function UsersManagementPage() {
                                                                     </AlertDialogTrigger>
                                                                     <AlertDialogContent>
                                                                         <AlertDialogHeader>
-                                                                            <AlertDialogTitle>Deactivate User</AlertDialogTitle>
+                                                                            <AlertDialogTitle>{t('users.deactivateUser')}</AlertDialogTitle>
                                                                             <AlertDialogDescription>
-                                                                                Are you sure you want to deactivate {user.name}? This will prevent them from accessing the platform.
+                                                                                {t('users.deactivateUserConfirm', { name: user.name })}
                                                                             </AlertDialogDescription>
                                                                         </AlertDialogHeader>
                                                                         <AlertDialogFooter>
-                                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                            <AlertDialogCancel>{t('users.cancel')}</AlertDialogCancel>
                                                                             <AlertDialogAction
                                                                                 onClick={() => handleDeactivateUser(user.userId)}
                                                                                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                                                             >
-                                                                                Deactivate
+                                                                                {t('users.deactivate')}
                                                                             </AlertDialogAction>
                                                                         </AlertDialogFooter>
                                                                     </AlertDialogContent>
@@ -336,18 +348,18 @@ export default function UsersManagementPage() {
                                                                     </AlertDialogTrigger>
                                                                     <AlertDialogContent>
                                                                         <AlertDialogHeader>
-                                                                            <AlertDialogTitle>Activate User</AlertDialogTitle>
+                                                                            <AlertDialogTitle>{t('users.activateUser')}</AlertDialogTitle>
                                                                             <AlertDialogDescription>
-                                                                                Are you sure you want to activate {user.name}? This will allow them to access the platform.
+                                                                                {t('users.activateUserConfirm', { name: user.name })}
                                                                             </AlertDialogDescription>
                                                                         </AlertDialogHeader>
                                                                         <AlertDialogFooter>
-                                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                            <AlertDialogCancel>{t('users.cancel')}</AlertDialogCancel>
                                                                             <AlertDialogAction
                                                                                 onClick={() => handleActivateUser(user.userId)}
                                                                                 className="bg-green-600 hover:bg-green-700"
                                                                             >
-                                                                                Activate
+                                                                                {t('users.activate')}
                                                                             </AlertDialogAction>
                                                                         </AlertDialogFooter>
                                                                     </AlertDialogContent>
@@ -364,7 +376,7 @@ export default function UsersManagementPage() {
 
                             {!reportLoading && filteredUsers.length === 0 && (
                                 <div className="flex items-center justify-center h-32">
-                                    <div className="text-muted-foreground">No users found matching your criteria</div>
+                                    <div className="text-muted-foreground">{t('users.noUsersFound')}</div>
                                 </div>
                             )}
                         </CardContent>

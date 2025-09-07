@@ -190,7 +190,7 @@ export default function IncomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-green-600">{formatCurrency(financialSummary.totalRevenue)}</div>
+                <div className="text-2xl font-bold text-green-600">{formatCurrency(financialSummary.totalRevenue, 'ar')}</div>
                 <p className="text-xs text-muted-foreground">{financialSummary.totalTransactions} invoices</p>
               </CardContent>
             </Card>
@@ -203,7 +203,7 @@ export default function IncomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-blue-600">{formatCurrency(financialSummary.netIncome)}</div>
+                <div className="text-2xl font-bold text-blue-600">{formatCurrency(financialSummary.netIncome, 'ar')}</div>
                 <p className="text-xs text-muted-foreground">After commissions</p>
               </CardContent>
             </Card>
@@ -216,7 +216,7 @@ export default function IncomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-orange-600">{formatCurrency(financialSummary.totalCommission)}</div>
+                <div className="text-2xl font-bold text-orange-600">{formatCurrency(financialSummary.totalCommission, 'ar')}</div>
                 <p className="text-xs text-muted-foreground">Platform earnings</p>
               </CardContent>
             </Card>
@@ -229,7 +229,7 @@ export default function IncomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-purple-600">{formatCurrency(financialSummary.totalDiscounts)}</div>
+                <div className="text-2xl font-bold text-purple-600">{formatCurrency(financialSummary.totalDiscounts, 'ar')}</div>
                 <p className="text-xs text-muted-foreground">Offer savings</p>
               </CardContent>
             </Card>
@@ -242,7 +242,7 @@ export default function IncomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-emerald-600">{formatCurrency(financialSummary.paidAmount)}</div>
+                <div className="text-2xl font-bold text-emerald-600">{formatCurrency(financialSummary.paidAmount, 'ar')}</div>
                 <p className="text-xs text-muted-foreground">Completed payments</p>
               </CardContent>
             </Card>
@@ -255,7 +255,7 @@ export default function IncomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-yellow-600">{formatCurrency(financialSummary.pendingAmount)}</div>
+                <div className="text-2xl font-bold text-yellow-600">{formatCurrency(financialSummary.pendingAmount, 'ar')}</div>
                 <p className="text-xs text-muted-foreground">Awaiting payment</p>
               </CardContent>
             </Card>
@@ -386,17 +386,17 @@ export default function IncomePage() {
                           </TableCell>
                           <TableCell>
                             <div className="font-bold text-green-600">
-                              {formatCurrency(invoice.totalAmount || 0)}
+                              {formatCurrency(invoice.totalAmount || 0, 'ar')}
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="font-medium text-orange-600">
-                              {formatCurrency(invoice.commission || 0)}
+                              {formatCurrency(invoice.commission || 0, 'ar')}
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="font-medium text-blue-600">
-                              {formatCurrency(invoice.netAmount || 0)}
+                              {formatCurrency(invoice.netAmount || 0, 'ar')}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -520,19 +520,19 @@ export default function IncomePage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm text-muted-foreground">Total Amount</Label>
-                      <p className="text-xl font-bold text-green-600">{formatCurrency(selectedInvoice.totalAmount)}</p>
+                      <p className="text-xl font-bold text-green-600">{formatCurrency(selectedInvoice.totalAmount, 'ar')}</p>
                     </div>
                     <div>
                       <Label className="text-sm text-muted-foreground">Discount</Label>
-                      <p className="text-lg font-medium text-purple-600">{formatCurrency(selectedInvoice.discount)}</p>
+                      <p className="text-lg font-medium text-purple-600">{formatCurrency(selectedInvoice.discount, 'ar')}</p>
                     </div>
                     <div>
                       <Label className="text-sm text-muted-foreground">Commission</Label>
-                      <p className="text-lg font-medium text-orange-600">{formatCurrency(selectedInvoice.commission)}</p>
+                      <p className="text-lg font-medium text-orange-600">{formatCurrency(selectedInvoice.commission, 'ar')}</p>
                     </div>
                     <div>
                       <Label className="text-sm text-muted-foreground">Net Amount</Label>
-                      <p className="text-xl font-bold text-blue-600">{formatCurrency(selectedInvoice.netAmount)}</p>
+                      <p className="text-xl font-bold text-blue-600">{formatCurrency(selectedInvoice.netAmount, 'ar')}</p>
                     </div>
                   </div>
                 </div>

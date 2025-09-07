@@ -146,6 +146,7 @@ export interface Order extends BaseEntity {
   orderDate: string
   scheduledDate?: string
   location?: string
+  state?: string
   locationDetails?: string
   providerLocation?: {
     lat: number
@@ -175,6 +176,7 @@ export interface UpdateOrderDto {
   status?: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'cancelled'
   scheduledDate?: string
   location?: string
+  state?: string
   locationDetails?: string
   providerLocation?: {
     lat: number

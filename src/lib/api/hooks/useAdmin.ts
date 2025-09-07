@@ -597,10 +597,10 @@ export const useAdminUpdatePaymentStatus = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, paymentStatus, paymentMethod }: { 
-      id: number; 
-      paymentStatus: string; 
-      paymentMethod?: string 
+    mutationFn: ({ id, paymentStatus, paymentMethod }: {
+      id: number;
+      paymentStatus: string;
+      paymentMethod?: string
     }) => adminService.updatePaymentStatus(id, paymentStatus, paymentMethod),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'invoices'] })

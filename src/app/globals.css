@@ -3,6 +3,39 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* RTL Support */
+[dir="rtl"] {
+  direction: rtl;
+}
+
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] .rtl-rotate {
+  transform: rotate(180deg);
+}
+
+/* RTL Table Support */
+.rtl {
+  direction: rtl;
+}
+
+.rtl table {
+  direction: rtl;
+}
+
+.rtl th,
+.rtl td {
+  text-align: right;
+}
+
+.rtl .space-x-reverse > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+  margin-right: calc(0.75rem * var(--tw-space-x-reverse));
+  margin-left: calc(0.75rem * calc(1 - var(--tw-space-x-reverse)));
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

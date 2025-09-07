@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 
 // Loading Skeleton Components
 const InvoiceCardSkeleton = () => (
@@ -87,22 +88,24 @@ const getStatusIcon = (status: string) => {
   }
 }
 
-const getStatusBadge = (status: string) => {
-  switch (status) {
-    case 'paid':
-      return <Badge variant="default" className="bg-green-100 text-green-800">Paid</Badge>
-    case 'unpaid':
-      return <Badge variant="secondary">Unpaid</Badge>
-    case 'failed':
-      return <Badge variant="destructive">Failed</Badge>
-    case 'refunded':
-      return <Badge variant="outline">Refunded</Badge>
-    default:
-      return <Badge variant="secondary">{status}</Badge>
-  }
-}
-
 export default function InvoicesPage() {
+  const { t } = useTranslation()
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'paid':
+        return <Badge variant="default" className="bg-green-100 text-green-800">{t('invoices.paid')}</Badge>
+      case 'unpaid':
+        return <Badge variant="secondary">{t('invoices.unpaid')}</Badge>
+      case 'failed':
+        return <Badge variant="destructive">{t('invoices.failed')}</Badge>
+      case 'refunded':
+        return <Badge variant="outline">{t('invoices.refunded')}</Badge>
+      default:
+        return <Badge variant="secondary">{t(`invoices.${status}`)}</Badge>
+    }
+  }
+
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [startDate, setStartDate] = useState('')
@@ -165,9 +168,9 @@ export default function InvoicesPage() {
       setIsMarkPaidDialogOpen(false)
       setSelectedInvoice(null)
       refetch()
-      toast.success('Invoice marked as paid successfully')
+      toast.success(t('invoices.invoiceMarkedAsPaid'))
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to mark invoice as paid"
+      const errorMessage = error instanceof Error ? error.message : t('invoices.failedToMarkAsPaid')
       toast.error(errorMessage)
     }
   }
@@ -182,9 +185,9 @@ export default function InvoicesPage() {
       setIsMarkFailedDialogOpen(false)
       setSelectedInvoice(null)
       refetch()
-      toast.success('Invoice marked as failed successfully')
+      toast.success(t('invoices.invoiceMarkedAsFailed'))
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to mark invoice as failed"
+      const errorMessage = error instanceof Error ? error.message : t('invoices.failedToMarkAsFailed')
       toast.error(errorMessage)
     }
   }
@@ -199,9 +202,9 @@ export default function InvoicesPage() {
       setIsRefundDialogOpen(false)
       setSelectedInvoice(null)
       refetch()
-      toast.success('Invoice marked as refunded successfully')
+      toast.success(t('invoices.invoiceRefunded'))
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to mark invoice as refunded"
+      const errorMessage = error instanceof Error ? error.message : t('invoices.failedToRefund')
       toast.error(errorMessage)
     }
   }
@@ -215,7 +218,7 @@ export default function InvoicesPage() {
       setSelectedInvoice(null)
       refetch()
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to delete invoice"
+      const errorMessage = error instanceof Error ? error.message : t('invoices.failedToDelete')
       toast.error(errorMessage)
     }
   }
@@ -234,11 +237,11 @@ export default function InvoicesPage() {
           {/* Compact Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Invoice Management</h1>
+              <h1 className="text-2xl font-bold">{t('invoices.invoiceManagement')}</h1>
             </div>
             <Button size="sm" onClick={() => refetch()} disabled={isLoading}>
               <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
+              {t('invoices.refresh')}
             </Button>
           </div>
 
@@ -249,28 +252,28 @@ export default function InvoicesPage() {
                 <DollarSign className="h-5 w-5 text-blue-600" />
                 <div>
                   <p className="text-sm font-medium text-blue-900">{stats.total}</p>
-                  <p className="text-xs text-blue-700">Total</p>
+                  <p className="text-xs text-blue-700">{t('invoices.total')}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
                 <AlertCircle className="h-5 w-5 text-yellow-600" />
                 <div>
-                  <p className="text-sm font-medium text-yellow-900">{formatCurrency(stats.pendingAmount)}</p>
-                  <p className="text-xs text-yellow-700">{stats.unpaid} unpaid</p>
+                  <p className="text-sm font-medium text-yellow-900">{formatCurrency(stats.pendingAmount, 'ar')}</p>
+                  <p className="text-xs text-yellow-700">{t('invoices.unpaidCount', { count: stats.unpaid })}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
                 <CheckCircle className="h-5 w-5 text-green-600" />
                 <div>
-                  <p className="text-sm font-medium text-green-900">{formatCurrency(stats.paidAmount)}</p>
-                  <p className="text-xs text-green-700">{stats.paid} paid</p>
+                  <p className="text-sm font-medium text-green-900">{formatCurrency(stats.paidAmount, 'ar')}</p>
+                  <p className="text-xs text-green-700">{t('invoices.paidCount', { count: stats.paid })}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
                 <DollarSign className="h-5 w-5 text-purple-600" />
                 <div>
-                  <p className="text-sm font-medium text-purple-900">{formatCurrency(stats.totalAmount)}</p>
-                  <p className="text-xs text-purple-700">Revenue</p>
+                  <p className="text-sm font-medium text-purple-900">{formatCurrency(stats.totalAmount, 'ar')}</p>
+                  <p className="text-xs text-purple-700">{t('invoices.revenue')}</p>
                 </div>
               </div>
             </div>
@@ -280,21 +283,21 @@ export default function InvoicesPage() {
           <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
             <Filter className="h-4 w-4 text-gray-600" />
             <Input
-              placeholder="Search invoices..."
+              placeholder={t('invoices.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-64"
             />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-32">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={t('invoices.status')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="unpaid">Unpaid</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="failed">Failed</SelectItem>
-                <SelectItem value="refunded">Refunded</SelectItem>
+                <SelectItem value="all">{t('invoices.all')}</SelectItem>
+                <SelectItem value="unpaid">{t('invoices.unpaid')}</SelectItem>
+                <SelectItem value="paid">{t('invoices.paid')}</SelectItem>
+                <SelectItem value="failed">{t('invoices.failed')}</SelectItem>
+                <SelectItem value="refunded">{t('invoices.refunded')}</SelectItem>
               </SelectContent>
             </Select>
             <Input
@@ -316,10 +319,10 @@ export default function InvoicesPage() {
             <CardContent className="pt-4">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-4 h-9">
-                  <TabsTrigger value="all" className="text-sm">All ({invoices.length})</TabsTrigger>
-                  <TabsTrigger value="unpaid" className="text-sm">Unpaid ({unpaidInvoices.length})</TabsTrigger>
-                  <TabsTrigger value="paid" className="text-sm">Paid ({paidInvoices.length})</TabsTrigger>
-                  <TabsTrigger value="failed" className="text-sm">Failed ({failedInvoices.length})</TabsTrigger>
+                  <TabsTrigger value="all" className="text-sm">{t('invoices.all')} ({invoices.length})</TabsTrigger>
+                  <TabsTrigger value="unpaid" className="text-sm">{t('invoices.unpaid')} ({unpaidInvoices.length})</TabsTrigger>
+                  <TabsTrigger value="paid" className="text-sm">{t('invoices.paid')} ({paidInvoices.length})</TabsTrigger>
+                  <TabsTrigger value="failed" className="text-sm">{t('invoices.failed')} ({failedInvoices.length})</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value={activeTab} className="mt-6">
@@ -332,20 +335,21 @@ export default function InvoicesPage() {
                   ) : currentInvoices.length === 0 ? (
                     <div className="text-center py-8">
                       <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">No invoices found</p>
+                      <p className="text-muted-foreground">{t('invoices.noInvoicesFound')}</p>
                     </div>
                   ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Invoice ID</TableHead>
-                          <TableHead>Customer</TableHead>
-                          <TableHead>Provider</TableHead>
-                          <TableHead>Service</TableHead>
-                          <TableHead>Amount</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Created</TableHead>
-                          <TableHead>Actions</TableHead>
+                          <TableHead>{t('invoices.tableHeaders.invoiceId')}</TableHead>
+                          <TableHead>{t('invoices.tableHeaders.customer')}</TableHead>
+                          <TableHead>{t('invoices.tableHeaders.provider')}</TableHead>
+                          <TableHead>{t('invoices.tableHeaders.service')}</TableHead>
+                          <TableHead>{t('invoices.tableHeaders.commission')}</TableHead>
+                          <TableHead>{t('invoices.tableHeaders.amount')}</TableHead>
+                          <TableHead>{t('invoices.tableHeaders.status')}</TableHead>
+                          <TableHead>{t('invoices.tableHeaders.created')}</TableHead>
+                          <TableHead>{t('invoices.tableHeaders.actions')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -367,15 +371,21 @@ export default function InvoicesPage() {
                             <TableCell>
                               <div>
                                 <p className="font-medium">{invoice.order?.service.title}</p>
-                                <p className="text-sm text-muted-foreground">{formatCurrency(invoice.order?.service.price || 0)}</p>
+                                <p className="text-sm text-muted-foreground">{formatCurrency(invoice.order?.service.price || 0, 'ar')}</p>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div>
-                                <p className="font-medium">{formatCurrency(invoice.totalAmount)}</p>
+                                <p className="font-medium">{t("invoices.commission")}  {formatCurrency(invoice.commission, 'ar')}</p>
+                                <p className="font-medium">{t("invoices.amountAfterCommission")}  {formatCurrency(invoice.totalAmount - invoice.commission, 'ar')}</p>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <p className="font-medium">{formatCurrency(invoice.totalAmount, 'ar')}</p>
                                 {invoice.discount > 0 && (
                                   <p className="text-sm text-muted-foreground">
-                                    -{formatCurrency(invoice.discount)} discount
+                                    -{formatCurrency(invoice.discount, 'ar')} {t('invoices.discount')}
                                   </p>
                                 )}
                               </div>
@@ -405,7 +415,7 @@ export default function InvoicesPage() {
                                 }}
                               >
                                 <MoreHorizontal className="h-4 w-4 mr-1" />
-                                Actions
+                                {t('invoices.actions')}
                               </Button>
                             </TableCell>
                           </TableRow>
@@ -425,14 +435,14 @@ export default function InvoicesPage() {
         <Dialog open={isMarkPaidDialogOpen} onOpenChange={setIsMarkPaidDialogOpen}>
           <DialogContent className="sm:max-w-[400px]">
             <DialogHeader>
-              <DialogTitle>Confirm Mark as Paid</DialogTitle>
+              <DialogTitle>{t('invoices.confirmMarkAsPaid')}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to mark invoice #{selectedInvoice?.id} as paid?
+                {t('invoices.confirmMarkAsPaidDescription', { id: selectedInvoice?.id })}
                 {selectedInvoice && (
                   <div className="mt-2 p-3 bg-green-50 rounded-lg">
                     <div className="text-sm text-green-800">
-                      <p><strong>Customer:</strong> {selectedInvoice.order?.user.name}</p>
-                      <p><strong>Amount:</strong> {formatCurrency(selectedInvoice.totalAmount)}</p>
+                      <p><strong>{t('invoices.customerLabel')}</strong> {selectedInvoice.order?.user.name}</p>
+                      <p><strong>{t('invoices.amountLabel')}</strong> {formatCurrency(selectedInvoice.totalAmount, 'ar')}</p>
                     </div>
                   </div>
                 )}
@@ -443,7 +453,7 @@ export default function InvoicesPage() {
                 variant="outline"
                 onClick={() => setIsMarkPaidDialogOpen(false)}
               >
-                Cancel
+                {t('invoices.cancel')}
               </Button>
               <Button
                 variant="default"
@@ -452,7 +462,7 @@ export default function InvoicesPage() {
                 className="bg-green-600 hover:bg-green-700"
               >
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Mark as Paid
+                {t('invoices.markAsPaid')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -462,15 +472,15 @@ export default function InvoicesPage() {
         <Dialog open={isMarkFailedDialogOpen} onOpenChange={setIsMarkFailedDialogOpen}>
           <DialogContent className="sm:max-w-[400px]">
             <DialogHeader>
-              <DialogTitle>Confirm Mark as Failed</DialogTitle>
+              <DialogTitle>{t('invoices.confirmMarkAsFailed')}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to mark invoice #{selectedInvoice?.id} as failed?
+                {t('invoices.confirmMarkAsFailedDescription', { id: selectedInvoice?.id })}
                 {selectedInvoice && (
                   <div className="mt-2 p-3 bg-red-50 rounded-lg">
                     <div className="text-sm text-red-800">
-                      <p><strong>Customer:</strong> {selectedInvoice.order?.user.name}</p>
-                      <p><strong>Amount:</strong> {formatCurrency(selectedInvoice.totalAmount)}</p>
-                      <p className="mt-2 text-xs">This will mark the payment as failed and update the order status.</p>
+                      <p><strong>{t('invoices.customerLabel')}</strong> {selectedInvoice.order?.user.name}</p>
+                      <p><strong>{t('invoices.amountLabel')}</strong> {formatCurrency(selectedInvoice.totalAmount, 'ar')}</p>
+                      <p className="mt-2 text-xs">{t('invoices.markAsFailedDescription')}</p>
                     </div>
                   </div>
                 )}
@@ -481,7 +491,7 @@ export default function InvoicesPage() {
                 variant="outline"
                 onClick={() => setIsMarkFailedDialogOpen(false)}
               >
-                Cancel
+                {t('invoices.cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -489,7 +499,7 @@ export default function InvoicesPage() {
                 disabled={updatePaymentStatusMutation.isPending}
               >
                 <XCircle className="h-4 w-4 mr-2" />
-                Mark as Failed
+                {t('invoices.markAsFailed')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -499,15 +509,15 @@ export default function InvoicesPage() {
         <Dialog open={isRefundDialogOpen} onOpenChange={setIsRefundDialogOpen}>
           <DialogContent className="sm:max-w-[400px]">
             <DialogHeader>
-              <DialogTitle>Confirm Refund</DialogTitle>
+              <DialogTitle>{t('invoices.confirmRefund')}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to refund invoice #{selectedInvoice?.id}?
+                {t('invoices.confirmRefundDescription', { id: selectedInvoice?.id })}
                 {selectedInvoice && (
                   <div className="mt-2 p-3 bg-blue-50 rounded-lg">
                     <div className="text-sm text-blue-800">
-                      <p><strong>Customer:</strong> {selectedInvoice.order?.user.name}</p>
-                      <p><strong>Amount:</strong> {formatCurrency(selectedInvoice.totalAmount)}</p>
-                      <p className="mt-2 text-xs">This will mark the invoice as refunded and process the refund.</p>
+                      <p><strong>{t('invoices.customerLabel')}</strong> {selectedInvoice.order?.user.name}</p>
+                      <p><strong>{t('invoices.amountLabel')}</strong> {formatCurrency(selectedInvoice.totalAmount, 'ar')}</p>
+                      <p className="mt-2 text-xs">{t('invoices.refundDescription')}</p>
                     </div>
                   </div>
                 )}
@@ -518,7 +528,7 @@ export default function InvoicesPage() {
                 variant="outline"
                 onClick={() => setIsRefundDialogOpen(false)}
               >
-                Cancel
+                {t('invoices.cancel')}
               </Button>
               <Button
                 variant="default"
@@ -527,7 +537,7 @@ export default function InvoicesPage() {
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
-                Refund
+                {t('invoices.refund')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -537,14 +547,14 @@ export default function InvoicesPage() {
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Delete Invoice</DialogTitle>
+              <DialogTitle>{t('invoices.deleteInvoice')}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete invoice #{selectedInvoice?.id}? This action cannot be undone.
+                {t('invoices.deleteInvoiceDescription', { id: selectedInvoice?.id })}
                 {selectedInvoice && (
                   <div className="mt-2 p-3 bg-red-50 rounded-lg">
                     <div className="text-sm text-red-800">
-                      <p><strong>Customer:</strong> {selectedInvoice.order?.user.name}</p>
-                      <p><strong>Amount:</strong> {formatCurrency(selectedInvoice.totalAmount)}</p>
+                      <p><strong>{t('invoices.customerLabel')}</strong> {selectedInvoice.order?.user.name}</p>
+                      <p><strong>{t('invoices.amountLabel')}</strong> {formatCurrency(selectedInvoice.totalAmount, 'ar')}</p>
                     </div>
                   </div>
                 )}
@@ -555,7 +565,7 @@ export default function InvoicesPage() {
                 variant="outline"
                 onClick={() => setIsDeleteDialogOpen(false)}
               >
-                Cancel
+                {t('invoices.cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -563,7 +573,7 @@ export default function InvoicesPage() {
                 disabled={deleteInvoiceMutation.isPending}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                Delete
+                {t('invoices.delete')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -573,10 +583,10 @@ export default function InvoicesPage() {
         <Dialog open={isActionsDialogOpen} onOpenChange={setIsActionsDialogOpen}>
           <DialogContent className="sm:max-w-[400px]">
             <DialogHeader>
-              <DialogTitle className="text-lg">Actions - #{selectedInvoice?.id}</DialogTitle>
+              <DialogTitle className="text-lg">{t('invoices.actionsTitle', { id: selectedInvoice?.id })}</DialogTitle>
               {selectedInvoice && (
                 <div className="text-sm text-muted-foreground">
-                  {selectedInvoice.order?.user.name} • {formatCurrency(selectedInvoice.totalAmount)} • {selectedInvoice.paymentStatus}
+                  {selectedInvoice.order?.user.name} • {formatCurrency(selectedInvoice.totalAmount, 'ar')} • {t(`invoices.${selectedInvoice.paymentStatus}`)}
                 </div>
               )}
             </DialogHeader>
@@ -595,8 +605,8 @@ export default function InvoicesPage() {
                   >
                     <CheckCircle className="h-4 w-4 mr-3 text-green-600" />
                     <div className="text-left">
-                      <div className="font-medium">Mark as Paid</div>
-                      <div className="text-xs text-green-600">+{formatCurrency((selectedInvoice.totalAmount - (selectedInvoice.discount || 0)) * 0.1)} commission</div>
+                      <div className="font-medium">{t('invoices.markAsPaidAction')}</div>
+                      <div className="text-xs text-green-600">{t('invoices.commissionEarned', { amount: formatCurrency((selectedInvoice.totalAmount - (selectedInvoice.discount || 0)) * 0.1, 'ar') })}</div>
                     </div>
                   </Button>
 
@@ -610,8 +620,8 @@ export default function InvoicesPage() {
                   >
                     <XCircle className="h-4 w-4 mr-3 text-red-600" />
                     <div className="text-left">
-                      <div className="font-medium">Mark as Failed</div>
-                      <div className="text-xs text-red-600">No commission earned</div>
+                      <div className="font-medium">{t('invoices.markAsFailedAction')}</div>
+                      <div className="text-xs text-red-600">{t('invoices.noCommissionEarned')}</div>
                     </div>
                   </Button>
                 </>
@@ -628,8 +638,8 @@ export default function InvoicesPage() {
                 >
                   <RefreshCw className="h-4 w-4 mr-3 text-blue-600" />
                   <div className="text-left">
-                    <div className="font-medium">Refund</div>
-                    <div className="text-xs text-blue-600">Reverse all financial commitments</div>
+                    <div className="font-medium">{t('invoices.refund')}</div>
+                    <div className="text-xs text-blue-600">{t('invoices.reverseFinancialCommitments')}</div>
                   </div>
                 </Button>
               )}
@@ -645,8 +655,8 @@ export default function InvoicesPage() {
                 >
                   <CheckCircle className="h-4 w-4 mr-3 text-yellow-600" />
                   <div className="text-left">
-                    <div className="font-medium">Reactivate</div>
-                    <div className="text-xs text-yellow-600">Ready for payment</div>
+                    <div className="font-medium">{t('invoices.reactivate')}</div>
+                    <div className="text-xs text-yellow-600">{t('invoices.readyForPayment')}</div>
                   </div>
                 </Button>
               )}
@@ -662,9 +672,9 @@ export default function InvoicesPage() {
               >
                 <Trash2 className="h-4 w-4 mr-3 text-red-600" />
                 <div className="text-left">
-                  <div className="font-medium">Delete Invoice</div>
+                  <div className="font-medium">{t('invoices.deleteInvoiceAction')}</div>
                   <div className="text-xs text-red-600">
-                    {selectedInvoice?.paymentStatus === 'paid' ? 'Reverse financial commitments' : 'No financial impact'}
+                    {selectedInvoice?.paymentStatus === 'paid' ? t('invoices.reverseFinancialCommitments') : t('invoices.noFinancialImpact')}
                   </div>
                 </div>
               </Button>

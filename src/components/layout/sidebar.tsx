@@ -1,27 +1,27 @@
 "use client"
 
-import * as React from "react"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { useLanguage } from "@/lib/hooks/useLanguage"
+import { cn } from "@/lib/utils"
+import { ScrollArea } from "@radix-ui/react-scroll-area"
 import {
-    Home,
-    Package,
-    Calendar,
-    CheckCircle,
-    Users,
-    DollarSign,
-    Star,
     Bell,
-    Settings,
-    ChevronLeft,
-    Menu,
     Building2,
-    FileText
+    CheckCircle,
+    FileText,
+    Home,
+    Menu,
+    Package,
+    Settings,
+    Star,
+    Users
 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { ScrollArea } from "@radix-ui/react-scroll-area"
+import * as React from "react"
+import { useTranslation } from "react-i18next"
 import { MobileSidebar } from "./MobileSidebar"
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -29,76 +29,66 @@ interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
     onCollapse?: (collapsed: boolean) => void
 }
 
-const navigationItems = [
-    {
-        title: "Dashboard",
-        href: "/dashboard",
-        icon: Home,
-        description: "Overview and analytics"
-    },
-    {
-        title: "Categories & Services",
-        href: "/categories-services",
-        icon: Building2,
-        description: "Manage services and categories"
-    },
-    {
-        title: "Orders Management",
-        href: "/orders",
-        icon: Package,
-        description: "All orders and tracking"
-    },
-    // {
-    //     title: "Daily Orders",
-    //     href: "/daily-orders",
-    //     icon: Calendar,
-    //     description: "Today's orders and real-time tracking"
-    // },
-    {
-        title: "Provider Verification",
-        href: "/provider-verification",
-        icon: CheckCircle,
-        description: "Verify and approve providers"
-    },
-    {
-        title: "Users Management",
-        href: "/users",
-        icon: Users,
-        description: "Manage user accounts"
-    },
-    // {
-    //     title: "Income & Finance",
-    //     href: "/income",
-    //     icon: DollarSign,
-    //     description: "Revenue, commissions, and financial reports"
-    // },
-    {
-        title: "Invoice Management",
-        href: "/invoices",
-        icon: FileText,
-        description: "Manage payments and invoices"
-    },
-    {
-        title: "Ratings & Reviews",
-        href: "/ratings",
-        icon: Star,
-        description: "Provider and service ratings"
-    },
-    {
-        title: "Notifications",
-        href: "/notifications",
-        icon: Bell,
-        description: "System notifications and alerts"
-    },
-    {
-        title: "Settings",
-        href: "/settings",
-        icon: Settings,
-        description: "Platform configuration"
-    }
-]
+export function Sidebar({ isCollapsed, onCollapse, className }: SidebarProps) {
+    const { t } = useTranslation()
+    const { isRTL } = useLanguage()
+    const navigationItems = [
+        {
+            title: t('navigation.dashboard'),
+            href: "/dashboard",
+            icon: Home,
+            description: t('dashboard.subtitle')
+        },
+        {
+            title: t('navigation.categoriesServices'),
+            href: "/categories-services",
+            icon: Building2,
+            description: t('categories.subtitle')
+        },
+        {
+            title: t('navigation.ordersManagement'),
+            href: "/orders",
+            icon: Package,
+            description: t('orders.subtitle')
+        },
+        {
+            title: t('navigation.providerVerification'),
+            href: "/provider-verification",
+            icon: CheckCircle,
+            description: t('providers.subtitle')
+        },
+        {
+            title: t('navigation.usersManagement'),
+            href: "/users",
+            icon: Users,
+            description: t('users.subtitle')
+        },
+        {
+            title: t('navigation.invoiceManagement'),
+            href: "/invoices",
+            icon: FileText,
+            description: t('invoices.subtitle')
+        },
+        {
+            title: t('navigation.ratingsReviews'),
+            href: "/ratings",
+            icon: Star,
+            description: t('ratings.subtitle')
+        },
+        {
+            title: t('navigation.notifications'),
+            href: "/notifications",
+            icon: Bell,
+            description: t('notifications.subtitle')
+        },
+        {
+            title: t('navigation.settings'),
+            href: "/settings",
+            icon: Settings,
+            description: t('settings.subtitle')
+        }
+    ]
 
-export function Sidebar({ className, isCollapsed = false, onCollapse }: SidebarProps) {
     const pathname = usePathname()
     const [isMobileOpen, setIsMobileOpen] = React.useState(false)
 
@@ -109,13 +99,13 @@ export function Sidebar({ className, isCollapsed = false, onCollapse }: SidebarP
                 <SheetTrigger asChild>
                     <Button
                         variant="ghost"
-                        className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
+                        className="mx-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
                     >
                         <Menu className="h-6 w-6" />
                         <span className="sr-only">Toggle sidebar</span>
                     </Button>
                 </SheetTrigger>
-                <SheetContent side="left">
+                <SheetContent side={isRTL ? "right" : "left"}>
                     <MobileSidebar onLinkClick={() => setIsMobileOpen(false)} onLogoClick={() => setIsMobileOpen(false)} navigationItems={navigationItems} />
                 </SheetContent>
             </Sheet>
@@ -137,9 +127,15 @@ export function Sidebar({ className, isCollapsed = false, onCollapse }: SidebarP
                                     onClick={() => onCollapse?.(!isCollapsed)}
                                     className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"
                                 >
-                                    <span className="text-white font-bold text-sm">K</span>
+                                    <Image
+                                        src="/khabir-logo.png"
+                                        alt="Khabir Logo"
+                                        width={20}
+                                        height={20}
+                                        className="w-5 h-5 brightness-0 invert"
+                                    />
                                 </button>
-                                <span className="text-white font-semibold text-lg">Khabeer</span>
+                                <span className="text-white font-semibold text-lg">{t("khabeer.name")}</span>
                             </div>
                         )}
                         {isCollapsed && (
@@ -147,13 +143,19 @@ export function Sidebar({ className, isCollapsed = false, onCollapse }: SidebarP
                                 onClick={() => onCollapse?.(!isCollapsed)}
                                 className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center mx-auto flex-shrink-0 hover:bg-red-600 transition-colors cursor-pointer"
                             >
-                                <span className="text-white font-bold text-sm leading-none">K</span>
+                                <Image
+                                    src="/khabir-logo.png"
+                                    alt="Khabir Logo"
+                                    width={20}
+                                    height={20}
+                                    className="w-5 h-5 brightness-0 invert"
+                                />
                             </button>
                         )}
                     </div>
 
                     {/* Navigation */}
-                    <ScrollArea className="flex-1 px-3 py-4">
+                    <ScrollArea className="flex-1 px-3 py-4 ">
                         <nav className="space-y-2">
                             {navigationItems.map((item) => {
                                 const isActive = pathname === item.href
@@ -162,7 +164,7 @@ export function Sidebar({ className, isCollapsed = false, onCollapse }: SidebarP
                                         key={item.href}
                                         href={item.href}
                                         className={cn(
-                                            "group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                                            "group flex rtl:flex-row-reverse items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
                                             isActive
                                                 ? "bg-red-500 text-white shadow-lg"
                                                 : "text-slate-300 hover:bg-slate-700 hover:text-white",
@@ -172,7 +174,7 @@ export function Sidebar({ className, isCollapsed = false, onCollapse }: SidebarP
                                         <item.icon className={cn(
                                             "h-5 w-5 transition-colors",
                                             isActive ? "text-white" : "text-slate-400 group-hover:text-white",
-                                            isCollapsed ? "mr-0" : "mr-3"
+                                            isCollapsed ? "mx-0" : "mx-3"
                                         )} />
                                         {!isCollapsed && (
                                             <span className="truncate">{item.title}</span>
@@ -194,7 +196,7 @@ export function Sidebar({ className, isCollapsed = false, onCollapse }: SidebarP
                                     <span className="text-white text-sm font-medium">A</span>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-white truncate">Admin User</p>
+                                    <p className="text-sm font-medium text-white truncate">{t('user.adminUser')}</p>
                                     <p className="text-xs text-slate-400 truncate">admin@khabeer.com</p>
                                 </div>
                             </div>

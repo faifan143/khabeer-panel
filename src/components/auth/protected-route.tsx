@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuthStore } from "@/lib/stores/auth.store"
+import { useTranslation } from "react-i18next"
 import { Loader2 } from "lucide-react"
 
 interface ProtectedRouteProps {
@@ -11,6 +12,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+  const { t } = useTranslation()
   const { isAuthenticated, isLoading, isInitialized, user } = useAuthStore()
   const router = useRouter()
 
@@ -36,7 +38,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center space-x-2">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading...</span>
+          <span>{t('common.loading')}</span>
         </div>
       </div>
     )
@@ -53,8 +55,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
       return (
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h2>
-            <p className="text-muted-foreground">You don&apos;t have permission to access this page.</p>
+            <h2 className="text-2xl font-bold text-red-600 mb-2">{t('common.accessDenied')}</h2>
+            <p className="text-muted-foreground">{t('common.noPermission')}</p>
           </div>
         </div>
       )

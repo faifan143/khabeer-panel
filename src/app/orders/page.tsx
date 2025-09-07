@@ -16,6 +16,7 @@ import { useAdminAcceptOrder, useAdminCancelOrder, useAdminCompleteOrder, useAdm
 import { adminService } from "@/lib/api/services/admin.service"
 import { Order } from "@/lib/api/types"
 import { formatCurrency } from "@/lib/utils"
+import { SearchBox } from "@/components/ui/search-box"
 import {
     CheckCircle,
     Clock,
@@ -30,6 +31,8 @@ import {
 } from "lucide-react"
 import { useMemo, useState } from "react"
 import toast from "react-hot-toast"
+import { useTranslation } from "react-i18next"
+import { useLanguage } from "@/lib/hooks/useLanguage"
 
 // Loading Skeleton Components
 const OrderCardSkeleton = () => (
@@ -124,6 +127,8 @@ const getStatusIcon = (status: string) => {
 }
 
 export default function OrdersManagementPage() {
+    const { t, i18n } = useTranslation()
+    const { isRTL } = useLanguage()
     const [activeTab, setActiveTab] = useState("all")
     const [searchTerm, setSearchTerm] = useState("")
 
@@ -248,12 +253,12 @@ export default function OrdersManagementPage() {
     const handleStatusUpdate = async (orderId: number, newStatus: string) => {
         try {
             await updateStatusMutation.mutateAsync({ id: orderId, status: newStatus })
-            toast.success(`Order status updated to ${newStatus}`)
+            toast.success(t('orders.orderStatusUpdated', { status: newStatus }))
             setIsStatusDialogOpen(false)
             setSelectedOrder(null)
             refetchOrders()
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to update order status"
+            const errorMessage = error instanceof Error ? error.message : t('orders.failedToUpdateOrderStatus')
             toast.error(errorMessage)
         }
     }
@@ -261,13 +266,13 @@ export default function OrdersManagementPage() {
     const handleOrderCancel = async (orderId: number) => {
         try {
             await cancelOrderMutation.mutateAsync({ id: orderId, reason: cancelReason })
-            toast.success("Order cancelled successfully")
+            toast.success(t('orders.orderCancelledSuccessfully'))
             setIsCancelDialogOpen(false)
             setSelectedOrder(null)
             setCancelReason("")
             refetchOrders()
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to cancel order"
+            const errorMessage = error instanceof Error ? error.message : t('orders.failedToCancelOrder')
             toast.error(errorMessage)
         }
     }
@@ -276,7 +281,7 @@ export default function OrdersManagementPage() {
         try {
             // First complete the order
             await completeOrderMutation.mutateAsync(orderId)
-            
+
             // Find the order to get its details for invoice creation
             const order = orders.find(o => o.id === orderId)
             if (order) {
@@ -288,18 +293,18 @@ export default function OrdersManagementPage() {
                         discount: 0, // No discount by default
                         commission: order.commissionAmount || 0
                     })
-                    toast.success("Order completed and invoice created successfully")
+                    toast.success(t('orders.orderCompletedAndInvoiceCreated'))
                 } catch (invoiceError) {
                     console.error('Failed to create invoice:', invoiceError)
-                    toast.success("Order completed successfully, but invoice creation failed")
+                    toast.success(t('orders.invoiceCreationFailed'))
                 }
             } else {
-                toast.success("Order marked as completed")
+                toast.success(t('orders.orderCompletedSuccessfully'))
             }
-            
+
             refetchOrders()
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to complete order"
+            const errorMessage = error instanceof Error ? error.message : t('orders.failedToCompleteOrder')
             toast.error(errorMessage)
         }
     }
@@ -307,13 +312,13 @@ export default function OrdersManagementPage() {
     const handleOrderAccept = async (orderId: number) => {
         try {
             await acceptOrderMutation.mutateAsync({ id: orderId, notes: acceptNotes })
-            toast.success("Order accepted successfully")
+            toast.success(t('orders.orderAcceptedSuccessfully'))
             setIsAcceptDialogOpen(false)
             setSelectedOrder(null)
             setAcceptNotes("")
             refetchOrders()
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to accept order"
+            const errorMessage = error instanceof Error ? error.message : t('orders.failedToAcceptOrder')
             toast.error(errorMessage)
         }
     }
@@ -321,24 +326,24 @@ export default function OrdersManagementPage() {
     const handleOrderReject = async (orderId: number) => {
         try {
             await rejectOrderMutation.mutateAsync({ id: orderId, reason: rejectReason })
-            toast.success("Order rejected successfully")
+            toast.success(t('orders.orderRejectedSuccessfully'))
             setIsRejectDialogOpen(false)
             setSelectedOrder(null)
             setRejectReason("")
             refetchOrders()
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to reject order"
+            const errorMessage = error instanceof Error ? error.message : t('orders.failedToRejectOrder')
             toast.error(errorMessage)
         }
     }
 
     const renderCurrency = (amount: number) => {
-        const currencyString = formatCurrency(amount)
-        const parts = currencyString.split(' OMR')
+        const currencyString = formatCurrency(amount, 'ar') // Use Arabic locale for RTL
+        const parts = currencyString.split(' ر.ع.')
         return (
             <span className="font-semibold">
                 {parts[0]}
-                <span className="text-sm text-muted-foreground ml-1 font-normal">OMR</span>
+                <span className="text-sm text-muted-foreground ml-1 font-normal">ر.ع.</span>
             </span>
         )
     }
@@ -360,46 +365,46 @@ export default function OrdersManagementPage() {
                     {/* Enhanced Stats Display */}
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                         <StatCard
-                            title="Total Orders"
+                            title={t('orders.totalOrders')}
                             value={orderStats.total}
                             icon={Package}
                             color="bg-gradient-to-br from-blue-500 to-indigo-600"
-                            description="All orders"
+                            description={t('orders.allOrders')}
                         />
                         <StatCard
-                            title="Pending"
+                            title={t('orders.pending')}
                             value={orderStats.pending}
                             icon={Clock}
                             color="bg-gradient-to-br from-yellow-500 to-orange-600"
-                            description="Awaiting confirmation"
+                            description={t('orders.awaitingConfirmation')}
                         />
                         <StatCard
-                            title="In Progress"
+                            title={t('orders.inProgress')}
                             value={orderStats.inProgress}
                             icon={Truck}
                             color="bg-gradient-to-br from-orange-500 to-red-600"
-                            description="Being processed"
+                            description={t('orders.beingProcessed')}
                         />
                         <StatCard
-                            title="Completed"
+                            title={t('orders.completed')}
                             value={orderStats.completed}
                             icon={CheckCircle}
                             color="bg-gradient-to-br from-green-500 to-emerald-600"
-                            description="Successfully delivered"
+                            description={t('orders.successfullyDelivered')}
                         />
                         <StatCard
-                            title="Total Revenue"
-                            value={`${orderStats.totalRevenue} OMR`}
+                            title={t('orders.totalRevenue')}
+                            value={`${orderStats.totalRevenue} ${t('orders.currency')}`}
                             icon={DollarSign}
                             color="bg-gradient-to-br from-emerald-500 to-teal-600"
-                            description="All time revenue"
+                            description={t('orders.allTimeRevenue')}
                         />
                         <StatCard
-                            title="Commission"
-                            value={`${orderStats.totalCommission} OMR`}
+                            title={t('orders.commission')}
+                            value={`${orderStats.totalCommission} ${t('orders.currency')}`}
                             icon={DollarSign}
                             color="bg-gradient-to-br from-purple-500 to-violet-600"
-                            description="Platform earnings"
+                            description={t('orders.platformEarnings')}
                         />
                     </div>
 
@@ -411,66 +416,73 @@ export default function OrdersManagementPage() {
                                     value="all"
                                     className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
                                 >
-                                    All Orders
+                                    {t('orders.allOrders')}
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="pending"
                                     className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
                                 >
-                                    Pending
+                                    {t('orders.pending')}
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="accepted"
                                     className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
                                 >
-                                    Accepted
+                                    {t('orders.accepted')}
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="in_progress"
                                     className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
                                 >
-                                    In Progress
+                                    {t('orders.inProgress')}
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="completed"
                                     className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
                                 >
-                                    Completed
+                                    {t('orders.completed')}
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="cancelled"
                                     className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
                                 >
-                                    Cancelled
+                                    {t('orders.cancelled')}
                                 </TabsTrigger>
                             </TabsList>
 
                             <div className="flex items-center space-x-3">
+                                {/* Search Box */}
+                                <SearchBox
+                                    placeholder={t('orders.searchOrders')}
+                                    value={searchTerm}
+                                    onChange={setSearchTerm}
+                                    className="w-64"
+                                />
                                 {/* Status Filter */}
                                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                                     <SelectTrigger className="w-40">
-                                        <SelectValue placeholder="Filter by status" />
+                                        <SelectValue placeholder={t('orders.filterByStatus')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Status</SelectItem>
-                                        <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="accepted">Accepted</SelectItem>
-                                        <SelectItem value="in_progress">In Progress</SelectItem>
-                                        <SelectItem value="completed">Completed</SelectItem>
-                                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                                        <SelectItem value="all">{t('orders.allStatus')}</SelectItem>
+                                        <SelectItem value="pending">{t('orders.pending')}</SelectItem>
+                                        <SelectItem value="accepted">{t('orders.accepted')}</SelectItem>
+                                        <SelectItem value="in_progress">{t('orders.in_progress')}</SelectItem>
+                                        <SelectItem value="completed">{t('orders.completed')}</SelectItem>
+                                        <SelectItem value="cancelled">{t('orders.cancelled')}</SelectItem>
                                     </SelectContent>
                                 </Select>
 
                                 {/* Date Filter */}
                                 <Select value={dateFilter} onValueChange={setDateFilter}>
                                     <SelectTrigger className="w-40">
-                                        <SelectValue placeholder="Filter by date" />
+                                        <SelectValue placeholder={t('orders.filterByDate')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Time</SelectItem>
-                                        <SelectItem value="today">Today</SelectItem>
-                                        <SelectItem value="week">This Week</SelectItem>
-                                        <SelectItem value="month">This Month</SelectItem>
+                                        <SelectItem value="all">{t('orders.allTime')}</SelectItem>
+                                        <SelectItem value="today">{t('orders.today')}</SelectItem>
+                                        <SelectItem value="week">{t('orders.thisWeek')}</SelectItem>
+                                        <SelectItem value="month">{t('orders.thisMonth')}</SelectItem>
                                     </SelectContent>
                                 </Select>
 
@@ -514,31 +526,31 @@ export default function OrdersManagementPage() {
                                                         <div className="flex items-center space-x-2 mb-2">
                                                             <Badge variant="outline" className={`${getStatusColor(order.status)}`}>
                                                                 {getStatusIcon(order.status)}
-                                                                <span className="ml-1 capitalize">{order.status.replace('_', ' ')}</span>
+                                                                <span className="ml-1 capitalize">{t(`orders.${order.status}`)}</span>
                                                             </Badge>
                                                             <span className="text-xs text-muted-foreground font-mono">#{order.bookingId}</span>
                                                         </div>
-                                                        <h3 className="font-semibold text-gray-900 mb-1">{order.service?.title}</h3>
-                                                        <p className="text-sm text-muted-foreground mb-3">{order.service?.description}</p>
+                                                        <h3 className="font-semibold text-gray-900 mb-1 text-right">{order.service?.title}</h3>
+                                                        <p className="text-sm text-muted-foreground mb-3 text-right">{order.service?.description}</p>
                                                     </div>
                                                 </div>
 
                                                 <div className="space-y-3">
                                                     <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-muted-foreground">Customer:</span>
-                                                        <span className="font-medium">{order.user?.name}</span>
+                                                        <span className="text-muted-foreground text-right">{t('orders.customer')}:</span>
+                                                        <span className="font-medium text-right">{order.user?.name}</span>
                                                     </div>
                                                     <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-muted-foreground">Provider:</span>
-                                                        <span className="font-medium">{order.provider?.name}</span>
+                                                        <span className="text-muted-foreground text-right">{t('orders.provider')}:</span>
+                                                        <span className="font-medium text-right">{order.provider?.name}</span>
                                                     </div>
                                                     <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-muted-foreground">Amount:</span>
-                                                        <span className="font-semibold text-green-600">{renderCurrency(order.totalAmount)}</span>
+                                                        <span className="text-muted-foreground text-right">{t('orders.amount')}:</span>
+                                                        <span className="font-semibold text-green-600 text-right">{renderCurrency(order.totalAmount)}</span>
                                                     </div>
                                                     <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-muted-foreground">Date:</span>
-                                                        <span className="font-medium">{formatDate(order.orderDate)}</span>
+                                                        <span className="text-muted-foreground text-right">{t('orders.date')}:</span>
+                                                        <span className="font-medium text-left">{formatDate(order.orderDate)}</span>
                                                     </div>
                                                     {order.location && (
                                                         <div className="flex items-center space-x-2 text-sm">
@@ -548,56 +560,70 @@ export default function OrdersManagementPage() {
                                                     )}
                                                 </div>
 
-                                                <div className="flex items-center justify-end space-x-2 mt-4 pt-4 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <Button
-                                                        variant="ghost"
+                                                        variant="outline"
                                                         size="sm"
                                                         onClick={() => {
                                                             setSelectedOrder(order)
                                                             setIsOrderDialogOpen(true)
                                                         }}
-                                                        className="h-8 w-8 p-0 hover:bg-blue-100"
+                                                        className="h-8 px-3 text-xs hover:bg-blue-50"
                                                     >
-                                                        <Eye className="h-4 w-4" />
+                                                        <Eye className="h-3 w-3 mr-1" />
+                                                        {t('orders.view')}
                                                     </Button>
                                                     {order.status === 'pending' && (
                                                         <>
                                                             <Button
-                                                                variant="ghost"
+                                                                variant="outline"
                                                                 size="sm"
                                                                 onClick={() => {
                                                                     setSelectedOrder(order)
                                                                     setIsAcceptDialogOpen(true)
                                                                 }}
-                                                                className="h-8 w-8 p-0 hover:bg-green-100"
-                                                                title="Accept Order"
+                                                                className="h-8 px-3 text-xs hover:bg-green-50 text-green-700 border-green-200"
                                                             >
-                                                                <CheckCircle className="h-4 w-4" />
+                                                                <CheckCircle className="h-3 w-3 mr-1" />
+                                                                {t('orders.accept')}
                                                             </Button>
                                                             <Button
-                                                                variant="ghost"
+                                                                variant="outline"
                                                                 size="sm"
                                                                 onClick={() => {
                                                                     setSelectedOrder(order)
                                                                     setIsRejectDialogOpen(true)
                                                                 }}
-                                                                className="h-8 w-8 p-0 hover:bg-red-100"
-                                                                title="Reject Order"
+                                                                className="h-8 px-3 text-xs hover:bg-red-50 text-red-700 border-red-200"
                                                             >
-                                                                <XCircle className="h-4 w-4" />
+                                                                <XCircle className="h-3 w-3 mr-1" />
+                                                                {t('orders.reject')}
                                                             </Button>
                                                         </>
                                                     )}
                                                     {order.status === 'in_progress' && (
                                                         <Button
-                                                            variant="ghost"
+                                                            variant="outline"
                                                             size="sm"
                                                             onClick={() => handleOrderComplete(order.id)}
-                                                            className="h-8 w-8 p-0 hover:bg-green-100"
+                                                            className="h-8 px-3 text-xs hover:bg-green-50 text-green-700 border-green-200"
                                                         >
-                                                            <CheckCircle className="h-4 w-4" />
+                                                            <CheckCircle className="h-3 w-3 mr-1" />
+                                                            {t('orders.complete')}
                                                         </Button>
                                                     )}
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            setSelectedOrder(order)
+                                                            setIsCancelDialogOpen(true)
+                                                        }}
+                                                        className="h-8 px-3 text-xs hover:bg-red-50 text-red-700 border-red-200"
+                                                    >
+                                                        <XCircle className="h-3 w-3 mr-1" />
+                                                        {t('orders.cancel')}
+                                                    </Button>
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -608,34 +634,34 @@ export default function OrdersManagementPage() {
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-gray-50">
-                                                <TableHead className="font-semibold">Order ID</TableHead>
-                                                <TableHead className="font-semibold">Customer</TableHead>
-                                                <TableHead className="font-semibold">Location</TableHead>
-                                                <TableHead className="font-semibold">Provider</TableHead>
-                                                <TableHead className="font-semibold">Service & Category</TableHead>
-                                                <TableHead className="font-semibold">Status</TableHead>
-                                                <TableHead className="font-semibold">Date</TableHead>
-                                                <TableHead className="font-semibold text-right">Actions</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('orders.orderId')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('orders.customer')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('orders.state')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('orders.provider')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('orders.serviceCategory')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('orders.status')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('orders.date')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-left' : 'text-right'}`}>{t('orders.actions')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {currentOrders.map((order) => (
                                                 <TableRow key={order.id} className="hover:bg-gray-50/50">
-                                                    <TableCell>
+                                                    <TableCell className={isRTL ? 'text-right' : 'text-left'}>
                                                         <div className="font-mono text-sm font-medium text-gray-900">
                                                             #{order.id}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell>
+                                                    <TableCell className={isRTL ? 'text-right' : 'text-left'}>
                                                         <div className="space-y-1">
                                                             <div className="font-medium text-gray-900">{order.user?.name}</div>
                                                             <div className="text-sm text-muted-foreground">{order.user?.phone}</div>
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell>
+                                                    <TableCell className={isRTL ? 'text-right' : 'text-left'}>
                                                         <div className="space-y-1">
                                                             <div className="text-sm font-medium text-gray-900">
-                                                                {order.location || 'N/A'}
+                                                                {order.state || t('orders.notApplicable')}
                                                             </div>
                                                             {order.locationDetails && (
                                                                 <div className="text-xs text-muted-foreground truncate max-w-32">
@@ -644,13 +670,13 @@ export default function OrdersManagementPage() {
                                                             )}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell>
+                                                    <TableCell className={isRTL ? 'text-right' : 'text-left'}>
                                                         <div className="space-y-1">
                                                             <div className="font-medium text-gray-900">{order.provider?.name}</div>
                                                             <div className="text-sm text-muted-foreground">{order.provider?.phone}</div>
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell>
+                                                    <TableCell className={isRTL ? 'text-right' : 'text-left'}>
                                                         <div className="space-y-1">
                                                             <div className="font-medium text-gray-900">{order.service?.title}</div>
                                                             {order.service?.category?.titleEn && (
@@ -660,86 +686,86 @@ export default function OrdersManagementPage() {
                                                             )}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell>
+                                                    <TableCell className={isRTL ? 'text-right' : 'text-left'}>
                                                         <Badge variant="outline" className={`${getStatusColor(order.status)}`}>
                                                             {getStatusIcon(order.status)}
-                                                            <span className="ml-1 capitalize">{order.status.replace('_', ' ')}</span>
+                                                            <span className={isRTL ? 'mr-1' : 'ml-1'} capitalize>{t(`orders.${order.status}`)}</span>
                                                         </Badge>
                                                     </TableCell>
-                                                    <TableCell>
+                                                    <TableCell className={isRTL ? 'text-right' : 'text-left'}>
                                                         <div className="space-y-1">
                                                             <div className="text-sm font-medium">{formatDate(order.orderDate)}</div>
                                                             {order.scheduledDate && (
                                                                 <div className="text-xs text-muted-foreground">
-                                                                    Scheduled: {formatDate(order.scheduledDate)}
+                                                                    {t('orders.scheduled')}: {formatDate(order.scheduledDate)}
                                                                 </div>
                                                             )}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <div className="flex items-center justify-end space-x-2">
+                                                    <TableCell className={isRTL ? 'text-right' : 'text-left'}>
+                                                        <div className="flex flex-col space-y-2">
                                                             <Button
-                                                                variant="ghost"
+                                                                variant="outline"
                                                                 size="sm"
                                                                 onClick={() => {
                                                                     setSelectedOrder(order)
                                                                     setIsOrderDialogOpen(true)
                                                                 }}
-                                                                className="h-8 w-8 p-0 hover:bg-blue-100"
-                                                                title="View Details"
+                                                                className="h-8 px-3 text-xs hover:bg-blue-50"
                                                             >
-                                                                <Eye className="h-4 w-4" />
+                                                                <Eye className="h-3 w-3 mr-1" />
+                                                                {t('orders.view')}
                                                             </Button>
                                                             {order.status === 'pending' && (
-                                                                <>
+                                                                <div className="flex space-x-1">
                                                                     <Button
-                                                                        variant="ghost"
+                                                                        variant="outline"
                                                                         size="sm"
                                                                         onClick={() => {
                                                                             setSelectedOrder(order)
                                                                             setIsAcceptDialogOpen(true)
                                                                         }}
-                                                                        className="h-8 w-8 p-0 hover:bg-green-100"
-                                                                        title="Accept Order"
+                                                                        className="h-8 px-2 text-xs hover:bg-green-50 text-green-700 border-green-200"
                                                                     >
-                                                                        <CheckCircle className="h-4 w-4" />
+                                                                        <CheckCircle className="h-3 w-3 mr-1" />
+                                                                        {t('orders.accept')}
                                                                     </Button>
                                                                     <Button
-                                                                        variant="ghost"
+                                                                        variant="outline"
                                                                         size="sm"
                                                                         onClick={() => {
                                                                             setSelectedOrder(order)
                                                                             setIsRejectDialogOpen(true)
                                                                         }}
-                                                                        className="h-8 w-8 p-0 hover:bg-red-100"
-                                                                        title="Reject Order"
+                                                                        className="h-8 px-2 text-xs hover:bg-red-50 text-red-700 border-red-200"
                                                                     >
-                                                                        <XCircle className="h-4 w-4" />
+                                                                        <XCircle className="h-3 w-3 mr-1" />
+                                                                        {t('orders.reject')}
                                                                     </Button>
-                                                                </>
+                                                                </div>
                                                             )}
                                                             {order.status === 'in_progress' && (
                                                                 <Button
-                                                                    variant="ghost"
+                                                                    variant="outline"
                                                                     size="sm"
                                                                     onClick={() => handleOrderComplete(order.id)}
-                                                                    className="h-8 w-8 p-0 hover:bg-green-100"
-                                                                    title="Mark as Completed"
+                                                                    className="h-8 px-3 text-xs hover:bg-green-50 text-green-700 border-green-200"
                                                                 >
-                                                                    <CheckCircle className="h-4 w-4" />
+                                                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                                                    {t('orders.complete')}
                                                                 </Button>
                                                             )}
                                                             <Button
-                                                                variant="ghost"
+                                                                variant="outline"
                                                                 size="sm"
                                                                 onClick={() => {
                                                                     setSelectedOrder(order)
                                                                     setIsCancelDialogOpen(true)
                                                                 }}
-                                                                className="h-8 w-8 p-0 hover:bg-red-100"
-                                                                title="Delete Order"
+                                                                className="h-8 px-3 text-xs hover:bg-red-50 text-red-700 border-red-200"
                                                             >
-                                                                <XCircle className="h-4 w-4" />
+                                                                <XCircle className="h-3 w-3 mr-1" />
+                                                                {t('orders.cancel')}
                                                             </Button>
                                                         </div>
                                                     </TableCell>
@@ -754,9 +780,9 @@ export default function OrdersManagementPage() {
                                 <Card className="border-0 shadow-lg">
                                     <CardContent className="p-12 text-center">
                                         <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">No orders found</h3>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('orders.noOrdersFound')}</h3>
                                         <p className="text-muted-foreground">
-                                            {searchTerm ? `No orders match your search "${searchTerm}"` : `No orders in ${activeTab} status`}
+                                            {searchTerm ? t('orders.noOrdersMatch', { searchTerm }) : t('orders.noOrdersInStatus', { status: activeTab })}
                                         </p>
                                     </CardContent>
                                 </Card>
@@ -768,30 +794,30 @@ export default function OrdersManagementPage() {
                     <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
                         <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] max-h-[90vh] w-full overflow-hidden">
                             <DialogHeader className="flex-shrink-0">
-                                <DialogTitle className="text-xl">Order Details</DialogTitle>
+                                <DialogTitle className="text-xl">{t('orders.orderDetails')}</DialogTitle>
                                 <DialogDescription>
-                                    Complete information about this order
+                                    {t('orders.completeInformation')}
                                 </DialogDescription>
                             </DialogHeader>
                             {selectedOrder && (
                                 <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-140px)] pr-2">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium">Booking ID</Label>
+                                            <Label className="text-sm font-medium">{t('orders.bookingId')}</Label>
                                             <div className="text-sm font-mono bg-gray-100 p-2 rounded break-all">#{selectedOrder.bookingId}</div>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-sm font-medium">Status</Label>
+                                            <Label className="text-sm font-medium">{t('orders.status')}</Label>
                                             <Badge variant="outline" className={`${getStatusColor(selectedOrder.status)}`}>
                                                 {getStatusIcon(selectedOrder.status)}
-                                                <span className="ml-1 capitalize">{selectedOrder.status.replace('_', ' ')}</span>
+                                                <span className="ml-1 capitalize">{t(`orders.${selectedOrder.status}`)}</span>
                                             </Badge>
                                         </div>
                                     </div>
 
                                     <div className="space-y-4">
                                         <div>
-                                            <Label className="text-sm font-medium">Service</Label>
+                                            <Label className="text-sm font-medium">{t('orders.service')}</Label>
                                             <div className="mt-1 p-3 bg-gray-50 rounded-lg">
                                                 <div className="font-semibold">{selectedOrder.service?.title}</div>
                                                 <div className="text-sm text-muted-foreground">{selectedOrder.service?.description}</div>
@@ -800,7 +826,7 @@ export default function OrdersManagementPage() {
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <Label className="text-sm font-medium">Customer</Label>
+                                                <Label className="text-sm font-medium">{t('orders.customer')}</Label>
                                                 <div className="mt-1 p-3 bg-gray-50 rounded-lg">
                                                     <div className="font-semibold">{selectedOrder.user?.name}</div>
                                                     <div className="text-sm text-muted-foreground">{selectedOrder.user?.phone}</div>
@@ -808,7 +834,7 @@ export default function OrdersManagementPage() {
                                                 </div>
                                             </div>
                                             <div>
-                                                <Label className="text-sm font-medium">Provider</Label>
+                                                <Label className="text-sm font-medium">{t('orders.provider')}</Label>
                                                 <div className="mt-1 p-3 bg-gray-50 rounded-lg">
                                                     <div className="font-semibold">{selectedOrder.provider?.name}</div>
                                                     <div className="text-sm text-muted-foreground">{selectedOrder.provider?.phone}</div>
@@ -819,7 +845,7 @@ export default function OrdersManagementPage() {
 
                                         {selectedOrder.location && (
                                             <div>
-                                                <Label className="text-sm font-medium">Location</Label>
+                                                <Label className="text-sm font-medium">{t('orders.location')}</Label>
                                                 <div className="mt-1 p-3 bg-gray-50 rounded-lg">
                                                     <div className="flex items-center space-x-2">
                                                         <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -834,27 +860,27 @@ export default function OrdersManagementPage() {
 
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                             <div>
-                                                <Label className="text-sm font-medium">Quantity</Label>
+                                                <Label className="text-sm font-medium">{t('orders.quantity')}</Label>
                                                 <div className="mt-1 text-lg font-semibold">{selectedOrder.quantity}</div>
                                             </div>
                                             <div>
-                                                <Label className="text-sm font-medium">Total Amount</Label>
+                                                <Label className="text-sm font-medium">{t('orders.totalAmount')}</Label>
                                                 <div className="mt-1 text-lg font-semibold text-green-600">{renderCurrency(selectedOrder.totalAmount)}</div>
                                             </div>
                                             <div>
-                                                <Label className="text-sm font-medium">Commission</Label>
+                                                <Label className="text-sm font-medium">{t('orders.commission')}</Label>
                                                 <div className="mt-1 text-lg font-semibold text-blue-600">{renderCurrency(selectedOrder.commissionAmount)}</div>
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div>
-                                                <Label className="text-sm font-medium">Order Date</Label>
+                                                <Label className="text-sm font-medium">{t('orders.orderDate')}</Label>
                                                 <div className="mt-1 text-sm">{formatDate(selectedOrder.orderDate)}</div>
                                             </div>
                                             {selectedOrder.scheduledDate && (
                                                 <div>
-                                                    <Label className="text-sm font-medium">Scheduled Date</Label>
+                                                    <Label className="text-sm font-medium">{t('orders.scheduled')} Date</Label>
                                                     <div className="mt-1 text-sm">{formatDate(selectedOrder.scheduledDate)}</div>
                                                 </div>
                                             )}
@@ -864,7 +890,7 @@ export default function OrdersManagementPage() {
                             )}
                             <DialogFooter className="flex-shrink-0 pt-4 border-t">
                                 <Button variant="outline" onClick={() => setIsOrderDialogOpen(false)}>
-                                    Close
+                                    {t('orders.close')}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -874,9 +900,9 @@ export default function OrdersManagementPage() {
                     <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
                         <DialogContent className="sm:max-w-[400px]">
                             <DialogHeader>
-                                <DialogTitle>Update Order Status</DialogTitle>
+                                <DialogTitle>{t('orders.updateOrderStatus')}</DialogTitle>
                                 <DialogDescription>
-                                    Change the status of order #{selectedOrder?.bookingId}
+                                    {t('orders.changeOrderStatus', { bookingId: selectedOrder?.bookingId })}
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4">
@@ -888,7 +914,7 @@ export default function OrdersManagementPage() {
                                         className="h-12"
                                     >
                                         <CheckCircle className="h-4 w-4 mr-2" />
-                                        Accept
+                                        {t('orders.accept')}
                                     </Button>
                                     <Button
                                         variant="outline"
@@ -897,13 +923,13 @@ export default function OrdersManagementPage() {
                                         className="h-12"
                                     >
                                         <Truck className="h-4 w-4 mr-2" />
-                                        Start
+                                        {t('orders.start')}
                                     </Button>
                                 </div>
                             </div>
                             <DialogFooter>
                                 <Button variant="outline" onClick={() => setIsStatusDialogOpen(false)}>
-                                    Cancel
+                                    {t('orders.cancel')}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -913,26 +939,26 @@ export default function OrdersManagementPage() {
                     <Dialog open={isAcceptDialogOpen} onOpenChange={setIsAcceptDialogOpen}>
                         <DialogContent className="sm:max-w-[500px]">
                             <DialogHeader>
-                                <DialogTitle>Accept Order</DialogTitle>
+                                <DialogTitle>{t('orders.acceptOrder')}</DialogTitle>
                                 <DialogDescription>
-                                    Are you sure you want to accept order #{selectedOrder?.bookingId}? This will move the order to accepted status.
+                                    {t('orders.acceptOrderConfirm', { bookingId: selectedOrder?.bookingId })}
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4">
                                 <div>
-                                    <Label htmlFor="acceptNotes" className="text-sm font-medium">Admin Notes (Optional)</Label>
+                                    <Label htmlFor="acceptNotes" className="text-sm font-medium">{t('orders.adminNotes')}</Label>
                                     <Textarea
                                         id="acceptNotes"
                                         value={acceptNotes}
                                         onChange={(e) => setAcceptNotes(e.target.value)}
-                                        placeholder="Enter any notes about accepting this order..."
+                                        placeholder={t('orders.enterAcceptNotes')}
                                         rows={3}
                                     />
                                 </div>
                             </div>
                             <DialogFooter>
                                 <Button variant="outline" onClick={() => setIsAcceptDialogOpen(false)}>
-                                    Cancel
+                                    {t('orders.cancel')}
                                 </Button>
                                 <Button
                                     variant="default"
@@ -940,7 +966,7 @@ export default function OrdersManagementPage() {
                                     disabled={acceptOrderMutation.isPending}
                                     className="bg-green-600 hover:bg-green-700"
                                 >
-                                    Accept Order
+                                    {t('orders.acceptOrder')}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -950,19 +976,19 @@ export default function OrdersManagementPage() {
                     <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
                         <DialogContent className="sm:max-w-[500px]">
                             <DialogHeader>
-                                <DialogTitle>Reject Order</DialogTitle>
+                                <DialogTitle>{t('orders.rejectOrder')}</DialogTitle>
                                 <DialogDescription>
-                                    Are you sure you want to reject order #{selectedOrder?.bookingId}? This action cannot be undone.
+                                    {t('orders.rejectOrderConfirm', { bookingId: selectedOrder?.bookingId })}
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4">
                                 <div>
-                                    <Label htmlFor="rejectReason" className="text-sm font-medium">Rejection Reason (Required)</Label>
+                                    <Label htmlFor="rejectReason" className="text-sm font-medium">{t('orders.rejectionReason')}</Label>
                                     <Textarea
                                         id="rejectReason"
                                         value={rejectReason}
                                         onChange={(e) => setRejectReason(e.target.value)}
-                                        placeholder="Enter reason for rejecting this order..."
+                                        placeholder={t('orders.enterRejectReason')}
                                         rows={3}
                                         required
                                     />
@@ -970,14 +996,14 @@ export default function OrdersManagementPage() {
                             </div>
                             <DialogFooter>
                                 <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
-                                    Keep Order
+                                    {t('orders.keepOrder')}
                                 </Button>
                                 <Button
                                     variant="destructive"
                                     onClick={() => handleOrderReject(selectedOrder!.id)}
                                     disabled={rejectOrderMutation.isPending || !rejectReason.trim()}
                                 >
-                                    Reject Order
+                                    {t('orders.rejectOrder')}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -987,33 +1013,33 @@ export default function OrdersManagementPage() {
                     <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
                         <DialogContent className="sm:max-w-[500px]">
                             <DialogHeader>
-                                <DialogTitle>Cancel Order</DialogTitle>
+                                <DialogTitle>{t('orders.cancelOrder')}</DialogTitle>
                                 <DialogDescription>
-                                    Are you sure you want to cancel order #{selectedOrder?.bookingId}? This action cannot be undone.
+                                    {t('orders.cancelOrderConfirm', { bookingId: selectedOrder?.bookingId })}
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4">
                                 <div>
-                                    <Label htmlFor="cancelReason" className="text-sm font-medium">Cancellation Reason (Optional)</Label>
+                                    <Label htmlFor="cancelReason" className="text-sm font-medium">{t('orders.cancellationReason')}</Label>
                                     <Textarea
                                         id="cancelReason"
                                         value={cancelReason}
                                         onChange={(e) => setCancelReason(e.target.value)}
-                                        placeholder="Enter reason for cancellation..."
+                                        placeholder={t('orders.enterCancelReason')}
                                         rows={3}
                                     />
                                 </div>
                             </div>
                             <DialogFooter>
                                 <Button variant="outline" onClick={() => setIsCancelDialogOpen(false)}>
-                                    Keep Order
+                                    {t('orders.keepOrder')}
                                 </Button>
                                 <Button
                                     variant="destructive"
                                     onClick={() => handleOrderCancel(selectedOrder!.id)}
                                     disabled={cancelOrderMutation.isPending}
                                 >
-                                    Cancel Order
+                                    {t('orders.cancelOrder')}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>

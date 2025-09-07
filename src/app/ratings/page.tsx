@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useAdminRatings } from "@/lib/api/hooks/useAdmin"
 import { formatCurrency } from "@/lib/utils"
+import { useTranslation } from "react-i18next"
 import {
     Eye,
     Search,
@@ -24,6 +25,7 @@ import {
 import { useState, useMemo } from "react"
 
 export default function RatingsPage() {
+    const { t } = useTranslation()
     const [searchQuery, setSearchQuery] = useState("")
     const [ratingFilter, setRatingFilter] = useState<string>("all")
     const [selectedRating, setSelectedRating] = useState<any>(null)
@@ -116,7 +118,7 @@ export default function RatingsPage() {
                     <div className="flex items-center justify-center h-32">
                         <div className="text-center">
                             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
-                            <div className="text-sm text-muted-foreground">Loading ratings...</div>
+                            <div className="text-sm text-muted-foreground">{t('ratings.loadingRatings')}</div>
                         </div>
                     </div>
                 </AdminLayout>
@@ -132,20 +134,20 @@ export default function RatingsPage() {
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Ratings</CardTitle>
+                                <CardTitle className="text-sm font-medium">{t('ratings.totalRatings')}</CardTitle>
                                 <Star className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">{stats.total}</div>
                                 <p className="text-xs text-muted-foreground">
-                                    All time reviews
+                                    {t('ratings.allTimeReviews')}
                                 </p>
                             </CardContent>
                         </Card>
 
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Average Rating</CardTitle>
+                                <CardTitle className="text-sm font-medium">{t('ratings.averageRating')}</CardTitle>
                                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
@@ -158,39 +160,39 @@ export default function RatingsPage() {
 
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">5-Star Ratings</CardTitle>
+                                <CardTitle className="text-sm font-medium">{t('ratings.fiveStarRatings')}</CardTitle>
                                 <Award className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">{stats.fiveStar}</div>
                                 <p className="text-xs text-muted-foreground">
-                                    {stats.percentage}% of total
+                                    {t('ratings.percentageOfTotal', { percentage: stats.percentage })}
                                 </p>
                             </CardContent>
                         </Card>
 
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Verified Reviews</CardTitle>
+                                <CardTitle className="text-sm font-medium">{t('ratings.verifiedReviews')}</CardTitle>
                                 <ThumbsUp className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">{stats.verified}</div>
                                 <p className="text-xs text-muted-foreground">
-                                    Confirmed purchases
+                                    {t('ratings.confirmedPurchases')}
                                 </p>
                             </CardContent>
                         </Card>
 
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Reported Reviews</CardTitle>
+                                <CardTitle className="text-sm font-medium">{t('ratings.reportedReviews')}</CardTitle>
                                 <ThumbsDown className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">{stats.reported}</div>
                                 <p className="text-xs text-muted-foreground">
-                                    Needs attention
+                                    {t('ratings.needsAttention')}
                                 </p>
                             </CardContent>
                         </Card>
@@ -200,9 +202,9 @@ export default function RatingsPage() {
                     <Card>
                         <CardHeader className="flex items-center justify-between">
                             <div>
-                                <CardTitle>All Ratings ({filteredRatings.length})</CardTitle>
+                                <CardTitle>{t('ratings.allRatings', { count: filteredRatings.length })}</CardTitle>
                                 <p className="text-sm text-muted-foreground">
-                                    Manage and monitor all customer reviews and ratings
+                                    {t('ratings.manageAndMonitor')}
                                 </p>
                             </div>
 
@@ -210,7 +212,7 @@ export default function RatingsPage() {
                                 <div className="relative">
                                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                     <Input
-                                        placeholder="Search ratings..."
+                                        placeholder={t('ratings.searchRatings')}
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         className="pl-10 w-80"
@@ -219,15 +221,15 @@ export default function RatingsPage() {
 
                                 <Select value={ratingFilter} onValueChange={setRatingFilter}>
                                     <SelectTrigger className="w-40">
-                                        <SelectValue placeholder="Filter by rating" />
+                                        <SelectValue placeholder={t('ratings.filterByRating')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Ratings</SelectItem>
-                                        <SelectItem value="5">5 Stars</SelectItem>
-                                        <SelectItem value="4">4 Stars</SelectItem>
-                                        <SelectItem value="3">3 Stars</SelectItem>
-                                        <SelectItem value="2">2 Stars</SelectItem>
-                                        <SelectItem value="1">1 Star</SelectItem>
+                                        <SelectItem value="all">{t('ratings.allRatingsFilter')}</SelectItem>
+                                        <SelectItem value="5">{t('ratings.fiveStars')}</SelectItem>
+                                        <SelectItem value="4">{t('ratings.fourStars')}</SelectItem>
+                                        <SelectItem value="3">{t('ratings.threeStars')}</SelectItem>
+                                        <SelectItem value="2">{t('ratings.twoStars')}</SelectItem>
+                                        <SelectItem value="1">{t('ratings.oneStar')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -237,13 +239,13 @@ export default function RatingsPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow className="bg-gray-50">
-                                            <TableHead className="font-semibold">Customer</TableHead>
-                                            <TableHead className="font-semibold">Provider</TableHead>
-                                            <TableHead className="font-semibold">Service</TableHead>
-                                            <TableHead className="font-semibold">Rating</TableHead>
-                                            <TableHead className="font-semibold">Comment</TableHead>
-                                            <TableHead className="font-semibold">Date</TableHead>
-                                            <TableHead className="font-semibold text-right">Actions</TableHead>
+                                            <TableHead className="font-semibold">{t('ratings.tableHeaders.customer')}</TableHead>
+                                            <TableHead className="font-semibold">{t('ratings.tableHeaders.provider')}</TableHead>
+                                            <TableHead className="font-semibold">{t('ratings.tableHeaders.service')}</TableHead>
+                                            <TableHead className="font-semibold">{t('ratings.tableHeaders.rating')}</TableHead>
+                                            <TableHead className="font-semibold">{t('ratings.tableHeaders.comment')}</TableHead>
+                                            <TableHead className="font-semibold">{t('ratings.tableHeaders.date')}</TableHead>
+                                            <TableHead className="font-semibold text-right">{t('ratings.tableHeaders.actions')}</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -252,8 +254,8 @@ export default function RatingsPage() {
                                                 <TableCell colSpan={8} className="text-center py-8">
                                                     <div className="text-muted-foreground">
                                                         {searchQuery || ratingFilter !== "all"
-                                                            ? "No ratings found matching your criteria"
-                                                            : "No ratings available"
+                                                            ? t('ratings.noRatingsFound')
+                                                            : t('ratings.noRatingsAvailable')
                                                         }
                                                     </div>
                                                 </TableCell>
@@ -268,8 +270,8 @@ export default function RatingsPage() {
                                                                 <AvatarFallback>{getInitials(rating.user?.name || "U")}</AvatarFallback>
                                                             </Avatar>
                                                             <div>
-                                                                <div className="font-medium">{rating.user?.name || "Unknown"}</div>
-                                                                <div className="text-sm text-muted-foreground">{rating.user?.phone || "N/A"}</div>
+                                                                <div className="font-medium">{rating.user?.name || t('ratings.unknown')}</div>
+                                                                <div className="text-sm text-muted-foreground">{rating.user?.phone || t('ratings.notApplicable')}</div>
                                                             </div>
                                                         </div>
                                                     </TableCell>
@@ -280,15 +282,15 @@ export default function RatingsPage() {
                                                                 <AvatarFallback>{getInitials(rating.provider?.name || "P")}</AvatarFallback>
                                                             </Avatar>
                                                             <div>
-                                                                <div className="font-medium">{rating.provider?.name || "Unknown"}</div>
-                                                                <div className="text-sm text-muted-foreground">{rating.provider?.email || "N/A"}</div>
+                                                                <div className="font-medium">{rating.provider?.name || t('ratings.unknown')}</div>
+                                                                <div className="text-sm text-muted-foreground">{rating.provider?.email || t('ratings.notApplicable')}</div>
                                                             </div>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div>
-                                                            <div className="font-medium">{rating.order?.service?.title || "N/A"}</div>
-                                                            <div className="text-sm text-muted-foreground">{rating.order?.service?.category?.titleEn || "N/A"}-{rating.order?.service?.category?.titleAr || "N/A"}</div>
+                                                            <div className="font-medium">{rating.order?.service?.title || t('ratings.notApplicable')}</div>
+                                                            <div className="text-sm text-muted-foreground">{rating.order?.service?.category?.titleEn || t('ratings.notApplicable')}-{rating.order?.service?.category?.titleAr || t('ratings.notApplicable')}</div>
                                                             {rating.order?.bookingId && (
                                                                 <div className="text-xs text-muted-foreground">#{rating.order.bookingId}</div>
                                                             )}
@@ -303,7 +305,7 @@ export default function RatingsPage() {
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="max-w-xs">
-                                                            <p className="text-sm line-clamp-2">{rating.comment || "No comment"}</p>
+                                                            <p className="text-sm line-clamp-2">{rating.comment || t('ratings.noComment')}</p>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
@@ -323,9 +325,9 @@ export default function RatingsPage() {
                                                             </DialogTrigger>
                                                             <DialogContent className="max-w-2xl">
                                                                 <DialogHeader>
-                                                                    <DialogTitle>Rating Details</DialogTitle>
+                                                                    <DialogTitle>{t('ratings.ratingDetails')}</DialogTitle>
                                                                     <DialogDescription>
-                                                                        Detailed view of the rating and related information
+                                                                        {t('ratings.detailedView')}
                                                                     </DialogDescription>
                                                                 </DialogHeader>
                                                                 {selectedRating && (
@@ -338,8 +340,8 @@ export default function RatingsPage() {
                                                                                     <AvatarFallback>{getInitials(selectedRating.user?.name || "U")}</AvatarFallback>
                                                                                 </Avatar>
                                                                                 <div>
-                                                                                    <div className="font-medium">{selectedRating.user?.name || "Unknown"}</div>
-                                                                                    <div className="text-sm text-muted-foreground">{selectedRating.user?.phone || "N/A"}</div>
+                                                                                    <div className="font-medium">{selectedRating.user?.name || t('ratings.unknown')}</div>
+                                                                                    <div className="text-sm text-muted-foreground">{selectedRating.user?.phone || t('ratings.notApplicable')}</div>
                                                                                 </div>
                                                                             </div>
                                                                             <div className="text-right">
@@ -355,30 +357,30 @@ export default function RatingsPage() {
                                                                         {/* Service Information */}
                                                                         {selectedRating.order && (
                                                                             <div className="bg-gray-50 p-4 rounded-lg">
-                                                                                <h4 className="font-medium mb-2">Service Information</h4>
+                                                                                <h4 className="font-medium mb-2">{t('ratings.serviceInformation')}</h4>
                                                                                 <div className="grid grid-cols-2 gap-4 text-sm">
                                                                                     <div>
-                                                                                        <span className="text-muted-foreground">Provider:</span>
-                                                                                        <div className="font-medium">{selectedRating.provider?.name || "N/A"}</div>
+                                                                                        <span className="text-muted-foreground">{t('ratings.providerLabel')}</span>
+                                                                                        <div className="font-medium">{selectedRating.provider?.name || t('ratings.unknown')}</div>
                                                                                     </div>
                                                                                     <div>
-                                                                                        <span className="text-muted-foreground">Service:</span>
-                                                                                        <div className="font-medium">{selectedRating.order.service?.title || "N/A"}</div>
+                                                                                        <span className="text-muted-foreground">{t('ratings.serviceLabel')}</span>
+                                                                                        <div className="font-medium">{selectedRating.order.service?.title || t('ratings.unknown')}</div>
                                                                                     </div>
                                                                                     <div>
-                                                                                        <span className="text-muted-foreground">Category:</span>
-                                                                                        <div className="font-medium">{selectedRating.order.service?.category?.titleEn || "N/A"}</div>
+                                                                                        <span className="text-muted-foreground">{t('ratings.categoryLabel')}</span>
+                                                                                        <div className="font-medium">{selectedRating.order.service?.category?.titleEn || t('ratings.unknown')}</div>
                                                                                     </div>
                                                                                     <div>
-                                                                                        <span className="text-muted-foreground">Order Amount:</span>
-                                                                                        <div className="font-medium">{formatCurrency(selectedRating.order.totalAmount || 0)}</div>
+                                                                                        <span className="text-muted-foreground">{t('ratings.orderAmountLabel')}</span>
+                                                                                        <div className="font-medium">{formatCurrency(selectedRating.order.totalAmount || 0, 'ar')}</div>
                                                                                     </div>
                                                                                     <div>
-                                                                                        <span className="text-muted-foreground">Order ID:</span>
+                                                                                        <span className="text-muted-foreground">{t('ratings.orderIdLabel')}</span>
                                                                                         <div className="font-medium">#{selectedRating.order.id}</div>
                                                                                     </div>
                                                                                     <div>
-                                                                                        <span className="text-muted-foreground">Rating Date:</span>
+                                                                                        <span className="text-muted-foreground">{t('ratings.ratingDateLabel')}</span>
                                                                                         <div className="font-medium">{formatDate(selectedRating.ratingDate)}</div>
                                                                                     </div>
                                                                                 </div>
@@ -387,9 +389,9 @@ export default function RatingsPage() {
 
                                                                         {/* Comment */}
                                                                         <div>
-                                                                            <h4 className="font-medium mb-2">Customer Comment</h4>
+                                                                            <h4 className="font-medium mb-2">{t('ratings.customerComment')}</h4>
                                                                             <div className="bg-gray-50 p-4 rounded-lg">
-                                                                                <p className="text-sm">{selectedRating.comment || "No comment provided"}</p>
+                                                                                <p className="text-sm">{selectedRating.comment || t('ratings.noCommentProvided')}</p>
                                                                             </div>
                                                                         </div>
                                                                     </div>

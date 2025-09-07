@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { showInfo } from '@/lib/utils/toast'
+import { useTranslation } from 'react-i18next'
 import {
     FolderPlus,
     UserPlus,
@@ -18,34 +19,34 @@ import {
 const quickActions = [
     {
         id: 1,
-        title: 'Create Project',
-        description: 'Start a new project',
+        title: t('dashboard.quickActions.createProject'),
+        description: t('dashboard.quickActions.startNewProject'),
         icon: FolderPlus,
-        action: 'Create Project',
+        action: t('dashboard.quickActions.createProject'),
         variant: 'default' as const,
     },
     {
         id: 2,
-        title: 'Add User',
-        description: 'Invite team member',
+        title: t('dashboard.quickActions.addUser'),
+        description: t('dashboard.quickActions.inviteTeamMember'),
         icon: UserPlus,
-        action: 'Add User',
+        action: t('dashboard.quickActions.addUser'),
         variant: 'secondary' as const,
     },
     {
         id: 3,
-        title: 'Generate Report',
-        description: 'Create analytics report',
+        title: t('dashboard.quickActions.generateReport'),
+        description: t('dashboard.quickActions.createAnalyticsReport'),
         icon: BarChart3,
-        action: 'Generate Report',
+        action: t('dashboard.quickActions.generateReport'),
         variant: 'outline' as const,
     },
     {
         id: 4,
-        title: 'Deploy',
-        description: 'Deploy to production',
+        title: t('dashboard.quickActions.deploy'),
+        description: t('dashboard.quickActions.deployToProduction'),
         icon: Rocket,
-        action: 'Deploy',
+        action: t('dashboard.quickActions.deploy'),
         variant: 'destructive' as const,
     },
 ]
@@ -74,19 +75,20 @@ const recentProjects = [
 const getStatusBadge = (status: string) => {
     switch (status) {
         case 'active':
-            return <Badge variant="default" className="flex items-center gap-1"><Activity className="h-3 w-3" />Active</Badge>
+            return <Badge variant="default" className="flex items-center gap-1"><Activity className="h-3 w-3" />{t('dashboard.quickActions.status.active')}</Badge>
         case 'development':
-            return <Badge variant="secondary" className="flex items-center gap-1"><Clock className="h-3 w-3" />Development</Badge>
+            return <Badge variant="secondary" className="flex items-center gap-1"><Clock className="h-3 w-3" />{t('dashboard.quickActions.status.development')}</Badge>
         case 'completed':
-            return <Badge variant="outline" className="flex items-center gap-1"><CheckCircle className="h-3 w-3" />Completed</Badge>
+            return <Badge variant="outline" className="flex items-center gap-1"><CheckCircle className="h-3 w-3" />{t('dashboard.quickActions.status.completed')}</Badge>
         default:
             return <Badge variant="outline">{status}</Badge>
     }
 }
 
 export function QuickActions() {
+    const { t } = useTranslation()
     const handleQuickAction = (action: string) => {
-        showInfo(`${action} action has been triggered successfully!`, 'Action Triggered')
+        showInfo(t('dashboard.quickActions.actionTriggeredSuccess', { action }), t('dashboard.quickActions.actionTriggered'))
     }
 
     return (
@@ -94,8 +96,8 @@ export function QuickActions() {
             {/* Quick Actions */}
             <Card className="glass-card-hover">
                 <CardHeader>
-                    <CardTitle className="cyber-gradient-text">Quick Actions</CardTitle>
-                    <CardDescription className="text-gray-400">Common tasks and shortcuts</CardDescription>
+                    <CardTitle className="cyber-gradient-text">{t('dashboard.quickActions.title')}</CardTitle>
+                    <CardDescription className="text-gray-400">{t('dashboard.quickActions.description')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-2 gap-4">
@@ -123,8 +125,8 @@ export function QuickActions() {
             {/* Recent Projects */}
             <Card className="glass-card-hover">
                 <CardHeader>
-                    <CardTitle className="purple-gradient-text">Recent Projects</CardTitle>
-                    <CardDescription className="text-gray-400">Your recently accessed projects</CardDescription>
+                    <CardTitle className="purple-gradient-text">{t('dashboard.quickActions.recentProjects')}</CardTitle>
+                    <CardDescription className="text-gray-400">{t('dashboard.quickActions.recentProjectsDescription')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-3">
@@ -140,7 +142,7 @@ export function QuickActions() {
                                     <div>
                                         <p className="text-sm font-medium text-white">{project.name}</p>
                                         <p className="text-xs text-gray-400">
-                                            Updated {project.lastUpdated}
+                                            {t('dashboard.quickActions.updated')} {project.lastUpdated}
                                         </p>
                                     </div>
                                 </div>
@@ -149,7 +151,7 @@ export function QuickActions() {
                         ))}
                     </div>
                     <Button className="w-full mt-4 cyber-button text-black font-bold">
-                        View All Projects
+                        {t('dashboard.quickActions.viewAllProjects')}
                     </Button>
                 </CardContent>
             </Card>
@@ -157,31 +159,31 @@ export function QuickActions() {
             {/* System Status */}
             <Card className="glass-card-hover">
                 <CardHeader>
-                    <CardTitle className="pink-gradient-text">System Status</CardTitle>
-                    <CardDescription className="text-gray-400">Current system health</CardDescription>
+                    <CardTitle className="pink-gradient-text">{t('dashboard.quickActions.systemStatus')}</CardTitle>
+                    <CardDescription className="text-gray-400">{t('dashboard.quickActions.currentSystemHealth')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="space-y-4">
                         <div className="flex items-center justify-between p-3 rounded-lg glass-card border border-green-500/30">
-                            <span className="text-sm font-medium text-white">API Status</span>
+                            <span className="text-sm font-medium text-white">{t('dashboard.quickActions.apiStatus')}</span>
                             <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                                Operational
+                                {t('dashboard.quickActions.operational')}
                             </Badge>
                         </div>
                         <div className="flex items-center justify-between p-3 rounded-lg glass-card border border-green-500/30">
-                            <span className="text-sm font-medium text-white">Database</span>
+                            <span className="text-sm font-medium text-white">{t('dashboard.quickActions.database')}</span>
                             <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                                Healthy
+                                {t('dashboard.quickActions.healthy')}
                             </Badge>
                         </div>
                         <div className="flex items-center justify-between p-3 rounded-lg glass-card border border-green-500/30">
-                            <span className="text-sm font-medium text-white">CDN</span>
+                            <span className="text-sm font-medium text-white">{t('dashboard.quickActions.cdn')}</span>
                             <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                                Online
+                                {t('dashboard.quickActions.online')}
                             </Badge>
                         </div>
                         <div className="flex items-center justify-between p-3 rounded-lg glass-card border border-cyan-500/30">
-                            <span className="text-sm font-medium text-white">Uptime</span>
+                            <span className="text-sm font-medium text-white">{t('dashboard.quickActions.uptime')}</span>
                             <span className="text-sm font-bold cyber-gradient-text">99.9%</span>
                         </div>
                     </div>

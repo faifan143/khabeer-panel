@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useLanguage } from '@/lib/hooks/useLanguage'
 import {
   Upload,
   File,
@@ -16,6 +17,7 @@ import {
   Eye
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface FileUploadProps {
   onFilesSelected: (files: File[]) => void
@@ -44,6 +46,8 @@ export function FileUpload({
   disabled = false,
   showPreview = true,
 }: FileUploadProps) {
+  const { t } = useTranslation()
+  const { isRTL } = useLanguage()
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -51,7 +55,7 @@ export function FileUpload({
   const validateFile = (file: File): string | null => {
     // Check file size
     if (file.size > maxSize) {
-      return `File size exceeds ${formatFileSize(maxSize)}`
+      return t('documents.fileSizeExceeds', { size: formatFileSize(maxSize) })
     }
 
     // Check file type
@@ -63,7 +67,7 @@ export function FileUpload({
     })
 
     if (!isValidType) {
-      return 'File type not accepted'
+      return t('documents.fileTypeNotAccepted')
     }
 
     return null
@@ -184,23 +188,23 @@ export function FileUpload({
               className="hidden"
               disabled={disabled}
             />
-            <div className="flex flex-col items-center space-y-2">
+            <div className={`flex flex-col items-center ${isRTL ? 'space-y-reverse gap-2' : 'space-y-2'}`}>
               <Upload className={cn(
                 "h-8 w-8",
                 dragActive ? "text-blue-500" : "text-gray-400"
               )} />
               <div className="text-center">
                 <p className="text-sm font-medium text-gray-900">
-                  {dragActive ? "Drop files here" : "Drag & drop files here"}
+                  {dragActive ? t('documents.dropFilesHere') : t('documents.dragDropFiles')}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  or click to browse
+                  {t('documents.orClickToBrowse')}
                 </p>
               </div>
             </div>
             <div className="text-xs text-gray-500 text-center">
-              <p>Accepted file types: PDF, DOC, DOCX, JPG, PNG</p>
-              <p>Max file size: {formatFileSize(maxSize)} | Max files: {maxFiles}</p>
+              <p>{t('documents.acceptedFileTypes')}</p>
+              <p>{t('documents.maxFileSize', { size: formatFileSize(maxSize), count: maxFiles })}</p>
             </div>
           </div>
         </CardContent>
@@ -209,12 +213,12 @@ export function FileUpload({
       {/* Uploaded Files */}
       {uploadedFiles.length > 0 && (
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-900">Uploaded Files</h4>
+          <h4 className="text-sm font-medium text-gray-900">{t('documents.uploadedFiles')}</h4>
           {uploadedFiles.map((uploadedFile, index) => (
             <Card key={index} className="overflow-hidden">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                <div className={`flex items-center ${isRTL ? 'justify-between' : 'justify-between'}`}>
+                  <div className={`flex items-center ${isRTL ? 'space-x-reverse gap-3' : 'space-x-3'} flex-1 min-w-0`}>
                     <div className={cn(
                       "p-2 rounded-lg",
                       getFileTypeColor(uploadedFile.file)
@@ -231,11 +235,11 @@ export function FileUpload({
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className={`flex items-center ${isRTL ? 'space-x-reverse gap-2' : 'space-x-2'}`}>
                     {uploadedFile.error && (
-                      <div className="flex items-center space-x-1">
+                      <div className={`flex items-center ${isRTL ? 'space-x-reverse gap-1' : 'space-x-1'}`}>
                         <AlertCircle className="h-4 w-4 text-red-500" />
-                        <span className="text-xs text-red-600">Error</span>
+                        <span className="text-xs text-red-600">{t('documents.error')}</span>
                       </div>
                     )}
 

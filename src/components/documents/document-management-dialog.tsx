@@ -13,11 +13,13 @@ import {
   useUploadDocuments
 } from '@/lib/api/hooks/useDocuments'
 import { Provider } from '@/lib/api/types'
+import { useLanguage } from '@/lib/hooks/useLanguage'
 import {
   FileText,
   Upload
 } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 
 interface DocumentManagementDialogProps {
@@ -31,6 +33,8 @@ export function DocumentManagementDialog({
   isOpen,
   onClose
 }: DocumentManagementDialogProps) {
+  const { t } = useTranslation()
+  const { isRTL } = useLanguage()
   const [activeTab, setActiveTab] = useState('documents')
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
 
@@ -50,7 +54,7 @@ export function DocumentManagementDialog({
 
   const handleUploadDocuments = async () => {
     if (selectedFiles.length === 0) {
-      toast.error('Please select files to upload')
+      toast.error(t('documents.pleaseSelectFiles'))
       return
     }
 
@@ -71,10 +75,10 @@ export function DocumentManagementDialog({
 
       // Clear selected files
       setSelectedFiles([])
-      toast.success('Documents uploaded and assigned successfully')
+      toast.success(t('documents.documentsUploadedSuccessfully'))
     } catch (error) {
-      console.error('Upload failed:', error)
-      toast.error('Failed to upload documents')
+      console.error(t('documents.uploadFailed'), error)
+      toast.error(t('documents.failedToUploadDocuments'))
     }
   }
 
@@ -95,18 +99,26 @@ export function DocumentManagementDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
+          <DialogTitle className={`flex items-center ${isRTL ? ' gap-2' : 'space-x-2'}`}>
             <FileText className="h-5 w-5" />
-            <span>Document Management - {provider.name}</span>
+            <span>{t('documents.documentManagement')} - {provider.name}</span>
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-              <TabsTrigger value="upload">Upload</TabsTrigger>
-
+              {isRTL ? (
+                <>
+                  <TabsTrigger value="documents">{t('documents.documents')}</TabsTrigger>
+                  <TabsTrigger value="upload">{t('documents.upload')}</TabsTrigger>
+                </>
+              ) : (
+                <>
+                  <TabsTrigger value="documents">{t('documents.documents')}</TabsTrigger>
+                  <TabsTrigger value="upload">{t('documents.upload')}</TabsTrigger>
+                </>
+              )}
             </TabsList>
 
             <div className="mt-4 overflow-y-auto max-h-[calc(90vh-200px)]">
@@ -115,11 +127,12 @@ export function DocumentManagementDialog({
                 {documentsLoading ? (
                   <div className="flex items-center justify-center p-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span className={`ml-2 ${isRTL ? 'mr-2 ml-0' : ''}`}>{t('documents.loadingDocuments')}</span>
                   </div>
                 ) : (
                   <DocumentViewer
                     documents={documentsData?.documents || []}
-                    title="Provider Documents"
+                    title={t('documents.providerDocuments')}
                     onRemove={handleRemoveDocument}
                     showUploadInfo={true}
                   />
@@ -130,9 +143,9 @@ export function DocumentManagementDialog({
               <TabsContent value="upload" className="space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
+                    <CardTitle className={`flex items-center ${isRTL ? 'space-x-reverse gap-2' : 'space-x-2'}`}>
                       <Upload className="h-5 w-5" />
-                      <span>Upload New Documents</span>
+                      <span>{t('documents.uploadNewDocuments')}</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -151,26 +164,26 @@ export function DocumentManagementDialog({
                     />
 
                     {selectedFiles.length > 0 && (
-                      <div className="flex items-center justify-end space-x-2 pt-4 border-t">
+                      <div className={`flex items-center ${isRTL ? 'justify-start space-x-reverse gap-2' : 'justify-end space-x-2'} pt-4 border-t`}>
                         <Button
                           variant="outline"
                           onClick={() => setSelectedFiles([])}
                         >
-                          Clear
+                          {t('documents.clear')}
                         </Button>
                         <Button
                           onClick={handleUploadDocuments}
                           disabled={uploadDocumentsMutation.isPending || addDocumentsMutation.isPending}
                         >
                           {uploadDocumentsMutation.isPending || addDocumentsMutation.isPending ? (
-                            <div className="flex items-center space-x-2">
+                            <div className={`flex items-center ${isRTL ? 'space-x-reverse gap-2' : 'space-x-2'}`}>
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                              <span>Uploading...</span>
+                              <span>{t('documents.uploading')}</span>
                             </div>
                           ) : (
-                            <div className="flex items-center space-x-2">
+                            <div className={`flex items-center ${isRTL ? 'space-x-reverse gap-2' : 'space-x-2'}`}>
                               <Upload className="h-4 w-4" />
-                              <span>Upload & Assign</span>
+                              <span>{t('documents.uploadAndAssign')}</span>
                             </div>
                           )}
                         </Button>

@@ -4,6 +4,7 @@ import React from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { useLanguage } from '@/lib/hooks/useLanguage'
 import {
   File,
   FileText,
@@ -15,6 +16,7 @@ import {
   Eye
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface Document {
   id?: string
@@ -41,6 +43,9 @@ export function DocumentViewer({
   className,
   showUploadInfo = true
 }: DocumentViewerProps) {
+  const { t } = useTranslation()
+  const { isRTL } = useLanguage()
+
   const getFileIcon = (type: string) => {
     if (type.startsWith('image/')) return <Image className="h-4 w-4" />
     if (type === 'application/pdf') return <FileText className="h-4 w-4" />
@@ -54,15 +59,15 @@ export function DocumentViewer({
   }
 
   const getFileTypeLabel = (type: string) => {
-    if (type.startsWith('image/')) return 'Image'
-    if (type === 'application/pdf') return 'PDF'
-    if (type === 'application/msword') return 'DOC'
-    if (type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return 'DOCX'
-    return 'Document'
+    if (type.startsWith('image/')) return t('documents.image')
+    if (type === 'application/pdf') return t('documents.pdf')
+    if (type === 'application/msword') return t('documents.doc')
+    if (type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return t('documents.docx')
+    return t('documents.documentType')
   }
 
   const formatFileSize = (bytes?: number) => {
-    if (!bytes) return 'Unknown size'
+    if (!bytes) return t('documents.unknownSize')
     if (bytes === 0) return '0 Bytes'
     const k = 1024
     const sizes = ['Bytes', 'KB', 'MB', 'GB']
@@ -71,8 +76,8 @@ export function DocumentViewer({
   }
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Unknown date'
-    return new Date(dateString).toLocaleDateString('en-US', {
+    if (!dateString) return t('documents.unknownDate')
+    return new Date(dateString).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -103,8 +108,8 @@ export function DocumentViewer({
       <Card className={cn("border-dashed", className)}>
         <CardContent className="p-8 text-center">
           <File className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No documents uploaded</h3>
-          <p className="text-gray-500">No documents have been uploaded yet.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">{t('documents.noDocumentsUploaded')}</h3>
+          <p className="text-gray-500">{t('documents.noDocumentsUploadedDescription')}</p>
         </CardContent>
       </Card>
     )
@@ -112,16 +117,18 @@ export function DocumentViewer({
 
   return (
     <div className={cn("space-y-4", className)}>
-      <div className="flex items-center justify-between">
+      <div className={`flex items-center ${isRTL ? 'justify-between' : 'justify-between'}`}>
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        <Badge variant="secondary">{documents.length} document{documents.length !== 1 ? 's' : ''}</Badge>
+        <Badge variant="secondary">
+          {documents.length} {documents.length !== 1 ? t('documents.documents') : t('documents.document')}
+        </Badge>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {documents.map((document, index) => (
           <Card key={index} className="group hover:shadow-md transition-all duration-200">
             <CardContent className="p-4">
-              <div className="flex items-start justify-between mb-3">
+              <div className={`flex items-start ${isRTL ? 'justify-between' : 'justify-between'} mb-3`}>
                 <div className={cn(
                   "p-2 rounded-lg",
                   getFileTypeColor(document.type)
@@ -153,18 +160,18 @@ export function DocumentViewer({
                 {showUploadInfo && (document.size || document.uploadedAt || document.uploadedBy) && (
                   <div className="space-y-1 text-xs text-gray-500">
                     {document.size && (
-                      <div className="flex items-center space-x-1">
-                        <span>Size: {formatFileSize(document.size)}</span>
+                      <div className={`flex items-center ${isRTL ? 'space-x-reverse gap-1' : 'space-x-1'}`}>
+                        <span>{t('documents.size')} {formatFileSize(document.size)}</span>
                       </div>
                     )}
                     {document.uploadedAt && (
-                      <div className="flex items-center space-x-1">
+                      <div className={`flex items-center ${isRTL ? 'space-x-reverse gap-1' : 'space-x-1'}`}>
                         <Calendar className="h-3 w-3" />
                         <span>{formatDate(document.uploadedAt)}</span>
                       </div>
                     )}
                     {document.uploadedBy && (
-                      <div className="flex items-center space-x-1">
+                      <div className={`flex items-center ${isRTL ? 'space-x-reverse gap-1' : 'space-x-1'}`}>
                         <User className="h-3 w-3" />
                         <span>{document.uploadedBy}</span>
                       </div>
@@ -179,8 +186,8 @@ export function DocumentViewer({
                     onClick={() => downloadDocument(document)}
                     className="w-full h-8 text-xs"
                   >
-                    <Eye className="h-3 w-3 mr-1" />
-                    Open
+                    <Eye className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                    {t('documents.open')}
                   </Button>
                 </div>
               </div>

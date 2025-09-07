@@ -30,10 +30,13 @@ import {
 import { useState, useMemo, useRef } from "react"
 import { useNotifications, useCreateNotification, useDeleteNotification } from "@/lib/api/hooks/useAdmin"
 import { api } from "@/lib/api/axios"
+import { useTranslation } from 'react-i18next'
 
 
 
 export default function NotificationsPage() {
+    const { t } = useTranslation()
+
     // API Hooks
     const { data: notifications = [], isLoading } = useNotifications()
     const createNotificationMutation = useCreateNotification()
@@ -62,13 +65,13 @@ export default function NotificationsPage() {
         if (file) {
             // Validate file type
             if (!file.type.startsWith('image/')) {
-                toast.error('Please select an image file')
+                toast.error(t('notifications.pleaseSelectImageFile'))
                 return
             }
 
             // Validate file size (max 5MB)
             if (file.size > 5 * 1024 * 1024) {
-                toast.error('Image size should be less than 5MB')
+                toast.error(t('notifications.imageSizeLimit'))
                 return
             }
 
@@ -96,12 +99,12 @@ export default function NotificationsPage() {
         const file = event.dataTransfer.files?.[0]
         if (file) {
             if (!file.type.startsWith('image/')) {
-                toast.error('Please select an image file')
+                toast.error(t('notifications.pleaseSelectImageFile'))
                 return
             }
 
             if (file.size > 5 * 1024 * 1024) {
-                toast.error('Image size should be less than 5MB')
+                toast.error(t('notifications.imageSizeLimit'))
                 return
             }
 
@@ -175,19 +178,19 @@ export default function NotificationsPage() {
 
         return audienceArray.map(aud => (
             <Badge key={aud} variant="outline" className="text-xs">
-                {aud === "customers" ? "Customers" : "Providers"}
+                {aud === "customers" ? t('notifications.customers') : t('notifications.providers')}
             </Badge>
         ))
     }
 
     const handleCreateNotification = async () => {
         if (!newNotification.title) {
-            toast.error("Please fill in the notification title")
+            toast.error(t('notifications.pleaseFillTitle'))
             return
         }
 
         if (newNotification.targetAudience.length === 0) {
-            toast.error("Please select at least one target audience")
+            toast.error(t('notifications.pleaseSelectAudience'))
             return
         }
 
@@ -198,7 +201,7 @@ export default function NotificationsPage() {
                 targetAudience: newNotification.targetAudience
             })
 
-            toast.success("Notification sent successfully")
+            toast.success(t('notifications.notificationSentSuccessfully'))
 
             // Reset form
             setNewNotification({
@@ -210,7 +213,7 @@ export default function NotificationsPage() {
             })
             setIsCreateDialogOpen(false)
         } catch (error) {
-            toast.error("Failed to send notification")
+            toast.error(t('notifications.failedToSendNotification'))
         }
     }
 
@@ -219,9 +222,9 @@ export default function NotificationsPage() {
     const handleDeleteNotification = async (id: number) => {
         try {
             await deleteNotificationMutation.mutateAsync(id)
-            toast.success("Notification deleted successfully")
+            toast.success(t('notifications.notificationDeletedSuccessfully'))
         } catch (error) {
-            toast.error("Failed to delete notification")
+            toast.error(t('notifications.failedToDeleteNotification'))
         }
     }
 
@@ -247,20 +250,20 @@ export default function NotificationsPage() {
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Notifications</CardTitle>
+                                <CardTitle className="text-sm font-medium">{t('notifications.totalNotifications')}</CardTitle>
                                 <Bell className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold">{notifications.length}</div>
                                 <p className="text-xs text-muted-foreground">
-                                    All time notifications
+                                    {t('notifications.allTimeNotifications')}
                                 </p>
                             </CardContent>
                         </Card>
 
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Sent Today</CardTitle>
+                                <CardTitle className="text-sm font-medium">{t('notifications.sentToday')}</CardTitle>
                                 <Send className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
@@ -271,14 +274,14 @@ export default function NotificationsPage() {
                                     ).length}
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                    Notifications sent today
+                                    {t('notifications.notificationsSentToday')}
                                 </p>
                             </CardContent>
                         </Card>
 
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Failed Notifications</CardTitle>
+                                <CardTitle className="text-sm font-medium">{t('notifications.failedNotifications')}</CardTitle>
                                 <Calendar className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
@@ -286,7 +289,7 @@ export default function NotificationsPage() {
                                     {notifications.filter(n => n.status === "failed").length}
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                    Failed to send
+                                    {t('notifications.failedToSend')}
                                 </p>
                             </CardContent>
                         </Card>
@@ -297,34 +300,34 @@ export default function NotificationsPage() {
                     <Card>
                         <CardHeader className="flex items-center justify-between">
                             <div>
-                                <CardTitle>Notification History ({filteredNotifications.length})</CardTitle>
+                                <CardTitle>{t('notifications.notificationHistory')} ({filteredNotifications.length})</CardTitle>
                                 <p className="text-sm text-muted-foreground">
-                                    View and manage all sent and draft notifications
+                                    {t('notifications.viewAndManage')}
                                 </p>
                             </div>
 
                             <div className="flex items-center gap-4">
                                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                                     <SelectTrigger className="w-40">
-                                        <SelectValue placeholder="Filter by status" />
+                                        <SelectValue placeholder={t('notifications.filterByStatus')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Status</SelectItem>
-                                        <SelectItem value="sent">Sent</SelectItem>
-                                        <SelectItem value="draft">Draft</SelectItem>
-                                        <SelectItem value="failed">Failed</SelectItem>
+                                        <SelectItem value="all">{t('notifications.allStatus')}</SelectItem>
+                                        <SelectItem value="sent">{t('notifications.sent')}</SelectItem>
+                                        <SelectItem value="draft">{t('notifications.draft')}</SelectItem>
+                                        <SelectItem value="failed">{t('notifications.failed')}</SelectItem>
 
                                     </SelectContent>
                                 </Select>
 
                                 <Select value={audienceFilter} onValueChange={setAudienceFilter}>
                                     <SelectTrigger className="w-40">
-                                        <SelectValue placeholder="Filter by audience" />
+                                        <SelectValue placeholder={t('notifications.filterByAudience')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Audience</SelectItem>
-                                        <SelectItem value="customers">Customers</SelectItem>
-                                        <SelectItem value="providers">Providers</SelectItem>
+                                        <SelectItem value="all">{t('notifications.allAudience')}</SelectItem>
+                                        <SelectItem value="customers">{t('notifications.customers')}</SelectItem>
+                                        <SelectItem value="providers">{t('notifications.providers')}</SelectItem>
                                     </SelectContent>
                                 </Select>
 
@@ -332,34 +335,34 @@ export default function NotificationsPage() {
                                     <DialogTrigger asChild>
                                         <Button className="flex items-center gap-2">
                                             <Plus className="h-4 w-4" />
-                                            New Notification
+                                            {t('notifications.newNotification')}
                                         </Button>
                                     </DialogTrigger>
                                     <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                                         <DialogHeader className="border-b">
-                                            <DialogTitle className="text-xl font-semibold">Create New Notification</DialogTitle>
+                                            <DialogTitle className="text-xl font-semibold">{t('notifications.createNewNotification')}</DialogTitle>
                                             <DialogDescription className="text-sm text-muted-foreground">
-                                                Send a notification to your users with title and image. Notifications are sent immediately to selected audiences.
+                                                {t('notifications.sendNotificationDescription')}
                                             </DialogDescription>
                                         </DialogHeader>
                                         <div className="space-y-6 ">
                                             <div className="space-y-2">
                                                 <Label htmlFor="title" className="text-sm font-medium">
-                                                    Notification Title *
+                                                    {t('notifications.notificationTitle')} *
                                                 </Label>
                                                 <Input
                                                     id="title"
-                                                    placeholder="e.g., New Service Available, Maintenance Notice"
+                                                    placeholder={t('notifications.titlePlaceholder')}
                                                     value={newNotification.title}
                                                     onChange={(e) => setNewNotification(prev => ({ ...prev, title: e.target.value }))}
                                                     className="h-10"
                                                 />
                                                 <p className="text-xs text-muted-foreground">
-                                                    Keep it concise and descriptive
+                                                    {t('notifications.keepConcise')}
                                                 </p>
                                             </div>
                                             <div>
-                                                <Label>Notification Image</Label>
+                                                <Label>{t('notifications.notificationImage')}</Label>
                                                 <div className="space-y-3 mt-2" >
                                                     {/* File Upload Area */}
                                                     <div
@@ -389,7 +392,7 @@ export default function NotificationsPage() {
                                                                     </Button>
                                                                 </div>
                                                                 <p className="text-sm text-green-600 font-medium">
-                                                                    Image uploaded successfully!
+                                                                    {t('notifications.imageUploadedSuccessfully')}
                                                                 </p>
                                                             </div>
                                                         ) : (
@@ -397,10 +400,10 @@ export default function NotificationsPage() {
                                                                 <Upload className="h-8 w-8 text-gray-400 mx-auto" />
                                                                 <div>
                                                                     <p className="text-sm font-medium text-gray-700">
-                                                                        Drop an image here, or click to select
+                                                                        {t('notifications.dropImageHere')}
                                                                     </p>
                                                                     <p className="text-xs text-gray-500 mt-1">
-                                                                        PNG, JPG, GIF up to 5MB
+                                                                        {t('notifications.imageFormats')}
                                                                     </p>
                                                                 </div>
                                                                 <Button
@@ -409,7 +412,7 @@ export default function NotificationsPage() {
                                                                     size="sm"
                                                                     onClick={() => fileInputRef.current?.click()}
                                                                 >
-                                                                    Choose File
+                                                                    {t('notifications.chooseFile')}
                                                                 </Button>
                                                             </div>
                                                         )}
@@ -427,7 +430,7 @@ export default function NotificationsPage() {
                                             </div>
 
                                             <div className="space-y-3">
-                                                <Label className="text-sm font-medium">Target Audience *</Label>
+                                                <Label className="text-sm font-medium">{t('notifications.targetAudience')} *</Label>
                                                 <div className="flex gap-3">
                                                     <Button
                                                         type="button"
@@ -442,7 +445,7 @@ export default function NotificationsPage() {
                                                         }}
                                                     >
                                                         <Users className="h-4 w-4 mr-2" />
-                                                        Customers
+                                                        {t('notifications.customers')}
                                                     </Button>
                                                     <Button
                                                         type="button"
@@ -457,7 +460,7 @@ export default function NotificationsPage() {
                                                         }}
                                                     >
                                                         <UserCheck className="h-4 w-4 mr-2" />
-                                                        Providers
+                                                        {t('notifications.providers')}
                                                     </Button>
                                                 </div>
                                             </div>
@@ -468,7 +471,7 @@ export default function NotificationsPage() {
                                                     onClick={() => setIsCreateDialogOpen(false)}
                                                     className="px-6"
                                                 >
-                                                    Cancel
+                                                    {t('notifications.cancel')}
                                                 </Button>
                                                 <Button
                                                     onClick={handleCreateNotification}
@@ -476,7 +479,7 @@ export default function NotificationsPage() {
                                                     disabled={!newNotification.title || newNotification.targetAudience.length === 0}
                                                 >
                                                     <Send className="h-4 w-4 mr-2" />
-                                                    Send Notification
+                                                    {t('notifications.sendNotification')}
                                                 </Button>
                                             </div>
                                         </div>
@@ -490,13 +493,13 @@ export default function NotificationsPage() {
                                 <Table>
                                     <TableHeader>
                                         <TableRow className="bg-gray-50">
-                                            <TableHead className="font-semibold">Image</TableHead>
-                                            <TableHead className="font-semibold">Title</TableHead>
-                                            <TableHead className="font-semibold">Target Audience</TableHead>
-                                            <TableHead className="font-semibold">Status</TableHead>
-                                            <TableHead className="font-semibold">Recipients</TableHead>
-                                            <TableHead className="font-semibold">Date</TableHead>
-                                            <TableHead className="font-semibold text-right">Actions</TableHead>
+                                            <TableHead className="font-semibold">{t('notifications.tableHeaders.image')}</TableHead>
+                                            <TableHead className="font-semibold">{t('notifications.tableHeaders.title')}</TableHead>
+                                            <TableHead className="font-semibold">{t('notifications.tableHeaders.targetAudience')}</TableHead>
+                                            <TableHead className="font-semibold">{t('notifications.tableHeaders.status')}</TableHead>
+                                            <TableHead className="font-semibold">{t('notifications.tableHeaders.recipients')}</TableHead>
+                                            <TableHead className="font-semibold">{t('notifications.tableHeaders.date')}</TableHead>
+                                            <TableHead className="font-semibold text-right">{t('notifications.tableHeaders.actions')}</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -505,8 +508,8 @@ export default function NotificationsPage() {
                                                 <TableCell colSpan={7} className="text-center py-8">
                                                     <div className="text-muted-foreground">
                                                         {searchQuery || statusFilter !== "all" || audienceFilter !== "all"
-                                                            ? "No notifications found matching your criteria"
-                                                            : "No notifications available"
+                                                            ? t('notifications.noNotificationsFound')
+                                                            : t('notifications.noNotificationsAvailable')
                                                         }
                                                     </div>
                                                 </TableCell>
@@ -539,7 +542,7 @@ export default function NotificationsPage() {
                                                     </TableCell>
                                                     <TableCell>
                                                         <Badge className={getStatusColor(notification.status)}>
-                                                            {notification.status}
+                                                            {t(`notifications.status.${notification.status}`)}
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell>
@@ -564,7 +567,7 @@ export default function NotificationsPage() {
                                                                 </DialogTrigger>
                                                                 <DialogContent className="max-w-2xl">
                                                                     <DialogHeader>
-                                                                        <DialogTitle>Notification Details</DialogTitle>
+                                                                        <DialogTitle>{t('notifications.notificationDetails')}</DialogTitle>
                                                                     </DialogHeader>
                                                                     {selectedNotification && (
                                                                         <div className="space-y-4">
@@ -585,11 +588,14 @@ export default function NotificationsPage() {
                                                                                     {getAudienceBadges(selectedNotification.targetAudience)}
                                                                                 </div>
                                                                                 <Badge className={getStatusColor(selectedNotification.status)}>
-                                                                                    {selectedNotification.status}
+                                                                                    {t(`notifications.status.${selectedNotification.status}`)}
                                                                                 </Badge>
                                                                             </div>
                                                                             <div className="text-sm text-muted-foreground">
-                                                                                Sent to {selectedNotification.recipientsCount.toLocaleString()} recipients on {formatDate(selectedNotification.sentAt)}
+                                                                                {t('notifications.sentToRecipients', {
+                                                                                    count: selectedNotification.recipientsCount.toLocaleString(),
+                                                                                    date: formatDate(selectedNotification.sentAt)
+                                                                                })}
                                                                             </div>
                                                                         </div>
                                                                     )}

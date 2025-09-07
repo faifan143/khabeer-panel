@@ -17,6 +17,7 @@ import { useCategories, useCreateCategory, useCreateService, useDeleteCategory, 
 import { Category, CreateCategoryDto, CreateServiceDto, Service, UpdateCategoryDto, UpdateServiceDto } from "@/lib/api/types"
 import { formatCurrency } from "@/lib/utils"
 import { getCategoryImageUrl, getServiceImageUrl } from "@/lib/utils/image"
+import { SearchBox } from "@/components/ui/search-box"
 import {
     CheckCircle,
     DollarSign,
@@ -33,6 +34,7 @@ import {
 } from "lucide-react"
 import { useMemo, useState } from "react"
 import toast from "react-hot-toast"
+import { useTranslation } from "react-i18next"
 
 // Oman Governorates constant
 const OMAN_GOVERNORATES = [
@@ -125,6 +127,7 @@ const StatCard = ({
 )
 
 export default function CategoriesServicesPage() {
+    const { t } = useTranslation()
     const [activeTab, setActiveTab] = useState("categories")
     const [searchTerm, setSearchTerm] = useState("")
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
@@ -256,19 +259,19 @@ export default function CategoriesServicesPage() {
                     categoryData: categoryForm as UpdateCategoryDto,
                     imageFile: categoryImageFile || undefined
                 })
-                toast.success("Category updated successfully!")
+                toast.success(t('categories.categoryUpdated'))
             } else {
                 await createCategoryMutation.mutateAsync({
                     categoryData: categoryForm,
                     imageFile: categoryImageFile || undefined
                 })
-                toast.success("Category created successfully!")
+                toast.success(t('categories.categoryCreated'))
             }
             setIsCategoryDialogOpen(false)
             resetCategoryForm()
             refetchCategories()
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to save category"
+            const errorMessage = error instanceof Error ? error.message : t('categories.failedToSaveCategory')
             toast.error(errorMessage)
         }
     }
@@ -278,7 +281,7 @@ export default function CategoriesServicesPage() {
 
         // Validation: Either category or state must be selected
         if (!serviceForm.categoryId && !serviceForm.state) {
-            toast.error("Please select either a category or a state for the service")
+            toast.error(t('categories.validationError'))
             return
         }
 
@@ -289,19 +292,19 @@ export default function CategoriesServicesPage() {
                     serviceData: serviceForm as UpdateServiceDto,
                     imageFile: serviceImageFile || undefined
                 })
-                toast.success("Service updated successfully!")
+                toast.success(t('categories.serviceUpdated'))
             } else {
                 await createServiceMutation.mutateAsync({
                     serviceData: serviceForm,
                     imageFile: serviceImageFile || undefined
                 })
-                toast.success("Service created successfully!")
+                toast.success(t('categories.serviceCreated'))
             }
             setIsServiceDialogOpen(false)
             resetServiceForm()
             refetchServices()
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to save service"
+            const errorMessage = error instanceof Error ? error.message : t('categories.failedToSaveService')
             toast.error(errorMessage)
         }
     }
@@ -334,11 +337,11 @@ export default function CategoriesServicesPage() {
     const handleCategoryDelete = async (id: number) => {
         try {
             await deleteCategoryMutation.mutateAsync(id)
-            toast.success("Category and all related data deleted successfully!")
+            toast.success(t('categories.categoryDeleted'))
             refetchCategories()
             refetchServices() // Also refetch services since some might be deleted
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to delete category"
+            const errorMessage = error instanceof Error ? error.message : t('categories.failedToDeleteCategory')
             toast.error(errorMessage)
         }
     }
@@ -346,10 +349,10 @@ export default function CategoriesServicesPage() {
     const handleServiceDelete = async (id: number) => {
         try {
             await deleteServiceMutation.mutateAsync(id)
-            toast.success("Service and all related data deleted successfully!")
+            toast.success(t('categories.serviceDeleted'))
             refetchServices()
         } catch (error: unknown) {
-            const errorMessage = error instanceof Error ? error.message : "Failed to delete service"
+            const errorMessage = error instanceof Error ? error.message : t('categories.failedToDeleteService')
             toast.error(errorMessage)
         }
     }
@@ -359,12 +362,12 @@ export default function CategoriesServicesPage() {
         const allowedTypes = ['image/jpeg', 'image/png', 'image/gif']
 
         if (file.size > maxSize) {
-            toast.error('Image size must be less than 5MB')
+            toast.error(t('categories.imageValidation.sizeLimit'))
             return
         }
 
         if (!allowedTypes.includes(file.type)) {
-            toast.error('Please upload a valid image file (JPEG, PNG, GIF)')
+            toast.error(t('categories.imageValidation.fileType'))
             return
         }
 
@@ -376,12 +379,12 @@ export default function CategoriesServicesPage() {
     }
 
     const renderCurrency = (amount: number) => {
-        const currencyString = formatCurrency(amount)
-        const parts = currencyString.split(' OMR')
+        const currencyString = formatCurrency(amount, 'ar') // Use Arabic locale for RTL
+        const parts = currencyString.split(' ر.ع.')
         return (
             <span className="font-semibold">
                 {parts[0]}
-                <span className="text-sm text-muted-foreground ml-1 font-normal">OMR</span>
+                <span className="text-sm text-muted-foreground ml-1 font-normal">ر.ع.</span>
             </span>
         )
     }
@@ -398,33 +401,40 @@ export default function CategoriesServicesPage() {
                                     value="categories"
                                     className="px-8 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
                                 >
-                                    Categories
+                                    {t('categories.categories')}
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="services"
                                     className="px-8 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
                                 >
-                                    Services
+                                    {t('categories.services')}
                                 </TabsTrigger>
                             </TabsList>
 
                             <div className="flex items-center space-x-3">
+                                {/* Search Box */}
+                                <SearchBox
+                                    placeholder={activeTab === "categories" ? t('categories.searchCategories') : t('categories.searchServices')}
+                                    value={searchTerm}
+                                    onChange={setSearchTerm}
+                                    className="w-64"
+                                />
                                 {/* Status Filter */}
                                 <Select value={filterStatus} onValueChange={setFilterStatus}>
                                     <SelectTrigger className="w-40">
-                                        <SelectValue placeholder="Filter by status" />
+                                        <SelectValue placeholder={t('categories.filterByStatus')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All</SelectItem>
+                                        <SelectItem value="all">{t('categories.all')}</SelectItem>
                                         {activeTab === "categories" ? (
                                             <>
-                                                <SelectItem value="withState">With State</SelectItem>
-                                                <SelectItem value="withoutState">Without State</SelectItem>
+                                                <SelectItem value="withState">{t('categories.withState')}</SelectItem>
+                                                <SelectItem value="withoutState">{t('categories.withoutState')}</SelectItem>
                                             </>
                                         ) : (
                                             <>
-                                                <SelectItem value="withCategory">With Category</SelectItem>
-                                                <SelectItem value="withoutCategory">Without Category</SelectItem>
+                                                <SelectItem value="withCategory">{t('categories.withCategory')}</SelectItem>
+                                                <SelectItem value="withoutCategory">{t('categories.withoutCategory')}</SelectItem>
                                             </>
                                         )}
                                     </SelectContent>
@@ -456,43 +466,43 @@ export default function CategoriesServicesPage() {
                                         <DialogTrigger asChild>
                                             <Button onClick={resetCategoryForm} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
                                                 <Plus className="h-4 w-4 mr-2" />
-                                                Add Category
+                                                {t('categories.addCategory')}
                                             </Button>
                                         </DialogTrigger>
                                         <DialogContent className="sm:max-w-[500px]">
                                             <DialogHeader>
                                                 <DialogTitle className="text-xl">
-                                                    {selectedCategory ? "Edit Category" : "Add New Category"}
+                                                    {selectedCategory ? t('categories.editCategory') : t('categories.addCategory')}
                                                 </DialogTitle>
                                                 <DialogDescription>
-                                                    {selectedCategory ? "Update the category information below." : "Create a new service category to organize your services."}
+                                                    {selectedCategory ? t('categories.updateCategoryInfo') : t('categories.createNewCategory')}
                                                 </DialogDescription>
                                             </DialogHeader>
                                             <form onSubmit={handleCategorySubmit} className="space-y-6">
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div className="space-y-2">
-                                                        <Label htmlFor="titleEn" className="text-sm font-medium">English Title</Label>
+                                                        <Label htmlFor="titleEn" className="text-sm font-medium">{t('categories.englishTitle')}</Label>
                                                         <Input
                                                             id="titleEn"
                                                             value={categoryForm.titleEn}
                                                             onChange={(e) => setCategoryForm({ ...categoryForm, titleEn: e.target.value })}
-                                                            placeholder="Enter English title"
+                                                            placeholder={t('categories.enterEnglishTitle')}
                                                             required
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label htmlFor="titleAr" className="text-sm font-medium">Arabic Title</Label>
+                                                        <Label htmlFor="titleAr" className="text-sm font-medium">{t('categories.arabicTitle')}</Label>
                                                         <Input
                                                             id="titleAr"
                                                             value={categoryForm.titleAr}
                                                             onChange={(e) => setCategoryForm({ ...categoryForm, titleAr: e.target.value })}
-                                                            placeholder="أدخل العنوان بالعربية"
+                                                            placeholder={t('categories.enterArabicTitle')}
                                                             required
                                                         />
                                                     </div>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label htmlFor="categoryImage" className="text-sm font-medium">Category Image</Label>
+                                                    <Label htmlFor="categoryImage" className="text-sm font-medium">{t('categories.image')}</Label>
                                                     <div className="flex items-center space-x-2">
                                                         <Input
                                                             id="categoryImage"
@@ -508,23 +518,23 @@ export default function CategoriesServicesPage() {
                                                     </div>
                                                     {categoryImageFile && (
                                                         <p className="text-xs text-green-600">
-                                                            Selected: {categoryImageFile.name}
+                                                            {t('categories.fileStatus.selected', { fileName: categoryImageFile.name })}
                                                         </p>
                                                     )}
                                                     {selectedCategory?.image && !categoryImageFile && (
                                                         <p className="text-xs text-muted-foreground">
-                                                            Current image: {selectedCategory.image}
+                                                            {t('categories.fileStatus.currentImage', { fileName: selectedCategory.image })}
                                                         </p>
                                                     )}
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label htmlFor="state" className="text-sm font-medium">State</Label>
+                                                    <Label htmlFor="state" className="text-sm font-medium">{t('categories.state')}</Label>
                                                     <Select
                                                         value={categoryForm.state}
                                                         onValueChange={(value) => setCategoryForm({ ...categoryForm, state: value })}
                                                     >
                                                         <SelectTrigger>
-                                                            <SelectValue placeholder="Select a state" />
+                                                            <SelectValue placeholder={t('categories.selectState')} />
                                                         </SelectTrigger>
                                                         <SelectContent>
                                                             {OMAN_GOVERNORATES.map((governorate) => (
@@ -537,14 +547,14 @@ export default function CategoriesServicesPage() {
                                                 </div>
                                                 <DialogFooter>
                                                     <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>
-                                                        Cancel
+                                                        {t('categories.cancel')}
                                                     </Button>
                                                     <Button
                                                         type="submit"
                                                         disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
                                                         className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                                                     >
-                                                        {selectedCategory ? "Update Category" : "Create Category"}
+                                                        {selectedCategory ? t('categories.updateCategory') : t('categories.createCategory')}
                                                     </Button>
                                                 </DialogFooter>
                                             </form>
@@ -555,68 +565,45 @@ export default function CategoriesServicesPage() {
                                         <DialogTrigger asChild>
                                             <Button onClick={resetServiceForm} className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
                                                 <Plus className="h-4 w-4 mr-2" />
-                                                Add Service
+                                                {t('categories.addService')}
                                             </Button>
                                         </DialogTrigger>
                                         <DialogContent className="sm:max-w-[600px]">
                                             <DialogHeader>
                                                 <DialogTitle className="text-xl">
-                                                    {selectedService ? "Edit Service" : "Add New Service"}
+                                                    {selectedService ? t('categories.editService') : t('categories.addService')}
                                                 </DialogTitle>
                                                 <DialogDescription>
-                                                    {selectedService ? "Update the service information below." : "Create a new service with detailed information."}
+                                                    {selectedService ? t('categories.updateServiceInfo') : t('categories.createNewService')}
                                                 </DialogDescription>
                                             </DialogHeader>
                                             <form onSubmit={handleServiceSubmit} className="space-y-6">
-                                                {/* Selection Summary */}
-                                                <div className={`p-3 border rounded-lg ${serviceForm.categoryId || serviceForm.state
-                                                    ? 'bg-blue-50 border-blue-200'
-                                                    : 'bg-amber-50 border-amber-200'
-                                                    }`}>
-                                                    <p className={`text-sm ${serviceForm.categoryId || serviceForm.state
-                                                        ? 'text-blue-800'
-                                                        : 'text-amber-800'
-                                                        }`}>
-                                                        <strong>
-                                                            {serviceForm.categoryId || serviceForm.state
-                                                                ? 'Currently selected:'
-                                                                : 'Selection required:'
-                                                            }
-                                                        </strong>
-                                                        {serviceForm.categoryId ? (
-                                                            <span> Category: {categories.find(c => c.id === serviceForm.categoryId)?.titleEn}</span>
-                                                        ) : serviceForm.state ? (
-                                                            <span> State: {serviceForm.state}</span>
-                                                        ) : (
-                                                            <span> Please select either a category or a state</span>
-                                                        )}
-                                                    </p>
-                                                </div>
+
 
                                                 <div className="space-y-2">
-                                                    <Label htmlFor="serviceTitle" className="text-sm font-medium">Service Title</Label>
+                                                    <Label htmlFor="serviceTitle" className="text-sm font-medium">{t('categories.serviceTitle')}</Label>
                                                     <Input
                                                         id="serviceTitle"
                                                         value={serviceForm.title}
                                                         onChange={(e) => setServiceForm({ ...serviceForm, title: e.target.value })}
-                                                        placeholder="Enter service title"
+                                                        placeholder={t('categories.enterServiceTitle')}
                                                         required
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+                                                    <Label htmlFor="description" className="text-sm font-medium">{t('categories.description')}</Label>
                                                     <Textarea
                                                         id="description"
                                                         value={serviceForm.description}
                                                         onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
-                                                        placeholder="Enter service description"
+                                                        placeholder={t('categories.enterDescription')}
                                                         rows={3}
                                                         required
                                                     />
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div className="space-y-2">
-                                                        <Label htmlFor="commission" className="text-sm font-medium">Commission (OMR)</Label>
+                                                        <Label htmlFor="commission" className="text-sm font-medium">{t('categories.commissionOMR')}</Label>
                                                         <Input
                                                             id="commission"
                                                             type="number"
@@ -624,17 +611,17 @@ export default function CategoriesServicesPage() {
                                                             min="0"
                                                             value={serviceForm.commission}
                                                             onChange={(e) => setServiceForm({ ...serviceForm, commission: parseFloat(e.target.value) || 0 })}
-                                                            placeholder="0.00"
+                                                            placeholder={t('categories.placeholders.commissionAmount')}
                                                             required
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label htmlFor="whatsapp" className="text-sm font-medium">WhatsApp Number</Label>
+                                                        <Label htmlFor="whatsapp" className="text-sm font-medium">{t('categories.whatsappNumber')}</Label>
                                                         <Input
                                                             id="whatsapp"
                                                             value={serviceForm.whatsapp}
                                                             onChange={(e) => setServiceForm({ ...serviceForm, whatsapp: e.target.value })}
-                                                            placeholder="+968 1234 5678"
+                                                            placeholder={t('categories.placeholders.whatsappNumber')}
                                                             required
                                                         />
                                                     </div>
@@ -642,9 +629,9 @@ export default function CategoriesServicesPage() {
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div className="space-y-2">
                                                         <Label htmlFor="categoryId" className="text-sm font-medium">
-                                                            Category
+                                                            {t('categories.category')}
                                                             {serviceForm.categoryId && (
-                                                                <span className="text-green-600 ml-2">✓ Selected</span>
+                                                                <span className="text-green-600 ml-2">✓ {t('categories.selected')}</span>
                                                             )}
                                                         </Label>
                                                         <Select
@@ -658,13 +645,13 @@ export default function CategoriesServicesPage() {
                                                             }}
                                                         >
                                                             <SelectTrigger className={serviceForm.categoryId ? "border-green-200 bg-green-50" : ""}>
-                                                                <SelectValue placeholder="Select a category (optional)" />
+                                                                <SelectValue placeholder={t('categories.selectCategoryOptional')} />
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 <SelectItem value="__clear__" className="text-red-600 hover:text-red-700 hover:bg-red-50">
                                                                     <span className="flex items-center gap-2">
                                                                         <span>✕</span>
-                                                                        Clear selection
+                                                                        {t('categories.clearSelection')}
                                                                     </span>
                                                                 </SelectItem>
                                                                 {categories.map((category) => (
@@ -675,15 +662,15 @@ export default function CategoriesServicesPage() {
                                                             </SelectContent>
                                                         </Select>
                                                         <p className="text-xs text-muted-foreground">
-                                                            Select a category or state below
+                                                            {t('categories.selectCategoryOrStateBelow')}
                                                         </p>
                                                     </div>
 
                                                     <div className="space-y-2">
                                                         <Label htmlFor="state" className="text-sm font-medium">
-                                                            State
+                                                            {t('categories.state')}
                                                             {serviceForm.state && (
-                                                                <span className="text-green-600 ml-2">✓ Selected</span>
+                                                                <span className="text-green-600 ml-2">✓ {t('categories.selected')}</span>
                                                             )}
                                                         </Label>
                                                         <Select
@@ -697,13 +684,13 @@ export default function CategoriesServicesPage() {
                                                             }}
                                                         >
                                                             <SelectTrigger className={serviceForm.state ? "border-green-200 bg-green-50" : ""}>
-                                                                <SelectValue placeholder="Select a state (optional)" />
+                                                                <SelectValue placeholder={t('categories.selectStateOptional')} />
                                                             </SelectTrigger>
                                                             <SelectContent>
                                                                 <SelectItem value="__clear__" className="text-red-600 hover:text-red-700 hover:bg-red-50">
                                                                     <span className="flex items-center gap-2">
                                                                         <span>✕</span>
-                                                                        Clear selection
+                                                                        {t('categories.clearSelection')}
                                                                     </span>
                                                                 </SelectItem>
                                                                 {OMAN_GOVERNORATES.map((governorate) => (
@@ -714,12 +701,12 @@ export default function CategoriesServicesPage() {
                                                             </SelectContent>
                                                         </Select>
                                                         <p className="text-xs text-muted-foreground">
-                                                            Select a state or category above
+                                                            {t('categories.selectStateOrCategoryAbove')}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label htmlFor="serviceImage" className="text-sm font-medium">Service Image</Label>
+                                                    <Label htmlFor="serviceImage" className="text-sm font-medium">{t('categories.serviceImage')}</Label>
                                                     <div className="flex items-center space-x-2">
                                                         <Input
                                                             id="serviceImage"
@@ -735,25 +722,25 @@ export default function CategoriesServicesPage() {
                                                     </div>
                                                     {serviceImageFile && (
                                                         <p className="text-xs text-green-600">
-                                                            Selected: {serviceImageFile.name}
+                                                            {t('categories.fileStatus.selected', { fileName: serviceImageFile.name })}
                                                         </p>
                                                     )}
                                                     {selectedService?.image && !serviceImageFile && (
                                                         <p className="text-xs text-muted-foreground">
-                                                            Current image: {selectedService.image}
+                                                            {t('categories.fileStatus.currentImage', { fileName: selectedService.image })}
                                                         </p>
                                                     )}
                                                 </div>
                                                 <DialogFooter>
                                                     <Button type="button" variant="outline" onClick={() => setIsServiceDialogOpen(false)}>
-                                                        Cancel
+                                                        {t('categories.cancel')}
                                                     </Button>
                                                     <Button
                                                         type="submit"
                                                         disabled={createServiceMutation.isPending || updateServiceMutation.isPending}
                                                         className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
                                                     >
-                                                        {selectedService ? "Update Service" : "Create Service"}
+                                                        {selectedService ? t('categories.updateService') : t('categories.createService')}
                                                     </Button>
                                                 </DialogFooter>
                                             </form>
@@ -768,25 +755,25 @@ export default function CategoriesServicesPage() {
                             {/* Enhanced Stats Display */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <StatCard
-                                    title="Total Categories"
+                                    title={t('categories.totalCategories')}
                                     value={categoryStats.total}
                                     icon={Package}
                                     color="bg-gradient-to-br from-blue-500 to-indigo-600"
-                                    description={`${categoryStats.statePercentage}% have state info`}
+                                    description={`${categoryStats.statePercentage}% ${t('categories.haveStateInfo')}`}
                                 />
                                 <StatCard
-                                    title="With State"
+                                    title={t('categories.withState')}
                                     value={categoryStats.withState}
                                     icon={CheckCircle}
                                     color="bg-gradient-to-br from-green-500 to-emerald-600"
-                                    description="Categories with location"
+                                    description={t('categories.categoriesWithLocation')}
                                 />
                                 <StatCard
-                                    title="Without State"
+                                    title={t('categories.withoutState')}
                                     value={categoryStats.withoutState}
                                     icon={XCircle}
                                     color="bg-gradient-to-br from-orange-500 to-red-600"
-                                    description="Missing location info"
+                                    description={t('categories.missingLocationInfo')}
                                 />
                             </div>
 
@@ -800,8 +787,6 @@ export default function CategoriesServicesPage() {
                             ) : viewMode === "grid" ? (
                                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                                     {filteredCategories.map((category) => {
-                                        console.log(getCategoryImageUrl(category.image));
-
                                         return (
                                             <Card key={category.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50/50 hover:from-blue-50/50 hover:to-indigo-50/50">
                                                 <CardContent className="p-6">
@@ -832,7 +817,7 @@ export default function CategoriesServicesPage() {
                                                                             variant="secondary"
                                                                             className="text-xs px-3 py-1 bg-gray-100 text-gray-600"
                                                                         >
-                                                                            No location
+                                                                            {t('categories.noLocation')}
                                                                         </Badge>
                                                                     )}
                                                                 </div>
@@ -855,21 +840,21 @@ export default function CategoriesServicesPage() {
                                                                 </AlertDialogTrigger>
                                                                 <AlertDialogContent>
                                                                     <AlertDialogHeader>
-                                                                        <AlertDialogTitle>Delete Category</AlertDialogTitle>
+                                                                        <AlertDialogTitle>{t('categories.deleteConfirmations.categoryTitle')}</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            Are you sure you want to delete &quot;{category.titleEn}&quot;? This action cannot be undone and will permanently delete:
-                                                                            <br />• All services in this category
-                                                                            <br />• All invoices and orders related to those services
-                                                                            <br />• All provider services and offers
+                                                                            {t('categories.deleteConfirmations.categoryDescription', { title: category.titleEn })}:
+                                                                            <br />• {t('categories.deleteConfirmations.allServicesInCategory')}
+                                                                            <br />• {t('categories.deleteConfirmations.allInvoicesAndOrders')}
+                                                                            <br />• {t('categories.deleteConfirmations.allProviderServices')}
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
-                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                                                                         <AlertDialogAction
                                                                             onClick={() => handleCategoryDelete(category.id)}
                                                                             className="bg-red-600 hover:bg-red-700"
                                                                         >
-                                                                            Delete Category
+                                                                            {t('categories.deleteCategory')}
                                                                         </AlertDialogAction>
                                                                     </AlertDialogFooter>
                                                                 </AlertDialogContent>
@@ -885,16 +870,14 @@ export default function CategoriesServicesPage() {
                                 <Card className="border-0 shadow-lg">
                                     <Table>
                                         <TableHeader>
-                                            <TableRow className="bg-gray-50">
-                                                <TableHead className="font-semibold">Category</TableHead>
-                                                <TableHead className="font-semibold">State</TableHead>
-                                                <TableHead className="font-semibold text-right">Actions</TableHead>
+                                            <TableRow className="bg-gray-50 ">
+                                                <TableHead className="font-semibold rtl:text-right  ">{t('categories.tableHeaders.category')}</TableHead>
+                                                <TableHead className="font-semibold rtl:text-right ">{t('categories.tableHeaders.state')}</TableHead>
+                                                <TableHead className="font-semibold rtl:text-right ">{t('categories.tableHeaders.actions')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {filteredCategories.map((category) => {
-                                                console.log(getCategoryImageUrl(category.image));
-
                                                 return (
                                                     <TableRow key={category.id} className="hover:bg-gray-50/50">
                                                         <TableCell>
@@ -925,7 +908,7 @@ export default function CategoriesServicesPage() {
                                                                     variant="secondary"
                                                                     className="bg-gray-100 text-gray-600"
                                                                 >
-                                                                    No location
+                                                                    {t('categories.noLocation')}
                                                                 </Badge>
                                                             )}
                                                         </TableCell>
@@ -947,21 +930,21 @@ export default function CategoriesServicesPage() {
                                                                     </AlertDialogTrigger>
                                                                     <AlertDialogContent>
                                                                         <AlertDialogHeader>
-                                                                            <AlertDialogTitle>Delete Category</AlertDialogTitle>
+                                                                            <AlertDialogTitle>{t('categories.deleteConfirmations.categoryTitle')}</AlertDialogTitle>
                                                                             <AlertDialogDescription>
-                                                                                Are you sure you want to delete &quot;{category.titleEn}&quot;? This action cannot be undone and will permanently delete:
-                                                                                <br />• All services in this category
-                                                                                <br />• All invoices and orders related to those services
-                                                                                <br />• All provider services and offers
+                                                                                {t('categories.deleteConfirmations.categoryDescription', { title: category.titleEn })}:
+                                                                                <br />• {t('categories.deleteConfirmations.allServicesInCategory')}
+                                                                                <br />• {t('categories.deleteConfirmations.allInvoicesAndOrders')}
+                                                                                <br />• {t('categories.deleteConfirmations.allProviderServices')}
                                                                             </AlertDialogDescription>
                                                                         </AlertDialogHeader>
                                                                         <AlertDialogFooter>
-                                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                                                                             <AlertDialogAction
                                                                                 onClick={() => handleCategoryDelete(category.id)}
                                                                                 className="bg-red-600 hover:bg-red-700"
                                                                             >
-                                                                                Delete Category
+                                                                                {t('categories.deleteCategory')}
                                                                             </AlertDialogAction>
                                                                         </AlertDialogFooter>
                                                                     </AlertDialogContent>
@@ -982,32 +965,32 @@ export default function CategoriesServicesPage() {
                             {/* Enhanced Stats Display */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <StatCard
-                                    title="Total Services"
+                                    title={t('categories.totalServices')}
                                     value={serviceStats.total}
                                     icon={Package}
                                     color="bg-gradient-to-br from-violet-500 to-purple-600"
-                                    description="All available services"
+                                    description={t('categories.allAvailableServices')}
                                 />
                                 <StatCard
-                                    title="With Category"
+                                    title={t('categories.withCategory')}
                                     value={serviceStats.withCategory}
                                     icon={Filter}
                                     color="bg-gradient-to-br from-cyan-500 to-blue-600"
-                                    description={`${serviceStats.categoryPercentage}% categorized`}
+                                    description={`${serviceStats.categoryPercentage}% ${t('categories.categorized')}`}
                                 />
                                 <StatCard
-                                    title="Avg Commission"
-                                    value={`${serviceStats.avgCommission} OMR`}
+                                    title={t('categories.avgCommission')}
+                                    value={`${serviceStats.avgCommission} ${t('categories.currency.omr')}`}
                                     icon={DollarSign}
                                     color="bg-gradient-to-br from-amber-500 to-orange-600"
-                                    description="Per service average"
+                                    description={t('categories.perServiceAverage')}
                                 />
                                 <StatCard
-                                    title="Total Commission"
-                                    value={`${serviceStats.totalCommission} OMR`}
+                                    title={t('categories.totalCommission')}
+                                    value={`${serviceStats.totalCommission} ${t('categories.currency.omr')}`}
                                     icon={DollarSign}
                                     color="bg-gradient-to-br from-emerald-500 to-teal-600"
-                                    description="Combined value"
+                                    description={t('categories.combinedValue')}
                                 />
                             </div>
 
@@ -1066,20 +1049,20 @@ export default function CategoriesServicesPage() {
                                                             </AlertDialogTrigger>
                                                             <AlertDialogContent>
                                                                 <AlertDialogHeader>
-                                                                    <AlertDialogTitle>Delete Service</AlertDialogTitle>
+                                                                    <AlertDialogTitle>{t('categories.deleteConfirmations.serviceTitle')}</AlertDialogTitle>
                                                                     <AlertDialogDescription>
-                                                                        Are you sure you want to delete &quot;{service.title}&quot;? This action cannot be undone and will permanently delete:
-                                                                        <br />• All invoices and orders related to this service
-                                                                        <br />• All provider services and offers
+                                                                        {t('categories.deleteConfirmations.serviceDescription', { title: service.title })}:
+                                                                        <br />• {t('categories.deleteConfirmations.invoicesAndOrdersForService')}
+                                                                        <br />• {t('categories.deleteConfirmations.providerServicesForService')}
                                                                     </AlertDialogDescription>
                                                                 </AlertDialogHeader>
                                                                 <AlertDialogFooter>
-                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                    <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                                                                     <AlertDialogAction
                                                                         onClick={() => handleServiceDelete(service.id)}
                                                                         className="bg-red-600 hover:bg-red-700"
                                                                     >
-                                                                        Delete Service
+                                                                        {t('categories.deleteService')}
                                                                     </AlertDialogAction>
                                                                 </AlertDialogFooter>
                                                             </AlertDialogContent>
@@ -1095,11 +1078,11 @@ export default function CategoriesServicesPage() {
                                     <Table>
                                         <TableHeader>
                                             <TableRow className="bg-gray-50">
-                                                <TableHead className="font-semibold">Service</TableHead>
-                                                <TableHead className="font-semibold">Category</TableHead>
-                                                <TableHead className="font-semibold">Commission</TableHead>
-                                                <TableHead className="font-semibold">WhatsApp</TableHead>
-                                                <TableHead className="font-semibold text-right">Actions</TableHead>
+                                                <TableHead className="font-semibold  rtl:text-right">{t('categories.tableHeaders.service')}</TableHead>
+                                                <TableHead className="font-semibold  rtl:text-right">{t('categories.tableHeaders.category')}</TableHead>
+                                                <TableHead className="font-semibold  rtl:text-right">{t('categories.tableHeaders.commission')}</TableHead>
+                                                <TableHead className="font-semibold  rtl:text-right">{t('categories.tableHeaders.whatsapp')}</TableHead>
+                                                <TableHead className="font-semibold  rtl:text-right ">{t('categories.tableHeaders.actions')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -1125,10 +1108,10 @@ export default function CategoriesServicesPage() {
                                                     <TableCell>
                                                         {service.category ? (
                                                             <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                                                {service.category.titleEn}
+                                                                {service.category.titleEn} {service.category.titleAr}
                                                             </Badge>
                                                         ) : (
-                                                            <span className="text-sm text-muted-foreground">No category</span>
+                                                            <span className="text-sm text-muted-foreground">{t('categories.noCategory')}</span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
@@ -1155,20 +1138,20 @@ export default function CategoriesServicesPage() {
                                                                 </AlertDialogTrigger>
                                                                 <AlertDialogContent>
                                                                     <AlertDialogHeader>
-                                                                        <AlertDialogTitle>Delete Service</AlertDialogTitle>
+                                                                        <AlertDialogTitle>{t('categories.deleteConfirmations.serviceTitle')}</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            Are you sure you want to delete &quot;{service.title}&quot;? This action cannot be undone and will permanently delete:
-                                                                            <br />• All invoices and orders related to this service
-                                                                            <br />• All provider services and offers
+                                                                            {t('categories.deleteConfirmations.serviceDescription', { title: service.title })}:
+                                                                            <br />• {t('categories.deleteConfirmations.invoicesAndOrdersForService')}
+                                                                            <br />• {t('categories.deleteConfirmations.providerServicesForService')}
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
-                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
                                                                         <AlertDialogAction
                                                                             onClick={() => handleServiceDelete(service.id)}
                                                                             className="bg-red-600 hover:bg-red-700"
                                                                         >
-                                                                            Delete Service
+                                                                            {t('categories.deleteService')}
                                                                         </AlertDialogAction>
                                                                     </AlertDialogFooter>
                                                                 </AlertDialogContent>
