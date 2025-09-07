@@ -11,10 +11,24 @@ import {
 } from '../types'
 
 // Services hooks
-export const useServices = (page: number = 1, limit: number = 10) => {
+export const useServices = (page: number = 1, limit: number = 10, serviceType?: 'NORMAL' | 'KHABEER') => {
   return useQuery({
-    queryKey: ['services', page, limit],
-    queryFn: () => ServicesService.getAllServices(page, limit),
+    queryKey: ['services', page, limit, serviceType],
+    queryFn: () => ServicesService.getAllServices(page, limit, serviceType),
+  })
+}
+
+export const useNormalServices = (page: number = 1, limit: number = 10) => {
+  return useQuery({
+    queryKey: ['services', 'normal', page, limit],
+    queryFn: () => ServicesService.getNormalServices(page, limit),
+  })
+}
+
+export const useKhabeerServices = (page: number = 1, limit: number = 10) => {
+  return useQuery({
+    queryKey: ['services', 'khabeer', page, limit],
+    queryFn: () => ServicesService.getKhabeerServices(page, limit),
   })
 }
 
@@ -30,7 +44,7 @@ export const useCreateService = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ serviceData, imageFile }: { serviceData: CreateServiceDto; imageFile?: File }) => 
+    mutationFn: ({ serviceData, imageFile }: { serviceData: CreateServiceDto; imageFile?: File }) =>
       ServicesService.createService(serviceData, imageFile),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['services'] })
@@ -105,7 +119,7 @@ export const useCreateCategory = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ categoryData, imageFile }: { categoryData: CreateCategoryDto; imageFile?: File }) => 
+    mutationFn: ({ categoryData, imageFile }: { categoryData: CreateCategoryDto; imageFile?: File }) =>
       ServicesService.createCategory(categoryData, imageFile),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] })

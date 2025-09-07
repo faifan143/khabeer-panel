@@ -661,7 +661,7 @@ export default function OrdersManagementPage() {
                                                     <TableCell className={isRTL ? 'text-right' : 'text-left'}>
                                                         <div className="space-y-1">
                                                             <div className="text-sm font-medium text-gray-900">
-                                                                {order.state || t('orders.notApplicable')}
+                                                                {order.service?.state || t('orders.notApplicable')}
                                                             </div>
                                                             {order.locationDetails && (
                                                                 <div className="text-xs text-muted-foreground truncate max-w-32">
@@ -689,7 +689,7 @@ export default function OrdersManagementPage() {
                                                     <TableCell className={isRTL ? 'text-right' : 'text-left'}>
                                                         <Badge variant="outline" className={`${getStatusColor(order.status)}`}>
                                                             {getStatusIcon(order.status)}
-                                                            <span className={isRTL ? 'mr-1' : 'ml-1'} capitalize>{t(`orders.${order.status}`)}</span>
+                                                            <span className={isRTL ? 'mr-1' : 'ml-1'}>{t(`orders.${order.status}`)}</span>
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell className={isRTL ? 'text-right' : 'text-left'}>

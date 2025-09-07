@@ -107,24 +107,28 @@ export interface UpdateCategoryDto {
 }
 
 // Service types
+export type ServiceType = 'NORMAL' | 'KHABEER'
+
 export interface Service extends BaseEntity {
   image: string
   title: string
   description: string
-  commission: number
+  commission: number | null
   whatsapp: string
-  categoryId?: number
-  category?: Category
+  categoryId?: number | null
+  category?: Category | null
   state?: string
+  serviceType: ServiceType
 }
 
 export interface CreateServiceDto {
   title: string
   description: string
-  commission: number
+  commission?: number
   whatsapp: string
   categoryId?: number
   state?: string
+  serviceType?: ServiceType
 }
 
 export interface UpdateServiceDto {
@@ -134,6 +138,7 @@ export interface UpdateServiceDto {
   whatsapp?: string
   categoryId?: number
   state?: string
+  serviceType?: ServiceType
 }
 
 // Order types
@@ -146,7 +151,6 @@ export interface Order extends BaseEntity {
   orderDate: string
   scheduledDate?: string
   location?: string
-  state?: string
   locationDetails?: string
   providerLocation?: {
     lat: number

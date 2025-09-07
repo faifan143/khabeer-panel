@@ -14,7 +14,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useCategories, useCreateCategory, useCreateService, useDeleteCategory, useDeleteService, useServices, useUpdateCategory, useUpdateService } from "@/lib/api/hooks/useServices"
-import { Category, CreateCategoryDto, CreateServiceDto, Service, UpdateCategoryDto, UpdateServiceDto } from "@/lib/api/types"
+import { Category, CreateCategoryDto, CreateServiceDto, Service, UpdateCategoryDto, UpdateServiceDto, ServiceType } from "@/lib/api/types"
+import { ServiceTypeSelectionDialog } from "@/components/forms/service-type-selection-dialog"
+import { NormalServiceForm } from "@/components/forms/normal-service-form"
+import { KhabeerServiceForm } from "@/components/forms/khabeer-service-form"
 import { formatCurrency } from "@/lib/utils"
 import { getCategoryImageUrl, getServiceImageUrl } from "@/lib/utils/image"
 import { SearchBox } from "@/components/ui/search-box"
@@ -135,7 +138,10 @@ export default function CategoriesServicesPage() {
     const [selectedService, setSelectedService] = useState<Service | null>(null)
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
     const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false)
+    const [isNormalServiceDialogOpen, setIsNormalServiceDialogOpen] = useState(false)
+    const [isKhabeerServiceDialogOpen, setIsKhabeerServiceDialogOpen] = useState(false)
     const [filterStatus, setFilterStatus] = useState<string>("all")
+    const [serviceTypeFilter, setServiceTypeFilter] = useState<string>("all")
     const [categoryImageFile, setCategoryImageFile] = useState<File | null>(null)
     const [serviceImageFile, setServiceImageFile] = useState<File | null>(null)
 
@@ -146,7 +152,7 @@ export default function CategoriesServicesPage() {
     const deleteCategoryMutation = useDeleteCategory()
 
     // Services hooks
-    const { data: servicesResponse, isLoading: servicesLoading, refetch: refetchServices } = useServices()
+    const { data: servicesResponse, isLoading: servicesLoading, refetch: refetchServices } = useServices(1, 100, serviceTypeFilter === "all" ? undefined : serviceTypeFilter as ServiceType)
     const createServiceMutation = useCreateService()
     const updateServiceMutation = useUpdateService()
     const deleteServiceMutation = useDeleteService()
@@ -165,16 +171,20 @@ export default function CategoriesServicesPage() {
     }), [categories])
 
     const serviceStats = useMemo(() => {
-        const totalCommission = services.reduce((sum, s) => sum + s.commission, 0)
-        const avgCommission = services.length > 0 ? totalCommission / services.length : 0
-        const withCategory = services.filter(s => s.categoryId).length
+        const normalServices = services.filter(s => s.serviceType === 'NORMAL')
+        const khabeerServices = services.filter(s => s.serviceType === 'KHABEER')
+        const totalCommission = normalServices.reduce((sum, s) => sum + (s.commission || 0), 0)
+        const avgCommission = normalServices.length > 0 ? totalCommission / normalServices.length : 0
+        const withCategory = normalServices.filter(s => s.categoryId).length
 
         return {
             total: services.length,
+            normal: normalServices.length,
+            khabeer: khabeerServices.length,
             withCategory,
             avgCommission: Math.round(avgCommission * 100) / 100,
             totalCommission: Math.round(totalCommission * 100) / 100,
-            categoryPercentage: services.length > 0 ? Math.round((withCategory / services.length) * 100) : 0
+            categoryPercentage: normalServices.length > 0 ? Math.round((withCategory / normalServices.length) * 100) : 0
         }
     }, [services])
 
@@ -244,10 +254,19 @@ export default function CategoriesServicesPage() {
             commission: 0,
             whatsapp: "",
             categoryId: undefined,
-            state: undefined
+            state: undefined,
+            serviceType: 'NORMAL'
         })
         setSelectedService(null)
         setServiceImageFile(null)
+    }
+
+    const handleServiceTypeSelect = (serviceType: ServiceType) => {
+        if (serviceType === 'NORMAL') {
+            setIsNormalServiceDialogOpen(true)
+        } else {
+            setIsKhabeerServiceDialogOpen(true)
+        }
     }
 
     const handleCategorySubmit = async (e: React.FormEvent) => {
@@ -276,36 +295,28 @@ export default function CategoriesServicesPage() {
         }
     }
 
-    const handleServiceSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-
-        // Validation: Either category or state must be selected
-        if (!serviceForm.categoryId && !serviceForm.state) {
-            toast.error(t('categories.validationError'))
-            return
-        }
-
+    const handleServiceSubmit = async (serviceData: CreateServiceDto | UpdateServiceDto, imageFile?: File) => {
         try {
             if (selectedService) {
                 await updateServiceMutation.mutateAsync({
                     id: selectedService.id,
-                    serviceData: serviceForm as UpdateServiceDto,
-                    imageFile: serviceImageFile || undefined
+                    serviceData: serviceData as UpdateServiceDto,
+                    imageFile: imageFile
                 })
                 toast.success(t('categories.serviceUpdated'))
             } else {
                 await createServiceMutation.mutateAsync({
-                    serviceData: serviceForm,
-                    imageFile: serviceImageFile || undefined
+                    serviceData: serviceData as CreateServiceDto,
+                    imageFile: imageFile
                 })
                 toast.success(t('categories.serviceCreated'))
             }
-            setIsServiceDialogOpen(false)
             resetServiceForm()
             refetchServices()
         } catch (error: unknown) {
             const errorMessage = error instanceof Error ? error.message : t('categories.failedToSaveService')
             toast.error(errorMessage)
+            throw error
         }
     }
 
@@ -325,13 +336,19 @@ export default function CategoriesServicesPage() {
         setServiceForm({
             title: service.title,
             description: service.description,
-            commission: service.commission,
+            commission: service.commission || 0,
             whatsapp: service.whatsapp,
-            categoryId: service.categoryId,
-            state: service.state
+            categoryId: service.categoryId || undefined,
+            state: service.state,
+            serviceType: service.serviceType
         })
         setServiceImageFile(null)
-        setIsServiceDialogOpen(true)
+
+        if (service.serviceType === 'NORMAL') {
+            setIsNormalServiceDialogOpen(true)
+        } else {
+            setIsKhabeerServiceDialogOpen(true)
+        }
     }
 
     const handleCategoryDelete = async (id: number) => {
@@ -439,6 +456,20 @@ export default function CategoriesServicesPage() {
                                         )}
                                     </SelectContent>
                                 </Select>
+
+                                {/* Service Type Filter - Only show for services tab */}
+                                {activeTab === "services" && (
+                                    <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
+                                        <SelectTrigger className="w-40">
+                                            <SelectValue placeholder={t('categories.filterByType')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">{t('categories.allTypes')}</SelectItem>
+                                            <SelectItem value="NORMAL">{t('categories.normalServices')}</SelectItem>
+                                            <SelectItem value="KHABEER">{t('categories.khabeerServices')}</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
 
                                 {/* View Toggle */}
                                 <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
@@ -561,191 +592,12 @@ export default function CategoriesServicesPage() {
                                         </DialogContent>
                                     </Dialog>
                                 ) : (
-                                    <Dialog open={isServiceDialogOpen} onOpenChange={setIsServiceDialogOpen}>
-                                        <DialogTrigger asChild>
-                                            <Button onClick={resetServiceForm} className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
-                                                <Plus className="h-4 w-4 mr-2" />
-                                                {t('categories.addService')}
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="sm:max-w-[600px]">
-                                            <DialogHeader>
-                                                <DialogTitle className="text-xl">
-                                                    {selectedService ? t('categories.editService') : t('categories.addService')}
-                                                </DialogTitle>
-                                                <DialogDescription>
-                                                    {selectedService ? t('categories.updateServiceInfo') : t('categories.createNewService')}
-                                                </DialogDescription>
-                                            </DialogHeader>
-                                            <form onSubmit={handleServiceSubmit} className="space-y-6">
-
-
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="serviceTitle" className="text-sm font-medium">{t('categories.serviceTitle')}</Label>
-                                                    <Input
-                                                        id="serviceTitle"
-                                                        value={serviceForm.title}
-                                                        onChange={(e) => setServiceForm({ ...serviceForm, title: e.target.value })}
-                                                        placeholder={t('categories.enterServiceTitle')}
-                                                        required
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="description" className="text-sm font-medium">{t('categories.description')}</Label>
-                                                    <Textarea
-                                                        id="description"
-                                                        value={serviceForm.description}
-                                                        onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
-                                                        placeholder={t('categories.enterDescription')}
-                                                        rows={3}
-                                                        required
-                                                    />
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="commission" className="text-sm font-medium">{t('categories.commissionOMR')}</Label>
-                                                        <Input
-                                                            id="commission"
-                                                            type="number"
-                                                            step="0.01"
-                                                            min="0"
-                                                            value={serviceForm.commission}
-                                                            onChange={(e) => setServiceForm({ ...serviceForm, commission: parseFloat(e.target.value) || 0 })}
-                                                            placeholder={t('categories.placeholders.commissionAmount')}
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="whatsapp" className="text-sm font-medium">{t('categories.whatsappNumber')}</Label>
-                                                        <Input
-                                                            id="whatsapp"
-                                                            value={serviceForm.whatsapp}
-                                                            onChange={(e) => setServiceForm({ ...serviceForm, whatsapp: e.target.value })}
-                                                            placeholder={t('categories.placeholders.whatsappNumber')}
-                                                            required
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="categoryId" className="text-sm font-medium">
-                                                            {t('categories.category')}
-                                                            {serviceForm.categoryId && (
-                                                                <span className="text-green-600 ml-2">✓ {t('categories.selected')}</span>
-                                                            )}
-                                                        </Label>
-                                                        <Select
-                                                            value={serviceForm.categoryId?.toString() || ""}
-                                                            onValueChange={(value) => {
-                                                                if (value === "__clear__") {
-                                                                    setServiceForm({ ...serviceForm, categoryId: undefined, state: undefined })
-                                                                } else if (value) {
-                                                                    setServiceForm({ ...serviceForm, categoryId: parseInt(value), state: undefined })
-                                                                }
-                                                            }}
-                                                        >
-                                                            <SelectTrigger className={serviceForm.categoryId ? "border-green-200 bg-green-50" : ""}>
-                                                                <SelectValue placeholder={t('categories.selectCategoryOptional')} />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="__clear__" className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                                                                    <span className="flex items-center gap-2">
-                                                                        <span>✕</span>
-                                                                        {t('categories.clearSelection')}
-                                                                    </span>
-                                                                </SelectItem>
-                                                                {categories.map((category) => (
-                                                                    <SelectItem key={category.id} value={category.id.toString()}>
-                                                                        {category.titleEn}
-                                                                    </SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {t('categories.selectCategoryOrStateBelow')}
-                                                        </p>
-                                                    </div>
-
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="state" className="text-sm font-medium">
-                                                            {t('categories.state')}
-                                                            {serviceForm.state && (
-                                                                <span className="text-green-600 ml-2">✓ {t('categories.selected')}</span>
-                                                            )}
-                                                        </Label>
-                                                        <Select
-                                                            value={serviceForm.state || ""}
-                                                            onValueChange={(value) => {
-                                                                if (value === "__clear__") {
-                                                                    setServiceForm({ ...serviceForm, state: undefined, categoryId: undefined })
-                                                                } else if (value) {
-                                                                    setServiceForm({ ...serviceForm, state: value, categoryId: undefined })
-                                                                }
-                                                            }}
-                                                        >
-                                                            <SelectTrigger className={serviceForm.state ? "border-green-200 bg-green-50" : ""}>
-                                                                <SelectValue placeholder={t('categories.selectStateOptional')} />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="__clear__" className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                                                                    <span className="flex items-center gap-2">
-                                                                        <span>✕</span>
-                                                                        {t('categories.clearSelection')}
-                                                                    </span>
-                                                                </SelectItem>
-                                                                {OMAN_GOVERNORATES.map((governorate) => (
-                                                                    <SelectItem key={governorate.value} value={governorate.value}>
-                                                                        {governorate.label}
-                                                                    </SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {t('categories.selectStateOrCategoryAbove')}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="serviceImage" className="text-sm font-medium">{t('categories.serviceImage')}</Label>
-                                                    <div className="flex items-center space-x-2">
-                                                        <Input
-                                                            id="serviceImage"
-                                                            type="file"
-                                                            accept="image/*"
-                                                            onChange={(e) => {
-                                                                const file = e.target.files?.[0]
-                                                                if (file) handleImageUpload(file, 'service')
-                                                            }}
-                                                            className="flex-1"
-                                                        />
-                                                        <Upload className="h-4 w-4 text-muted-foreground" />
-                                                    </div>
-                                                    {serviceImageFile && (
-                                                        <p className="text-xs text-green-600">
-                                                            {t('categories.fileStatus.selected', { fileName: serviceImageFile.name })}
-                                                        </p>
-                                                    )}
-                                                    {selectedService?.image && !serviceImageFile && (
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {t('categories.fileStatus.currentImage', { fileName: selectedService.image })}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <DialogFooter>
-                                                    <Button type="button" variant="outline" onClick={() => setIsServiceDialogOpen(false)}>
-                                                        {t('categories.cancel')}
-                                                    </Button>
-                                                    <Button
-                                                        type="submit"
-                                                        disabled={createServiceMutation.isPending || updateServiceMutation.isPending}
-                                                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                                                    >
-                                                        {selectedService ? t('categories.updateService') : t('categories.createService')}
-                                                    </Button>
-                                                </DialogFooter>
-                                            </form>
-                                        </DialogContent>
-                                    </Dialog>
+                                    <ServiceTypeSelectionDialog onServiceTypeSelect={handleServiceTypeSelect}>
+                                        <Button onClick={resetServiceForm} className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
+                                            <Plus className="h-4 w-4 mr-2" />
+                                            {t('categories.addService')}
+                                        </Button>
+                                    </ServiceTypeSelectionDialog>
                                 )}
                             </div>
                         </div>
@@ -963,7 +815,7 @@ export default function CategoriesServicesPage() {
                         {/* Services Tab */}
                         <TabsContent value="services" className="space-y-6">
                             {/* Enhanced Stats Display */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                                 <StatCard
                                     title={t('categories.totalServices')}
                                     value={serviceStats.total}
@@ -972,11 +824,18 @@ export default function CategoriesServicesPage() {
                                     description={t('categories.allAvailableServices')}
                                 />
                                 <StatCard
-                                    title={t('categories.withCategory')}
-                                    value={serviceStats.withCategory}
-                                    icon={Filter}
-                                    color="bg-gradient-to-br from-cyan-500 to-blue-600"
-                                    description={`${serviceStats.categoryPercentage}% ${t('categories.categorized')}`}
+                                    title={t('categories.normalServices')}
+                                    value={serviceStats.normal}
+                                    icon={Package}
+                                    color="bg-gradient-to-br from-blue-500 to-indigo-600"
+                                    description={t('categories.marketplaceServices')}
+                                />
+                                <StatCard
+                                    title={t('categories.khabeerServices')}
+                                    value={serviceStats.khabeer}
+                                    icon={Package}
+                                    color="bg-gradient-to-br from-purple-500 to-pink-600"
+                                    description={t('categories.directContactServices')}
                                 />
                                 <StatCard
                                     title={t('categories.avgCommission')}
@@ -1020,12 +879,30 @@ export default function CategoriesServicesPage() {
                                                             <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{service.description}</p>
                                                             <div className="flex items-center justify-between mt-3">
                                                                 <div className="flex items-center space-x-2">
-                                                                    <span className="text-sm font-medium text-gray-900">
-                                                                        {renderCurrency(service.commission)}
-                                                                    </span>
-                                                                    {service.category && (
+                                                                    {service.commission && (
+                                                                        <span className="text-sm font-medium text-gray-900">
+                                                                            {renderCurrency(service.commission)}
+                                                                        </span>
+                                                                    )}
+                                                                    <Badge
+                                                                        variant="outline"
+                                                                        className={`text-xs px-2 py-1 ${service.serviceType === 'NORMAL'
+                                                                            ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                                                            : 'bg-purple-50 text-purple-700 border-purple-200'
+                                                                            }`}
+                                                                    >
+                                                                        {service.serviceType === 'NORMAL' ? 'NORMAL' : 'KHABEER'}
+                                                                    </Badge>
+                                                                    {service.category ? (
                                                                         <Badge variant="outline" className="text-xs px-2 py-1">
                                                                             {service.category.titleEn}
+                                                                        </Badge>
+                                                                    ) : (
+                                                                        <Badge variant="outline" className={`text-xs px-2 py-1 ${service.serviceType === 'KHABEER'
+                                                                            ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                                                            : 'bg-gray-50 text-gray-700 border-gray-200'
+                                                                            }`}>
+                                                                            {service.serviceType === 'KHABEER' ? 'فئة خبير' : 'لا توجد فئة'}
                                                                         </Badge>
                                                                     )}
                                                                 </div>
@@ -1111,11 +988,15 @@ export default function CategoriesServicesPage() {
                                                                 {service.category.titleEn} {service.category.titleAr}
                                                             </Badge>
                                                         ) : (
-                                                            <span className="text-sm text-muted-foreground">{t('categories.noCategory')}</span>
+                                                            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                                                                {service.serviceType === 'KHABEER' ? 'فئة خبير' : t('categories.noCategory')}
+                                                            </Badge>
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <span className="font-semibold text-gray-900">{renderCurrency(service.commission)}</span>
+                                                        <span className="font-semibold text-gray-900">
+                                                            {service.commission !== null ? renderCurrency(service.commission) : 'N/A'}
+                                                        </span>
                                                     </TableCell>
                                                     <TableCell>
                                                         <span className="text-sm text-muted-foreground font-mono">{service.whatsapp}</span>
@@ -1166,6 +1047,30 @@ export default function CategoriesServicesPage() {
                             )}
                         </TabsContent>
                     </Tabs>
+
+                    {/* Service Form Components */}
+                    <NormalServiceForm
+                        isOpen={isNormalServiceDialogOpen}
+                        onClose={() => {
+                            setIsNormalServiceDialogOpen(false)
+                            resetServiceForm()
+                        }}
+                        onSubmit={handleServiceSubmit}
+                        selectedService={selectedService}
+                        categories={categories}
+                        isLoading={createServiceMutation.isPending || updateServiceMutation.isPending}
+                    />
+
+                    <KhabeerServiceForm
+                        isOpen={isKhabeerServiceDialogOpen}
+                        onClose={() => {
+                            setIsKhabeerServiceDialogOpen(false)
+                            resetServiceForm()
+                        }}
+                        onSubmit={handleServiceSubmit}
+                        selectedService={selectedService}
+                        isLoading={createServiceMutation.isPending || updateServiceMutation.isPending}
+                    />
                 </div>
             </AdminLayout>
         </ProtectedRoute>

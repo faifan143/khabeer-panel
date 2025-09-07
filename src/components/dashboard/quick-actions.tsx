@@ -16,77 +16,77 @@ import {
     Activity
 } from 'lucide-react'
 
-const quickActions = [
-    {
-        id: 1,
-        title: t('dashboard.quickActions.createProject'),
-        description: t('dashboard.quickActions.startNewProject'),
-        icon: FolderPlus,
-        action: t('dashboard.quickActions.createProject'),
-        variant: 'default' as const,
-    },
-    {
-        id: 2,
-        title: t('dashboard.quickActions.addUser'),
-        description: t('dashboard.quickActions.inviteTeamMember'),
-        icon: UserPlus,
-        action: t('dashboard.quickActions.addUser'),
-        variant: 'secondary' as const,
-    },
-    {
-        id: 3,
-        title: t('dashboard.quickActions.generateReport'),
-        description: t('dashboard.quickActions.createAnalyticsReport'),
-        icon: BarChart3,
-        action: t('dashboard.quickActions.generateReport'),
-        variant: 'outline' as const,
-    },
-    {
-        id: 4,
-        title: t('dashboard.quickActions.deploy'),
-        description: t('dashboard.quickActions.deployToProduction'),
-        icon: Rocket,
-        action: t('dashboard.quickActions.deploy'),
-        variant: 'destructive' as const,
-    },
-]
-
-const recentProjects = [
-    {
-        id: 1,
-        name: 'E-commerce Platform',
-        status: 'active',
-        lastUpdated: '2 hours ago',
-    },
-    {
-        id: 2,
-        name: 'Mobile App',
-        status: 'development',
-        lastUpdated: '1 day ago',
-    },
-    {
-        id: 3,
-        name: 'API Gateway',
-        status: 'completed',
-        lastUpdated: '3 days ago',
-    },
-]
-
-const getStatusBadge = (status: string) => {
-    switch (status) {
-        case 'active':
-            return <Badge variant="default" className="flex items-center gap-1"><Activity className="h-3 w-3" />{t('dashboard.quickActions.status.active')}</Badge>
-        case 'development':
-            return <Badge variant="secondary" className="flex items-center gap-1"><Clock className="h-3 w-3" />{t('dashboard.quickActions.status.development')}</Badge>
-        case 'completed':
-            return <Badge variant="outline" className="flex items-center gap-1"><CheckCircle className="h-3 w-3" />{t('dashboard.quickActions.status.completed')}</Badge>
-        default:
-            return <Badge variant="outline">{status}</Badge>
-    }
-}
-
 export function QuickActions() {
     const { t } = useTranslation()
+
+    const quickActions = [
+        {
+            id: 1,
+            title: t('dashboard.quickActions.createProject'),
+            description: t('dashboard.quickActions.startNewProject'),
+            icon: FolderPlus,
+            action: t('dashboard.quickActions.createProject'),
+            variant: 'default' as const,
+        },
+        {
+            id: 2,
+            title: t('dashboard.quickActions.addUser'),
+            description: t('dashboard.quickActions.inviteTeamMember'),
+            icon: UserPlus,
+            action: t('dashboard.quickActions.addUser'),
+            variant: 'secondary' as const,
+        },
+        {
+            id: 3,
+            title: t('dashboard.quickActions.generateReport'),
+            description: t('dashboard.quickActions.createAnalyticsReport'),
+            icon: BarChart3,
+            action: t('dashboard.quickActions.generateReport'),
+            variant: 'outline' as const,
+        },
+        {
+            id: 4,
+            title: t('dashboard.quickActions.deploy'),
+            description: t('dashboard.quickActions.deployToProduction'),
+            icon: Rocket,
+            action: t('dashboard.quickActions.deploy'),
+            variant: 'destructive' as const,
+        },
+    ]
+
+    const recentProjects = [
+        {
+            id: 1,
+            name: 'E-commerce Platform',
+            status: 'active',
+            lastUpdated: '2 hours ago',
+        },
+        {
+            id: 2,
+            name: 'Mobile App',
+            status: 'development',
+            lastUpdated: '1 day ago',
+        },
+        {
+            id: 3,
+            name: 'API Gateway',
+            status: 'completed',
+            lastUpdated: '3 days ago',
+        },
+    ]
+
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case 'active':
+                return <Badge variant="default" className="flex items-center gap-1"><Activity className="h-3 w-3" />{t('dashboard.quickActions.status.active')}</Badge>
+            case 'development':
+                return <Badge variant="secondary" className="flex items-center gap-1"><Clock className="h-3 w-3" />{t('dashboard.quickActions.status.development')}</Badge>
+            case 'completed':
+                return <Badge variant="outline" className="flex items-center gap-1"><CheckCircle className="h-3 w-3" />{t('dashboard.quickActions.status.completed')}</Badge>
+            default:
+                return <Badge variant="outline">{status}</Badge>
+        }
+    }
     const handleQuickAction = (action: string) => {
         showInfo(t('dashboard.quickActions.actionTriggeredSuccess', { action }), t('dashboard.quickActions.actionTriggered'))
     }

@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { useAdminActivateProvider, useAdminDeactivateProvider, useAdminVerifyProvider, useAdminUnverifyProvider, useAdminPendingJoinRequests, useAdminApproveJoinRequest, useAdminRejectJoinRequest, useAdminProviders, useAdminUnverifiedProviders } from "@/lib/api/hooks/useAdmin"
+import { useAdminActivateProvider, useAdminDeactivateProvider, useAdminPendingJoinRequests, useAdminApproveJoinRequest, useAdminRejectJoinRequest, useAdminProviders, useAdminUnverifiedProviders } from "@/lib/api/hooks/useAdmin"
 import { AdminProvider, AdminProviderJoinRequest } from "@/lib/types/admin"
 import { formatCurrency } from "@/lib/utils"
 import { DocumentManagementDialog } from "@/components/documents/document-management-dialog"
@@ -28,22 +28,14 @@ import {
     Package,
     Phone,
     Shield,
-    Star,
-    Truck,
     User,
     XCircle,
     Zap,
-    Users,
     UserCheck,
     UserX,
     ShieldCheck,
-    ShieldX,
-    Calendar,
     FileText,
-    TrendingUp,
-    TrendingDown,
-    Percent,
-    Receipt
+    Percent
 } from "lucide-react"
 import { useState, useMemo } from "react"
 import toast from "react-hot-toast"
@@ -140,7 +132,7 @@ export default function ProviderVerificationPage() {
 
     // Hooks for verified providers
     const { data: verifiedProviders, isLoading: verifiedProvidersLoading } = useAdminProviders()
-    const { data: unverifiedProviders, isLoading: unverifiedProvidersLoading } = useAdminUnverifiedProviders()
+    const { data: unverifiedProviders } = useAdminUnverifiedProviders()
 
     // Hooks for join requests
     const { data: joinRequestsResponse, isLoading: joinRequestsLoading, error: joinRequestsError } = useAdminPendingJoinRequests()
@@ -300,14 +292,12 @@ export default function ProviderVerificationPage() {
     // Admin provider management hooks
     const activateProviderMutation = useAdminActivateProvider()
     const deactivateProviderMutation = useAdminDeactivateProvider()
-    const verifyProviderMutation = useAdminVerifyProvider()
-    const unverifyProviderMutation = useAdminUnverifyProvider()
     const approveJoinRequestMutation = useAdminApproveJoinRequest()
     const rejectJoinRequestMutation = useAdminRejectJoinRequest()
 
     // Computed statistics for verified providers
     const providerStats = useMemo(() => {
-        if (!verifiedProviders) {
+        if (!verifiedProviders || !verifiedProviders.providers || !Array.isArray(verifiedProviders.providers)) {
             return {
                 total: 0,
                 active: 0,
@@ -317,16 +307,17 @@ export default function ProviderVerificationPage() {
             }
         }
 
-        const totalIncome = verifiedProviders.reduce((sum, provider) => {
+        const providers = verifiedProviders.providers
+        const totalIncome = providers.reduce((sum, provider) => {
             // Calculate from actual order data
             const providerIncome = provider.orders?.reduce((orderSum, order) => orderSum + order.totalAmount, 0) || 0
             return sum + providerIncome
         }, 0)
 
         return {
-            total: verifiedProviders.length,
-            active: verifiedProviders.filter(p => p.isActive).length,
-            inactive: verifiedProviders.filter(p => !p.isActive).length,
+            total: providers.length,
+            active: providers.filter(p => p.isActive).length,
+            inactive: providers.filter(p => !p.isActive).length,
             totalIncome: Math.round(totalIncome * 100) / 100,
             pendingRequests: joinRequests?.length || 0
         }
@@ -350,11 +341,11 @@ export default function ProviderVerificationPage() {
         return filtered
     }
 
-    const currentProviders = getFilteredProviders(verifiedProviders || [])
+    const currentProviders = getFilteredProviders(verifiedProviders?.providers || [])
 
     // Calculate provider income from actual data
     const calculateProviderIncome = (providerId: number) => {
-        const provider = verifiedProviders?.find(p => p.id === providerId)
+        const provider = verifiedProviders?.providers?.find(p => p.id === providerId)
         if (!provider) {
             return {
                 total: 0,
@@ -716,6 +707,7 @@ export default function ProviderVerificationPage() {
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.categoriesServices')}</TableHead>
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.incomingOrders')}</TableHead>
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.detailedIncome')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.commissionFetched')}</TableHead>
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.documents')}</TableHead>
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.status')}</TableHead>
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-left' : 'text-right'}`}>{t('providers.tableHeaders.actions')}</TableHead>
@@ -788,6 +780,14 @@ export default function ProviderVerificationPage() {
                                                                     {renderCurrency(income.total)}
                                                                 </span>
                                                             </Button>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="flex items-center space-x-2">
+                                                                <Percent className="h-4 w-4 text-orange-600" />
+                                                                <span className="text-sm font-semibold text-orange-700">
+                                                                    {renderCurrency((provider as any).totalCommission || 0)}
+                                                                </span>
+                                                            </div>
                                                         </TableCell>
                                                         <TableCell>
                                                             <Button

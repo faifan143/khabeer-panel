@@ -118,22 +118,22 @@ const getActivityColor = (type: string) => {
     }
 }
 
-const formatTimeAgo = (date: Date) => {
-    const now = new Date()
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-
-    if (diffInMinutes < 1) return t('dashboard.recentActivity.justNow')
-    if (diffInMinutes < 60) return t('dashboard.recentActivity.minutesAgo', { minutes: diffInMinutes })
-
-    const diffInHours = Math.floor(diffInMinutes / 60)
-    if (diffInHours < 24) return t('dashboard.recentActivity.hoursAgo', { hours: diffInHours })
-
-    const diffInDays = Math.floor(diffInHours / 24)
-    return t('dashboard.recentActivity.daysAgo', { days: diffInDays })
-}
-
 export function RecentActivity() {
     const { t } = useTranslation()
+
+    const formatTimeAgo = (date: Date) => {
+        const now = new Date()
+        const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
+
+        if (diffInMinutes < 1) return t('dashboard.recentActivity.justNow')
+        if (diffInMinutes < 60) return t('dashboard.recentActivity.minutesAgo', { minutes: diffInMinutes })
+
+        const diffInHours = Math.floor(diffInMinutes / 60)
+        if (diffInHours < 24) return t('dashboard.recentActivity.hoursAgo', { hours: diffInHours })
+
+        const diffInDays = Math.floor(diffInHours / 24)
+        return t('dashboard.recentActivity.daysAgo', { days: diffInDays })
+    }
     const { data: activities, isLoading, error } = useQuery({
         queryKey: ['recent-activities'],
         queryFn: fetchActivities,

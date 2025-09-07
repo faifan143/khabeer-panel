@@ -3,8 +3,25 @@ import { Service, CreateServiceDto, UpdateServiceDto, Category, CreateCategoryDt
 
 export class ServicesService {
   // Services
-  static async getAllServices(page: number = 1, limit: number = 10): Promise<PaginatedResponse<Service>> {
-    const response = await api.get<PaginatedResponse<Service>>(`/services?page=${page}&limit=${limit}`)
+  static async getAllServices(page: number = 1, limit: number = 10, serviceType?: 'NORMAL' | 'KHABEER'): Promise<PaginatedResponse<Service>> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString()
+    })
+    if (serviceType) {
+      params.append('serviceType', serviceType)
+    }
+    const response = await api.get<PaginatedResponse<Service>>(`/services?${params.toString()}`)
+    return response.data
+  }
+
+  static async getNormalServices(page: number = 1, limit: number = 10): Promise<PaginatedResponse<Service>> {
+    const response = await api.get<PaginatedResponse<Service>>(`/services/normal?page=${page}&limit=${limit}`)
+    return response.data
+  }
+
+  static async getKhabeerServices(page: number = 1, limit: number = 10): Promise<PaginatedResponse<Service>> {
+    const response = await api.get<PaginatedResponse<Service>>(`/services/khabeer?page=${page}&limit=${limit}`)
     return response.data
   }
 

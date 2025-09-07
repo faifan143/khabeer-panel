@@ -166,6 +166,7 @@ export interface AdminProvider {
     providerServices: number
     ratings: number
   }
+  totalCommission: number
 }
 
 export interface AdminProviderJoinRequest {
