@@ -6,15 +6,16 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3001:3001"
+      - "80:3001"
     environment:
       # Node.js Configuration
       NODE_ENV: ${NODE_ENV:-production}
       PORT: ${PORT:-3001}
 
       # API Configuration
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://31.97.71.187:3000/api}
-      NEXT_PUBLIC_API_URL_IMAGE: ${NEXT_PUBLIC_API_URL_IMAGE:-http://31.97.71.187:3000}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://panel.khabirs.com/api}
+      NEXT_PUBLIC_API_URL_IMAGE: ${NEXT_PUBLIC_API_URL_IMAGE:-https://panel.khabirs.com}
+      NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-https://panel.khabirs.com}
     restart: unless-stopped
     container_name: khabeer-panel-prod
     networks:
