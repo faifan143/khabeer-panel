@@ -475,6 +475,7 @@
     "failedToReject": "فشل في رفض طلب الانضمام",
     "approveJoinRequest": "الموافقة على طلب الانضمام",
     "approveJoinRequestConfirm": "هل أنت متأكد من أنك تريد الموافقة على طلب انضمام {{name}}؟",
+    "approve": "موافقة",
     "rejectJoinRequest": "رفض طلب الانضمام",
     "rejectJoinRequestConfirm": "هل أنت متأكد من أنك تريد رفض طلب انضمام {{name}}؟",
     "tableHeaders": {

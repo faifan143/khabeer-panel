@@ -517,6 +517,7 @@
     "failedToReject": "Failed to reject join request",
     "approveJoinRequest": "Approve Join Request",
     "approveJoinRequestConfirm": "Are you sure you want to approve {{name}} join request?",
+    "approve": "Approve",
     "rejectJoinRequest": "Reject Join Request",
     "rejectJoinRequestConfirm": "Are you sure you want to reject {{name}} join request?",
     "tableHeaders": {
