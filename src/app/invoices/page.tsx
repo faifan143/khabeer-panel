@@ -369,46 +369,50 @@ export default function InvoicesPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.invoiceId')}</TableHead>
-                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.customer')}</TableHead>
-                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.provider')}</TableHead>
-                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.service')}</TableHead>
-                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.commission')}</TableHead>
-                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.mustPayforProvider')}</TableHead>
-                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.status')}</TableHead>
-                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.created')}</TableHead>
-                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.actions')}</TableHead>
+                          <TableHead className="text-left rtl:text-right px-8">{t('invoices.tableHeaders.invoiceId')}</TableHead>
+                          <TableHead className="text-left rtl:text-right px-8">{t('invoices.tableHeaders.customer')}</TableHead>
+                          <TableHead className="text-left rtl:text-right px-8">{t('invoices.tableHeaders.provider')}</TableHead>
+                          <TableHead className="text-left rtl:text-right px-8">{t('invoices.tableHeaders.service')}</TableHead>
+                          <TableHead className="text-left rtl:text-right px-8">{t('invoices.tableHeaders.commission')}</TableHead>
+                          <TableHead className="text-left rtl:text-right px-8">{t('invoices.tableHeaders.mustPayforProvider')}</TableHead>
+                          <TableHead className="text-left rtl:text-right px-8">{t('invoices.tableHeaders.status')}</TableHead>
+                          <TableHead className="text-left rtl:text-right px-8">{t('invoices.tableHeaders.created')}</TableHead>
+                          <TableHead className="text-left rtl:text-right px-8">{t('invoices.tableHeaders.actions')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {currentInvoices.map((invoice) => (
                           <TableRow key={invoice.id}>
-                            <TableCell className="font-medium">#{invoice.id}</TableCell>
-                            <TableCell>
+                            <TableCell className="font-medium px-6">
+                              #{invoice.id}
+                              <p>{t('invoices.orderId')}: {invoice.order?.id}</p>
+
+                            </TableCell>
+                            <TableCell className="px-6">
                               <div >
                                 <p className="font-medium">{invoice.order?.user.name}</p>
                                 <p dir="ltr" className="text-sm text-muted-foreground">{invoice.order?.user.email ?? invoice.order?.user.phone}</p>
                               </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-6">
                               <div>
                                 <p className="font-medium">{invoice.order?.provider.name}</p>
                                 <p dir="ltr" className="text-sm text-muted-foreground">{invoice.order?.provider.phone}</p>
                               </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-6">
                               <div>
                                 <p className="font-medium">{invoice.order?.service.title}</p>
                                 <p className="text-sm text-muted-foreground">{t("invoices.basePrice")} {formatCurrency(invoice.order?.service.price || 0, i18n.language)}</p>
                               </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-6">
                               <div>
                                 <p className="font-medium">{t("invoices.commission")}  {formatCurrency(invoice.commission, i18n.language)}</p>
                                 <p className="font-medium">{t("invoices.amountAfterCommission")}  {formatCurrency(invoice.totalAmount - invoice.commission, i18n.language)}</p>
                               </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-6">
                               <div>
                                 <p className="font-medium">{formatCurrency(invoice.totalAmount, i18n.language)}</p>
                                 {invoice.discount > 0 && (
@@ -418,19 +422,19 @@ export default function InvoicesPage() {
                                 )}
                               </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-6">
                               <div className="flex items-center gap-2">
                                 {getStatusIcon(invoice.paymentStatus)}
                                 {getStatusBadge(invoice.paymentStatus)}
                               </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-6">
                               <div className="text-sm">
                                 <p>{t('orders.orderDate')}: {new Date(invoice.order?.orderDate).toLocaleDateString()}</p>
                                 {invoice.paymentDate && <p>{t('orders.paymentDate')}: {invoice.paymentDate ? new Date(invoice.paymentDate).toLocaleDateString() : t('invoices.noPaymentDate')}</p>}
                               </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-6">
                               <Button
                                 variant="outline"
                                 size="sm"
