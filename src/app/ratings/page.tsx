@@ -25,7 +25,7 @@ import {
 import { useState, useMemo } from "react"
 
 export default function RatingsPage() {
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
     const [searchQuery, setSearchQuery] = useState("")
     const [ratingFilter, setRatingFilter] = useState<string>("all")
     const [selectedRating, setSelectedRating] = useState<any>(null)
@@ -373,7 +373,7 @@ export default function RatingsPage() {
                                                                                     </div>
                                                                                     <div>
                                                                                         <span className="text-muted-foreground">{t('ratings.orderAmountLabel')}</span>
-                                                                                        <div className="font-medium">{formatCurrency(selectedRating.order.totalAmount || 0, 'ar')}</div>
+                                                                                        <div className="font-medium">{formatCurrency(selectedRating.order.totalAmount || 0, i18n.language)}</div>
                                                                                     </div>
                                                                                     <div>
                                                                                         <span className="text-muted-foreground">{t('ratings.orderIdLabel')}</span>

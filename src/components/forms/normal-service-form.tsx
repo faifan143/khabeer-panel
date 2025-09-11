@@ -135,7 +135,7 @@ export function NormalServiceForm({
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="commission" className="text-sm font-medium text-right">
-                                العمولة (ر.ع.) <span className="text-red-500">*</span>
+                                {t('categories.commissionOMR')} <span className="text-red-500">*</span>
                             </Label>
                             <Input
                                 id="commission"

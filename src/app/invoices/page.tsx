@@ -89,7 +89,7 @@ const getStatusIcon = (status: string) => {
 }
 
 export default function InvoicesPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -135,7 +135,10 @@ export default function InvoicesPage() {
   const markAsPaidMutation = useMarkAsPaid()
   const deleteInvoiceMutation = useDeleteInvoice()
 
-  const invoices = invoicesResponse?.data || []
+  // Extract invoices array from response
+  const invoices = Array.isArray(invoicesResponse)
+    ? invoicesResponse
+    : (invoicesResponse?.data || [])
 
   // Filter invoices by status for tabs
   const unpaidInvoices = invoices.filter(invoice => invoice.paymentStatus === 'unpaid')
@@ -245,35 +248,60 @@ export default function InvoicesPage() {
             </Button>
           </div>
 
-          {/* Compact Statistics Row */}
+          {/* Financial Statistics - 6 Boxes */}
           {stats && (
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              {/* Total Provider Amount */}
               <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
                 <DollarSign className="h-5 w-5 text-blue-600" />
                 <div>
-                  <p className="text-sm font-medium text-blue-900">{stats.total}</p>
-                  <p className="text-xs text-blue-700">{t('invoices.total')}</p>
+                  <p className="text-sm font-medium text-blue-900">{formatCurrency(stats.totalProviderAmount, i18n.language)}</p>
+                  <p className="text-xs text-blue-700">{t('invoices.totalProviderAmount')}</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
-                <AlertCircle className="h-5 w-5 text-yellow-600" />
-                <div>
-                  <p className="text-sm font-medium text-yellow-900">{formatCurrency(stats.pendingAmount, 'ar')}</p>
-                  <p className="text-xs text-yellow-700">{t('invoices.unpaidCount', { count: stats.unpaid })}</p>
-                </div>
-              </div>
+
+              {/* Total Commission */}
               <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
                 <CheckCircle className="h-5 w-5 text-green-600" />
                 <div>
-                  <p className="text-sm font-medium text-green-900">{formatCurrency(stats.paidAmount, 'ar')}</p>
-                  <p className="text-xs text-green-700">{t('invoices.paidCount', { count: stats.paid })}</p>
+                  <p className="text-sm font-medium text-green-900">{formatCurrency(stats.totalCommission, i18n.language)}</p>
+                  <p className="text-xs text-green-700">{t('invoices.totalCommission')}</p>
                 </div>
               </div>
+
+              {/* Total Provider Net Amount */}
               <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
                 <DollarSign className="h-5 w-5 text-purple-600" />
                 <div>
-                  <p className="text-sm font-medium text-purple-900">{formatCurrency(stats.totalAmount, 'ar')}</p>
-                  <p className="text-xs text-purple-700">{t('invoices.revenue')}</p>
+                  <p className="text-sm font-medium text-purple-900">{formatCurrency(stats.totalProviderNetAmount, i18n.language)}</p>
+                  <p className="text-xs text-purple-700">{t('invoices.totalProviderNetAmount')}</p>
+                </div>
+              </div>
+
+              {/* Paid Provider Amount */}
+              <div className="flex items-center space-x-3 p-3 bg-emerald-50 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-emerald-600" />
+                <div>
+                  <p className="text-sm font-medium text-emerald-900">{formatCurrency(stats.paidProviderAmount, i18n.language)}</p>
+                  <p className="text-xs text-emerald-700">{t('invoices.paidProviderAmount')}</p>
+                </div>
+              </div>
+
+              {/* Paid Commission */}
+              <div className="flex items-center space-x-3 p-3 bg-teal-50 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-teal-600" />
+                <div>
+                  <p className="text-sm font-medium text-teal-900">{formatCurrency(stats.paidCommission, i18n.language)}</p>
+                  <p className="text-xs text-teal-700">{t('invoices.paidCommission')}</p>
+                </div>
+              </div>
+
+              {/* Pending Provider Amount */}
+              <div className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
+                <AlertCircle className="h-5 w-5 text-yellow-600" />
+                <div>
+                  <p className="text-sm font-medium text-yellow-900">{formatCurrency(stats.pendingProviderAmount, i18n.language)}</p>
+                  <p className="text-xs text-yellow-700">{t('invoices.pendingProviderAmount')}</p>
                 </div>
               </div>
             </div>
@@ -341,15 +369,15 @@ export default function InvoicesPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>{t('invoices.tableHeaders.invoiceId')}</TableHead>
-                          <TableHead>{t('invoices.tableHeaders.customer')}</TableHead>
-                          <TableHead>{t('invoices.tableHeaders.provider')}</TableHead>
-                          <TableHead>{t('invoices.tableHeaders.service')}</TableHead>
-                          <TableHead>{t('invoices.tableHeaders.commission')}</TableHead>
-                          <TableHead>{t('invoices.tableHeaders.amount')}</TableHead>
-                          <TableHead>{t('invoices.tableHeaders.status')}</TableHead>
-                          <TableHead>{t('invoices.tableHeaders.created')}</TableHead>
-                          <TableHead>{t('invoices.tableHeaders.actions')}</TableHead>
+                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.invoiceId')}</TableHead>
+                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.customer')}</TableHead>
+                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.provider')}</TableHead>
+                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.service')}</TableHead>
+                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.commission')}</TableHead>
+                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.mustPayforProvider')}</TableHead>
+                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.status')}</TableHead>
+                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.created')}</TableHead>
+                          <TableHead className="text-left rtl:text-right">{t('invoices.tableHeaders.actions')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -357,35 +385,35 @@ export default function InvoicesPage() {
                           <TableRow key={invoice.id}>
                             <TableCell className="font-medium">#{invoice.id}</TableCell>
                             <TableCell>
-                              <div>
+                              <div >
                                 <p className="font-medium">{invoice.order?.user.name}</p>
-                                <p className="text-sm text-muted-foreground">{invoice.order?.user.email}</p>
+                                <p dir="ltr" className="text-sm text-muted-foreground">{invoice.order?.user.email ?? invoice.order?.user.phone}</p>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div>
                                 <p className="font-medium">{invoice.order?.provider.name}</p>
-                                <p className="text-sm text-muted-foreground">{invoice.order?.provider.phone}</p>
+                                <p dir="ltr" className="text-sm text-muted-foreground">{invoice.order?.provider.phone}</p>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div>
                                 <p className="font-medium">{invoice.order?.service.title}</p>
-                                <p className="text-sm text-muted-foreground">{formatCurrency(invoice.order?.service.price || 0, 'ar')}</p>
+                                <p className="text-sm text-muted-foreground">{t("invoices.basePrice")} {formatCurrency(invoice.order?.service.price || 0, i18n.language)}</p>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div>
-                                <p className="font-medium">{t("invoices.commission")}  {formatCurrency(invoice.commission, 'ar')}</p>
-                                <p className="font-medium">{t("invoices.amountAfterCommission")}  {formatCurrency(invoice.totalAmount - invoice.commission, 'ar')}</p>
+                                <p className="font-medium">{t("invoices.commission")}  {formatCurrency(invoice.commission, i18n.language)}</p>
+                                <p className="font-medium">{t("invoices.amountAfterCommission")}  {formatCurrency(invoice.totalAmount - invoice.commission, i18n.language)}</p>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div>
-                                <p className="font-medium">{formatCurrency(invoice.totalAmount, 'ar')}</p>
+                                <p className="font-medium">{formatCurrency(invoice.totalAmount, i18n.language)}</p>
                                 {invoice.discount > 0 && (
                                   <p className="text-sm text-muted-foreground">
-                                    -{formatCurrency(invoice.discount, 'ar')} {t('invoices.discount')}
+                                    -{formatCurrency(invoice.discount, i18n.language)} {t('invoices.discount')}
                                   </p>
                                 )}
                               </div>
@@ -398,10 +426,8 @@ export default function InvoicesPage() {
                             </TableCell>
                             <TableCell>
                               <div className="text-sm">
-                                <p>{new Date(invoice.createdAt).toLocaleDateString()}</p>
-                                <p className="text-muted-foreground">
-                                  {new Date(invoice.createdAt).toLocaleTimeString()}
-                                </p>
+                                <p>{t('orders.orderDate')}: {new Date(invoice.order?.orderDate).toLocaleDateString()}</p>
+                                {invoice.paymentDate && <p>{t('orders.paymentDate')}: {invoice.paymentDate ? new Date(invoice.paymentDate).toLocaleDateString() : t('invoices.noPaymentDate')}</p>}
                               </div>
                             </TableCell>
                             <TableCell>
@@ -442,7 +468,7 @@ export default function InvoicesPage() {
                   <div className="mt-2 p-3 bg-green-50 rounded-lg">
                     <div className="text-sm text-green-800">
                       <p><strong>{t('invoices.customerLabel')}</strong> {selectedInvoice.order?.user.name}</p>
-                      <p><strong>{t('invoices.amountLabel')}</strong> {formatCurrency(selectedInvoice.totalAmount, 'ar')}</p>
+                      <p><strong>{t('invoices.amountLabel')}</strong> {formatCurrency(selectedInvoice.totalAmount, i18n.language)}</p>
                     </div>
                   </div>
                 )}
@@ -479,7 +505,7 @@ export default function InvoicesPage() {
                   <div className="mt-2 p-3 bg-red-50 rounded-lg">
                     <div className="text-sm text-red-800">
                       <p><strong>{t('invoices.customerLabel')}</strong> {selectedInvoice.order?.user.name}</p>
-                      <p><strong>{t('invoices.amountLabel')}</strong> {formatCurrency(selectedInvoice.totalAmount, 'ar')}</p>
+                      <p><strong>{t('invoices.amountLabel')}</strong> {formatCurrency(selectedInvoice.totalAmount, i18n.language)}</p>
                       <p className="mt-2 text-xs">{t('invoices.markAsFailedDescription')}</p>
                     </div>
                   </div>
@@ -516,7 +542,7 @@ export default function InvoicesPage() {
                   <div className="mt-2 p-3 bg-blue-50 rounded-lg">
                     <div className="text-sm text-blue-800">
                       <p><strong>{t('invoices.customerLabel')}</strong> {selectedInvoice.order?.user.name}</p>
-                      <p><strong>{t('invoices.amountLabel')}</strong> {formatCurrency(selectedInvoice.totalAmount, 'ar')}</p>
+                      <p><strong>{t('invoices.amountLabel')}</strong> {formatCurrency(selectedInvoice.totalAmount, i18n.language)}</p>
                       <p className="mt-2 text-xs">{t('invoices.refundDescription')}</p>
                     </div>
                   </div>
@@ -554,7 +580,7 @@ export default function InvoicesPage() {
                   <div className="mt-2 p-3 bg-red-50 rounded-lg">
                     <div className="text-sm text-red-800">
                       <p><strong>{t('invoices.customerLabel')}</strong> {selectedInvoice.order?.user.name}</p>
-                      <p><strong>{t('invoices.amountLabel')}</strong> {formatCurrency(selectedInvoice.totalAmount, 'ar')}</p>
+                      <p><strong>{t('invoices.amountLabel')}</strong> {formatCurrency(selectedInvoice.totalAmount, i18n.language)}</p>
                     </div>
                   </div>
                 )}
@@ -582,11 +608,13 @@ export default function InvoicesPage() {
         {/* Compact Actions Dialog */}
         <Dialog open={isActionsDialogOpen} onOpenChange={setIsActionsDialogOpen}>
           <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader>
+            <DialogHeader className="rtl:text-right">
               <DialogTitle className="text-lg">{t('invoices.actionsTitle', { id: selectedInvoice?.id })}</DialogTitle>
               {selectedInvoice && (
                 <div className="text-sm text-muted-foreground">
-                  {selectedInvoice.order?.user.name} • {formatCurrency(selectedInvoice.totalAmount, 'ar')} • {t(`invoices.${selectedInvoice.paymentStatus}`)}
+                  {selectedInvoice.order?.user.name} <br />
+                  {formatCurrency(selectedInvoice.totalAmount, i18n.language)}<br />
+                  {t(`invoices.${selectedInvoice.paymentStatus}`)}
                 </div>
               )}
             </DialogHeader>
@@ -606,7 +634,7 @@ export default function InvoicesPage() {
                     <CheckCircle className="h-4 w-4 mr-3 text-green-600" />
                     <div className="text-left">
                       <div className="font-medium">{t('invoices.markAsPaidAction')}</div>
-                      <div className="text-xs text-green-600">{t('invoices.commissionEarned', { amount: formatCurrency((selectedInvoice.totalAmount - (selectedInvoice.discount || 0)) * 0.1, 'ar') })}</div>
+                      <div className="text-xs text-green-600">{t('invoices.commissionEarned')} {formatCurrency(selectedInvoice.commission || selectedInvoice.order?.commissionAmount || 0, i18n.language)}</div>
                     </div>
                   </Button>
 

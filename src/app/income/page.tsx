@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useInvoices } from '@/lib/api/hooks/useInvoices'
 import { formatCurrency } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 import {
   DollarSign,
   Eye,
@@ -26,6 +27,7 @@ import {
 import { useMemo, useState } from 'react'
 
 export default function IncomePage() {
+  const { i18n } = useTranslation()
   const [searchTerm, setSearchTerm] = useState('')
   const [sortField, setSortField] = useState('')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
@@ -190,7 +192,7 @@ export default function IncomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-green-600">{formatCurrency(financialSummary.totalRevenue, 'ar')}</div>
+                <div className="text-2xl font-bold text-green-600">{formatCurrency(financialSummary.totalRevenue, i18n.language)}</div>
                 <p className="text-xs text-muted-foreground">{financialSummary.totalTransactions} invoices</p>
               </CardContent>
             </Card>
@@ -203,7 +205,7 @@ export default function IncomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-blue-600">{formatCurrency(financialSummary.netIncome, 'ar')}</div>
+                <div className="text-2xl font-bold text-blue-600">{formatCurrency(financialSummary.netIncome, i18n.language)}</div>
                 <p className="text-xs text-muted-foreground">After commissions</p>
               </CardContent>
             </Card>
@@ -216,7 +218,7 @@ export default function IncomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-orange-600">{formatCurrency(financialSummary.totalCommission, 'ar')}</div>
+                <div className="text-2xl font-bold text-orange-600">{formatCurrency(financialSummary.totalCommission, i18n.language)}</div>
                 <p className="text-xs text-muted-foreground">Platform earnings</p>
               </CardContent>
             </Card>
@@ -229,7 +231,7 @@ export default function IncomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-purple-600">{formatCurrency(financialSummary.totalDiscounts, 'ar')}</div>
+                <div className="text-2xl font-bold text-purple-600">{formatCurrency(financialSummary.totalDiscounts, i18n.language)}</div>
                 <p className="text-xs text-muted-foreground">Offer savings</p>
               </CardContent>
             </Card>
@@ -242,7 +244,7 @@ export default function IncomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-emerald-600">{formatCurrency(financialSummary.paidAmount, 'ar')}</div>
+                <div className="text-2xl font-bold text-emerald-600">{formatCurrency(financialSummary.paidAmount, i18n.language)}</div>
                 <p className="text-xs text-muted-foreground">Completed payments</p>
               </CardContent>
             </Card>
@@ -255,7 +257,7 @@ export default function IncomePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-yellow-600">{formatCurrency(financialSummary.pendingAmount, 'ar')}</div>
+                <div className="text-2xl font-bold text-yellow-600">{formatCurrency(financialSummary.pendingAmount, i18n.language)}</div>
                 <p className="text-xs text-muted-foreground">Awaiting payment</p>
               </CardContent>
             </Card>
@@ -386,17 +388,17 @@ export default function IncomePage() {
                           </TableCell>
                           <TableCell>
                             <div className="font-bold text-green-600">
-                              {formatCurrency(invoice.totalAmount || 0, 'ar')}
+                              {formatCurrency(invoice.totalAmount || 0, i18n.language)}
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="font-medium text-orange-600">
-                              {formatCurrency(invoice.commission || 0, 'ar')}
+                              {formatCurrency(invoice.commission || 0, i18n.language)}
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="font-medium text-blue-600">
-                              {formatCurrency(invoice.netAmount || 0, 'ar')}
+                              {formatCurrency(invoice.netAmount || 0, i18n.language)}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -520,19 +522,19 @@ export default function IncomePage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm text-muted-foreground">Total Amount</Label>
-                      <p className="text-xl font-bold text-green-600">{formatCurrency(selectedInvoice.totalAmount, 'ar')}</p>
+                      <p className="text-xl font-bold text-green-600">{formatCurrency(selectedInvoice.totalAmount, i18n.language)}</p>
                     </div>
                     <div>
                       <Label className="text-sm text-muted-foreground">Discount</Label>
-                      <p className="text-lg font-medium text-purple-600">{formatCurrency(selectedInvoice.discount, 'ar')}</p>
+                      <p className="text-lg font-medium text-purple-600">{formatCurrency(selectedInvoice.discount, i18n.language)}</p>
                     </div>
                     <div>
                       <Label className="text-sm text-muted-foreground">Commission</Label>
-                      <p className="text-lg font-medium text-orange-600">{formatCurrency(selectedInvoice.commission, 'ar')}</p>
+                      <p className="text-lg font-medium text-orange-600">{formatCurrency(selectedInvoice.commission, i18n.language)}</p>
                     </div>
                     <div>
                       <Label className="text-sm text-muted-foreground">Net Amount</Label>
-                      <p className="text-xl font-bold text-blue-600">{formatCurrency(selectedInvoice.netAmount, 'ar')}</p>
+                      <p className="text-xl font-bold text-blue-600">{formatCurrency(selectedInvoice.netAmount, i18n.language)}</p>
                     </div>
                   </div>
                 </div>

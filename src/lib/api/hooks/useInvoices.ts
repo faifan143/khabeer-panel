@@ -72,10 +72,10 @@ export const useUpdatePaymentStatus = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, paymentStatus, paymentMethod }: { 
-      id: number; 
-      paymentStatus: string; 
-      paymentMethod?: string 
+    mutationFn: ({ id, paymentStatus, paymentMethod }: {
+      id: number;
+      paymentStatus: string;
+      paymentMethod?: string
     }) => InvoiceService.updatePaymentStatus(id, paymentStatus, paymentMethod),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })

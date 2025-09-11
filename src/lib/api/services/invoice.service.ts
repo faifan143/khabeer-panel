@@ -1,254 +1,75 @@
 import { api } from '../axios'
-import type { Invoice, CreateInvoiceDto, UpdateInvoiceDto, InvoiceFilters, InvoiceStats } from '@/lib/types/invoice'
+import type { Invoice, CreateInvoiceDto, UpdateInvoiceDto, InvoiceFilters, InvoiceStats, ServiceBreakdown } from '@/lib/types/invoice'
 
-// Mock data for development (replace with actual API calls when backend is ready)
-const mockInvoices: Invoice[] = [
-  {
-    id: 1,
-    orderId: 101,
-    totalAmount: 150.00,
-    discount: 10.00,
-    netAmount: 140.00,
-    commission: 15.00,
-    paymentStatus: 'unpaid',
-    isVerified: false,
-    payoutStatus: 'pending',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    order: {
-      id: 101,
-      status: 'completed',
-      totalAmount: 150.00,
-      commissionAmount: 15.00,
-      user: {
-        id: 1,
-        name: 'Ahmed Al-Rashid',
-        email: 'ahmed@example.com',
-        phone: '+968 9123 4567'
-      },
-      provider: {
-        id: 1,
-        name: 'Oman Services Co.',
-        email: 'info@omanservices.com',
-        phone: '+968 2456 7890'
-      },
+// Helper function to transform API response to Invoice format
+const transformInvoiceResponse = (apiInvoice: any): Invoice => {
+  // Calculate total commission from servicesBreakdown
+  const totalCommission = apiInvoice.order?.servicesBreakdown?.reduce(
+    (sum: number, service: ServiceBreakdown) => sum + (service.commissionAmount || 0),
+    0
+  ) || 0
+
+  // Calculate total provider amount from servicesBreakdown
+  const totalProviderAmount = apiInvoice.order?.servicesBreakdown?.reduce(
+    (sum: number, service: ServiceBreakdown) => sum + service.totalPrice,
+    0
+  ) || 0
+
+
+  return {
+    ...apiInvoice,
+    commission: totalCommission,
+    // Map the order data to match our Invoice interface
+    order: apiInvoice.order ? {
+      ...apiInvoice.order,
+      commissionAmount: totalCommission,
+      providerAmount: totalProviderAmount,
+      // Keep the original service data for backward compatibility
       service: {
-        id: 1,
-        title: 'Home Cleaning Service',
-        description: 'Professional home cleaning service',
-        price: 150.00
+        id: apiInvoice.order.serviceId,
+        title: apiInvoice.order.service?.title || apiInvoice.order.servicesBreakdown?.[0]?.serviceTitle || '',
+        description: apiInvoice.order.service?.description || apiInvoice.order.servicesBreakdown?.[0]?.serviceDescription || '',
+        price: apiInvoice.order.servicesBreakdown?.[0]?.unitPrice || 0
       }
-    }
-  },
-  {
-    id: 2,
-    orderId: 102,
-    totalAmount: 200.00,
-    discount: 0.00,
-    netAmount: 200.00,
-    commission: 20.00,
-    paymentStatus: 'paid',
-    paymentDate: new Date().toISOString(),
-    paymentMethod: 'Bank Transfer',
-    isVerified: true,
-    verifiedBy: 1,
-    verifiedAt: new Date().toISOString(),
-    payoutStatus: 'paid',
-    payoutDate: new Date().toISOString(),
-    createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-    updatedAt: new Date().toISOString(),
-    order: {
-      id: 102,
-      status: 'completed',
-      totalAmount: 200.00,
-      commissionAmount: 20.00,
-      user: {
-        id: 2,
-        name: 'Fatima Al-Zahra',
-        email: 'fatima@example.com',
-        phone: '+968 9234 5678'
-      },
-      provider: {
-        id: 2,
-        name: 'Muscat Maintenance',
-        email: 'contact@muscatmaintenance.com',
-        phone: '+968 2567 8901'
-      },
-      service: {
-        id: 2,
-        title: 'Plumbing Repair',
-        description: 'Emergency plumbing repair service',
-        price: 200.00
-      }
-    }
-  },
-  {
-    id: 3,
-    orderId: 103,
-    totalAmount: 300.00,
-    discount: 25.00,
-    netAmount: 275.00,
-    commission: 30.00,
-    paymentStatus: 'unpaid',
-    isVerified: false,
-    payoutStatus: 'pending',
-    createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-    updatedAt: new Date().toISOString(),
-    order: {
-      id: 103,
-      status: 'completed',
-      totalAmount: 300.00,
-      commissionAmount: 30.00,
-      user: {
-        id: 3,
-        name: 'Omar Al-Sayed',
-        email: 'omar@example.com',
-        phone: '+968 9345 6789'
-      },
-      provider: {
-        id: 3,
-        name: 'Salalah Tech Solutions',
-        email: 'info@salalahtech.com',
-        phone: '+968 2678 9012'
-      },
-      service: {
-        id: 3,
-        title: 'Electrical Installation',
-        description: 'Complete electrical system installation',
-        price: 300.00
-      }
-    }
-  },
-  {
-    id: 4,
-    orderId: 104,
-    totalAmount: 120.00,
-    discount: 0.00,
-    netAmount: 120.00,
-    commission: 12.00,
-    paymentStatus: 'failed',
-    isVerified: false,
-    payoutStatus: 'failed',
-    createdAt: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
-    updatedAt: new Date().toISOString(),
-    order: {
-      id: 104,
-      status: 'completed',
-      totalAmount: 120.00,
-      commissionAmount: 12.00,
-      user: {
-        id: 4,
-        name: 'Layla Al-Mansouri',
-        email: 'layla@example.com',
-        phone: '+968 9456 7890'
-      },
-      provider: {
-        id: 4,
-        name: 'Nizwa Home Services',
-        email: 'contact@nizwahome.com',
-        phone: '+968 2789 0123'
-      },
-      service: {
-        id: 4,
-        title: 'Carpet Cleaning',
-        description: 'Professional carpet cleaning service',
-        price: 120.00
-      }
-    }
-  },
-  {
-    id: 5,
-    orderId: 105,
-    totalAmount: 450.00,
-    discount: 50.00,
-    netAmount: 400.00,
-    commission: 45.00,
-    paymentStatus: 'paid',
-    paymentDate: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
-    paymentMethod: 'Credit Card',
-    isVerified: true,
-    verifiedBy: 1,
-    verifiedAt: new Date().toISOString(),
-    payoutStatus: 'paid',
-    payoutDate: new Date().toISOString(),
-    createdAt: new Date(Date.now() - 345600000).toISOString(),
-    updatedAt: new Date().toISOString(),
-    order: {
-      id: 105,
-      status: 'completed',
-      totalAmount: 450.00,
-      commissionAmount: 45.00,
-      user: {
-        id: 5,
-        name: 'Khalid Al-Rashid',
-        email: 'khalid@example.com',
-        phone: '+968 9567 8901'
-      },
-      provider: {
-        id: 5,
-        name: 'Sohar Construction',
-        email: 'info@soharconstruction.com',
-        phone: '+968 2890 1234'
-      },
-      service: {
-        id: 5,
-        title: 'Kitchen Renovation',
-        description: 'Complete kitchen renovation service',
-        price: 450.00
-      }
-    }
+    } : undefined
   }
-]
+}
 
 export class InvoiceService {
   // Get all invoices with filtering
   static async getInvoices(filters: InvoiceFilters = {}): Promise<{ data: Invoice[], total: number }> {
     try {
-      // TODO: Replace with actual API call when backend is ready
-      // const response = await api.get('/admin/invoices', { params: filters })
-      // return response.data
+      const params: any = {}
 
-      // Mock implementation
-      let filteredInvoices = [...mockInvoices]
-
-      // Apply filters
+      // Map paymentStatus to status for backend API
       if (filters.paymentStatus && filters.paymentStatus !== 'all') {
-        filteredInvoices = filteredInvoices.filter(invoice =>
-          invoice.paymentStatus === filters.paymentStatus
-        )
-      }
-
-      if (filters.search) {
-        const searchTerm = filters.search.toLowerCase()
-        filteredInvoices = filteredInvoices.filter(invoice =>
-          invoice.order?.user.name.toLowerCase().includes(searchTerm) ||
-          invoice.order?.provider.name.toLowerCase().includes(searchTerm) ||
-          invoice.order?.service.title.toLowerCase().includes(searchTerm)
-        )
+        params.status = filters.paymentStatus
       }
 
       if (filters.startDate) {
-        filteredInvoices = filteredInvoices.filter(invoice =>
-          new Date(invoice.createdAt) >= new Date(filters.startDate!)
-        )
+        params.startDate = filters.startDate
       }
 
       if (filters.endDate) {
-        filteredInvoices = filteredInvoices.filter(invoice =>
-          new Date(invoice.createdAt) <= new Date(filters.endDate!)
-        )
+        params.endDate = filters.endDate
       }
 
-      // Pagination
-      const page = filters.page || 1
-      const limit = filters.limit || 10
-      const startIndex = (page - 1) * limit
-      const endIndex = startIndex + limit
-      const paginatedInvoices = filteredInvoices.slice(startIndex, endIndex)
+      const response = await api.get('/admin/invoices', { params })
+
+      // Handle both response formats: { data: [], total: number } or direct array
+      let invoices: any[] = []
+      if (Array.isArray(response.data)) {
+        invoices = response.data
+      } else {
+        invoices = response.data.data || []
+      }
+
+      // Transform each invoice to match our Invoice interface
+      const transformedInvoices = invoices.map(transformInvoiceResponse)
 
       return {
-        data: paginatedInvoices,
-        total: filteredInvoices.length
+        data: transformedInvoices,
+        total: transformedInvoices.length
       }
     } catch (error) {
       console.error('Error fetching invoices:', error)
@@ -259,16 +80,8 @@ export class InvoiceService {
   // Get specific invoice by ID
   static async getInvoice(id: number): Promise<Invoice> {
     try {
-      // TODO: Replace with actual API call when backend is ready
-      // const response = await api.get(`/admin/invoices/${id}`)
-      // return response.data
-
-      // Mock implementation
-      const invoice = mockInvoices.find(inv => inv.id === id)
-      if (!invoice) {
-        throw new Error('Invoice not found')
-      }
-      return invoice
+      const response = await api.get(`/admin/invoices/${id}`)
+      return transformInvoiceResponse(response.data)
     } catch (error) {
       console.error('Error fetching invoice:', error)
       throw new Error('Failed to fetch invoice')
@@ -278,27 +91,8 @@ export class InvoiceService {
   // Create new invoice
   static async createInvoice(data: CreateInvoiceDto): Promise<Invoice> {
     try {
-      // TODO: Replace with actual API call when backend is ready
-      // const response = await api.post('/admin/invoices', data)
-      // return response.data
-
-      // Mock implementation
-      const newInvoice: Invoice = {
-        id: Math.max(...mockInvoices.map(inv => inv.id)) + 1,
-        orderId: data.orderId,
-        totalAmount: data.totalAmount,
-        discount: data.discount,
-        netAmount: data.totalAmount - data.discount,
-        commission: data.commission,
-        paymentStatus: 'unpaid',
-        isVerified: false,
-        payoutStatus: 'pending',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-
-      mockInvoices.push(newInvoice)
-      return newInvoice
+      const response = await api.post('/admin/invoices', data)
+      return response.data
     } catch (error) {
       console.error('Error creating invoice:', error)
       throw new Error('Failed to create invoice')
@@ -308,24 +102,8 @@ export class InvoiceService {
   // Update invoice
   static async updateInvoice(id: number, data: UpdateInvoiceDto): Promise<Invoice> {
     try {
-      // TODO: Replace with actual API call when backend is ready
-      // const response = await api.put(`/admin/invoices/${id}`, data)
-      // return response.data
-
-      // Mock implementation
-      const invoiceIndex = mockInvoices.findIndex(inv => inv.id === id)
-      if (invoiceIndex === -1) {
-        throw new Error('Invoice not found')
-      }
-
-      const updatedInvoice = {
-        ...mockInvoices[invoiceIndex],
-        ...data,
-        updatedAt: new Date().toISOString()
-      }
-
-      mockInvoices[invoiceIndex] = updatedInvoice
-      return updatedInvoice
+      const response = await api.put(`/admin/invoices/${id}`, data)
+      return response.data
     } catch (error) {
       console.error('Error updating invoice:', error)
       throw new Error('Failed to update invoice')
@@ -335,13 +113,16 @@ export class InvoiceService {
   // Update payment status
   static async updatePaymentStatus(id: number, paymentStatus: string, paymentMethod?: string): Promise<Invoice> {
     try {
-      const updateData: UpdateInvoiceDto = {
-        paymentStatus: paymentStatus as any,
-        paymentDate: paymentStatus === 'paid' ? new Date().toISOString() : undefined,
-        paymentMethod
+      const body: { paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded'; paymentMethod?: string } = {
+        paymentStatus: paymentStatus as 'pending' | 'paid' | 'failed' | 'refunded'
       }
 
-      return await this.updateInvoice(id, updateData)
+      if (paymentMethod) {
+        body.paymentMethod = paymentMethod
+      }
+
+      const response = await api.put(`/admin/invoices/${id}/payment-status`, body)
+      return response.data
     } catch (error) {
       console.error('Error updating payment status:', error)
       throw new Error('Failed to update payment status')
@@ -351,7 +132,14 @@ export class InvoiceService {
   // Mark invoice as paid
   static async markAsPaid(id: number, paymentMethod: string = 'Admin Payment'): Promise<Invoice> {
     try {
-      return await this.updatePaymentStatus(id, 'paid', paymentMethod)
+      const body: { paymentMethod?: string } = {}
+
+      if (paymentMethod) {
+        body.paymentMethod = paymentMethod
+      }
+
+      const response = await api.put(`/admin/invoices/${id}/mark-paid`, body)
+      return response.data
     } catch (error) {
       console.error('Error marking invoice as paid:', error)
       throw new Error('Failed to mark invoice as paid')
@@ -361,23 +149,71 @@ export class InvoiceService {
   // Get invoice statistics
   static async getInvoiceStats(): Promise<InvoiceStats> {
     try {
-      // TODO: Replace with actual API call when backend is ready
-      // const response = await api.get('/admin/invoices/stats')
-      // return response.data
+      // Since there's no dedicated stats endpoint, calculate stats from all invoices
+      const response = await api.get('/admin/invoices')
 
-      // Mock implementation
-      const total = mockInvoices.length
-      const unpaid = mockInvoices.filter(inv => inv.paymentStatus === 'unpaid').length
-      const paid = mockInvoices.filter(inv => inv.paymentStatus === 'paid').length
-      const failed = mockInvoices.filter(inv => inv.paymentStatus === 'failed').length
+      // Handle both response formats: { data: [] } or direct array
+      let invoices: any[] = []
+      if (Array.isArray(response.data)) {
+        invoices = response.data
+      } else {
+        invoices = response.data.data || []
+      }
 
-      const totalAmount = mockInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0)
-      const paidAmount = mockInvoices
-        .filter(inv => inv.paymentStatus === 'paid')
-        .reduce((sum, inv) => sum + inv.totalAmount, 0)
-      const pendingAmount = mockInvoices
-        .filter(inv => inv.paymentStatus === 'unpaid')
-        .reduce((sum, inv) => sum + inv.totalAmount, 0)
+      // Transform invoices to get proper commission calculations
+      const transformedInvoices = invoices.map(transformInvoiceResponse)
+
+      const total = transformedInvoices.length
+      const unpaid = transformedInvoices.filter((invoice: Invoice) => invoice.paymentStatus === 'unpaid').length
+      const paid = transformedInvoices.filter((invoice: Invoice) => invoice.paymentStatus === 'paid').length
+      const failed = transformedInvoices.filter((invoice: Invoice) => invoice.paymentStatus === 'failed').length
+
+      // Calculate total amounts (what customer pays)
+      const totalAmount = transformedInvoices.reduce((sum: number, invoice: Invoice) => sum + invoice.totalAmount, 0)
+      const paidAmount = transformedInvoices
+        .filter((invoice: Invoice) => invoice.paymentStatus === 'paid')
+        .reduce((sum: number, invoice: Invoice) => sum + invoice.totalAmount, 0)
+      const pendingAmount = transformedInvoices
+        .filter((invoice: Invoice) => invoice.paymentStatus === 'unpaid')
+        .reduce((sum: number, invoice: Invoice) => sum + invoice.totalAmount, 0)
+
+      // Calculate provider amounts and commissions from servicesBreakdown
+      let totalProviderAmount = 0
+      let totalCommission = 0
+      let totalProviderNetAmount = 0
+      let paidProviderAmount = 0
+      let paidCommission = 0
+      let pendingProviderAmount = 0
+      let pendingCommission = 0
+
+      transformedInvoices.forEach((invoice: Invoice) => {
+        // Calculate from servicesBreakdown for accurate amounts
+        const providerAmount = invoice.order?.servicesBreakdown?.reduce(
+          (sum: number, service: ServiceBreakdown) => sum + service.totalPrice,
+          0
+        ) || 0
+
+        const commission = invoice.order?.servicesBreakdown?.reduce(
+          (sum: number, service: ServiceBreakdown) => sum + service.commissionAmount,
+          0
+        ) || 0
+
+        const providerNetAmount = providerAmount - commission
+
+        // Add to totals
+        totalProviderAmount += providerAmount
+        totalCommission += commission
+        totalProviderNetAmount += providerNetAmount
+
+        // Add to status-specific totals
+        if (invoice.paymentStatus === 'paid') {
+          paidProviderAmount += providerAmount
+          paidCommission += commission
+        } else if (invoice.paymentStatus === 'unpaid') {
+          pendingProviderAmount += providerAmount
+          pendingCommission += commission
+        }
+      })
 
       return {
         total,
@@ -386,7 +222,14 @@ export class InvoiceService {
         failed,
         totalAmount,
         paidAmount,
-        pendingAmount
+        pendingAmount,
+        totalProviderAmount,
+        totalCommission,
+        totalProviderNetAmount,
+        paidProviderAmount,
+        paidCommission,
+        pendingProviderAmount,
+        pendingCommission
       }
     } catch (error) {
       console.error('Error fetching invoice stats:', error)
@@ -397,16 +240,7 @@ export class InvoiceService {
   // Delete invoice (for cancelled orders)
   static async deleteInvoice(id: number): Promise<void> {
     try {
-      // TODO: Replace with actual API call when backend is ready
-      // await api.delete(`/admin/invoices/${id}`)
-
-      // Mock implementation
-      const invoiceIndex = mockInvoices.findIndex(inv => inv.id === id)
-      if (invoiceIndex === -1) {
-        throw new Error('Invoice not found')
-      }
-
-      mockInvoices.splice(invoiceIndex, 1)
+      await api.delete(`/admin/invoices/${id}`)
     } catch (error) {
       console.error('Error deleting invoice:', error)
       throw new Error('Failed to delete invoice')

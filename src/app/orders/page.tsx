@@ -338,12 +338,14 @@ export default function OrdersManagementPage() {
     }
 
     const renderCurrency = (amount: number) => {
-        const currencyString = formatCurrency(amount, 'ar') // Use Arabic locale for RTL
-        const parts = currencyString.split(' ر.ع.')
+        const currentLocale = i18n.language
+        const currencyString = formatCurrency(amount, currentLocale)
+        const currencySymbol = currentLocale === 'ar' ? 'ر.ع.' : 'OMR'
+        const parts = currencyString.split(` ${currencySymbol}`)
         return (
             <span className="font-semibold">
                 {parts[0]}
-                <span className="text-sm text-muted-foreground ml-1 font-normal">ر.ع.</span>
+                <span className="text-sm text-muted-foreground ml-1 font-normal">{currencySymbol}</span>
             </span>
         )
     }

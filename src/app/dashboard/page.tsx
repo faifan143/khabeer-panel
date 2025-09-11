@@ -12,7 +12,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar"
 
 export default function DashboardPage() {
   const { data: dashboardStats, isLoading: dashboardLoading } = useDashboardStats()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const router = useRouter()
 
   const formatNumber = (num: number) => {
@@ -21,12 +21,14 @@ export default function DashboardPage() {
 
   // Function to render currency with smaller currency symbol
   const renderCurrency = (amount: number) => {
-    const currencyString = formatCurrency(amount, 'ar') // Use Arabic locale for RTL
-    const parts = currencyString.split(' ر.ع.')
+    const currentLocale = i18n.language
+    const currencyString = formatCurrency(amount, currentLocale)
+    const currencySymbol = currentLocale === 'ar' ? 'ر.ع.' : 'OMR'
+    const parts = currencyString.split(` ${currencySymbol}`)
     return (
       <span>
         {parts[0]}
-        <span className="text-sm text-muted-foreground ml-1">ر.ع.</span>
+        <span className="text-sm text-muted-foreground ml-1">{currencySymbol}</span>
       </span>
     )
   }

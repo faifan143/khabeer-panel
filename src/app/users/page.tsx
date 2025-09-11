@@ -20,7 +20,7 @@ import { useTranslation } from "react-i18next"
 import { useLanguage } from "@/lib/hooks/useLanguage"
 
 export default function UsersManagementPage() {
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
     const { isRTL } = useLanguage()
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -242,7 +242,7 @@ export default function UsersManagementPage() {
                                                     <TableCell>
                                                         <div className={`flex items-center ${isRTL ? 'space-x-reverse gap-1' : 'gap-1'}`}>
                                                             <DollarSign className="h-3 w-3 text-muted-foreground" />
-                                                            <span className="text-sm font-medium">{formatCurrency(user.totalSpent, 'ar')}</span>
+                                                            <span className="text-sm font-medium">{formatCurrency(user.totalSpent, i18n.language)}</span>
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
@@ -297,7 +297,7 @@ export default function UsersManagementPage() {
                                                                             </div>
                                                                             <div>
                                                                                 <div className="font-medium">{t('users.totalSpent')}</div>
-                                                                                <div className="text-muted-foreground">{formatCurrency(user.totalSpent, 'ar')}</div>
+                                                                                <div className="text-muted-foreground">{formatCurrency(user.totalSpent, i18n.language)}</div>
                                                                             </div>
                                                                             <div>
                                                                                 <div className="font-medium">{t('users.joined')}</div>

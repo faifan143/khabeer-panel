@@ -109,7 +109,7 @@ const getStatusIcon = (isActive: boolean) => {
 }
 
 export default function ProviderVerificationPage() {
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
     const { isRTL } = useLanguage()
 
     const getStatusText = (isActive: boolean) => {
@@ -444,12 +444,14 @@ export default function ProviderVerificationPage() {
     }
 
     const renderCurrency = (amount: number) => {
-        const currencyString = formatCurrency(amount, 'ar') // Use Arabic locale for RTL
-        const parts = currencyString.split(' ر.ع.')
+        const currentLocale = i18n.language
+        const currencyString = formatCurrency(amount, currentLocale)
+        const currencySymbol = currentLocale === 'ar' ? 'ر.ع.' : 'OMR'
+        const parts = currencyString.split(` ${currencySymbol}`)
         return (
             <span className="font-semibold">
                 {parts[0]}
-                <span className="text-sm text-muted-foreground ml-1 font-normal">ر.ع.</span>
+                <span className="text-sm text-muted-foreground ml-1 font-normal">{currencySymbol}</span>
             </span>
         )
     }
@@ -483,7 +485,7 @@ export default function ProviderVerificationPage() {
                         />
                         <StatCard
                             title={t('providers.totalIncome')}
-                            value={`${providerStats.totalIncome} ر.ع.`}
+                            value={`${providerStats.totalIncome} ${i18n.language === 'ar' ? 'ر.ع.' : 'OMR'}`}
                             icon={DollarSign}
                             color="bg-gradient-to-br from-emerald-500 to-teal-600"
                             description={t('providers.allTimeEarnings')}
@@ -1176,7 +1178,7 @@ export default function ProviderVerificationPage() {
                                                             <div className="font-semibold">{service.service?.title}</div>
                                                             <div className="text-sm text-muted-foreground">{service.service?.description}</div>
                                                             <div className="text-sm font-medium text-green-600 mt-1">
-                                                                {t('providers.price')} {formatCurrency(service.price, 'ar')}
+                                                                {t('providers.price')} {formatCurrency(service.price, i18n.language)}
                                                             </div>
                                                             {service.service?.category && (
                                                                 <div className="text-xs text-muted-foreground mt-1">
@@ -1198,11 +1200,11 @@ export default function ProviderVerificationPage() {
                                                             <div className="flex items-center justify-between">
                                                                 <div>
                                                                     <div className="font-semibold">{t('providers.orderNumber')} {order.id}</div>
-                                                                    <div className="text-sm text-muted-foreground">{t('providers.total')}: {formatCurrency(order.totalAmount, 'ar')}</div>
+                                                                    <div className="text-sm text-muted-foreground">{t('providers.total')}: {formatCurrency(order.totalAmount, i18n.language)}</div>
                                                                 </div>
                                                                 <div className="text-right">
-                                                                    <div className="font-semibold text-green-600">{formatCurrency(order.providerAmount, 'ar')}</div>
-                                                                    <div className="text-sm text-muted-foreground">{t('providers.commission')} {formatCurrency(order.commissionAmount, 'ar')}</div>
+                                                                    <div className="font-semibold text-green-600">{formatCurrency(order.providerAmount, i18n.language)}</div>
+                                                                    <div className="text-sm text-muted-foreground">{t('providers.commission')} {formatCurrency(order.commissionAmount, i18n.language)}</div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1425,19 +1427,19 @@ export default function ProviderVerificationPage() {
                                                                                     <div className="flex items-center justify-between">
                                                                                         <span className="text-sm font-medium text-gray-600">{t('providers.basePrice')}</span>
                                                                                         <span className="text-sm font-semibold text-gray-900">
-                                                                                            {formatCurrency(ps.price, 'ar')}
+                                                                                            {formatCurrency(ps.price, i18n.language)}
                                                                                         </span>
                                                                                     </div>
                                                                                     <div className="flex items-center justify-between">
                                                                                         <span className="text-sm font-medium text-gray-600">{t('providers.commission').replace('{percentage}', (ps.service?.commission || 0).toString())}</span>
                                                                                         <span className="text-sm font-semibold text-orange-600">
-                                                                                            {formatCurrency(commissionAmount, 'ar')}
+                                                                                            {formatCurrency(commissionAmount, i18n.language)}
                                                                                         </span>
                                                                                     </div>
                                                                                     <div className="flex items-center justify-between border-t pt-2">
                                                                                         <span className="text-sm font-medium text-gray-700">{t('providers.total')}</span>
                                                                                         <span className="text-sm font-bold text-green-700">
-                                                                                            {formatCurrency(totalWithCommission, 'ar')}
+                                                                                            {formatCurrency(totalWithCommission, i18n.language)}
                                                                                         </span>
                                                                                     </div>
                                                                                 </div>
@@ -1451,19 +1453,19 @@ export default function ProviderVerificationPage() {
                                                                                                 <div className="flex items-center justify-between">
                                                                                                     <span className="text-xs text-yellow-700">{t('providers.original')}</span>
                                                                                                     <span className="text-xs line-through text-yellow-600">
-                                                                                                        {formatCurrency(offer.originalPrice, 'ar')}
+                                                                                                        {formatCurrency(offer.originalPrice, i18n.language)}
                                                                                                     </span>
                                                                                                 </div>
                                                                                                 <div className="flex items-center justify-between">
                                                                                                     <span className="text-xs text-yellow-700">{t('providers.offerPrice')}</span>
                                                                                                     <span className="text-xs font-bold text-green-600">
-                                                                                                        {formatCurrency(offer.offerPrice, 'ar')}
+                                                                                                        {formatCurrency(offer.offerPrice, i18n.language)}
                                                                                                     </span>
                                                                                                 </div>
                                                                                                 <div className="flex items-center justify-between">
                                                                                                     <span className="text-xs text-yellow-700">{t('providers.youSave')}</span>
                                                                                                     <span className="text-xs font-bold text-green-600">
-                                                                                                        {formatCurrency(offer.originalPrice - offer.offerPrice, 'ar')}
+                                                                                                        {formatCurrency(offer.originalPrice - offer.offerPrice, i18n.language)}
                                                                                                     </span>
                                                                                                 </div>
                                                                                             </div>

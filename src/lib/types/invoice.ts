@@ -15,17 +15,31 @@ export interface Invoice {
   payoutDate?: string
   createdAt: string
   updatedAt: string
-  
+
   // Related data
   order?: {
     id: number
+    userId: number
+    providerId: number
+    serviceId: number
     status: string
-    totalAmount: number
+    orderDate: string
+    bookingId: string
     commissionAmount: number
+    location?: string
+    locationDetails?: string
+    providerAmount: number
+    providerNetAmount: number
+    providerLocation?: string
+    quantity: number
+    scheduledDate: string
+    totalAmount: number
+    isMultipleServices: boolean
+    servicesBreakdown: ServiceBreakdown[]
     user: {
       id: number
       name: string
-      email: string
+      email?: string
       phone: string
     }
     provider: {
@@ -41,6 +55,18 @@ export interface Invoice {
       price: number
     }
   }
+}
+
+export interface ServiceBreakdown {
+  quantity: number
+  serviceId: number
+  unitPrice: number
+  commission: number
+  totalPrice: number
+  serviceImage: string
+  serviceTitle: string
+  commissionAmount: number
+  serviceDescription: string
 }
 
 export interface CreateInvoiceDto {
@@ -76,4 +102,11 @@ export interface InvoiceStats {
   totalAmount: number
   paidAmount: number
   pendingAmount: number
+  totalProviderAmount: number
+  totalCommission: number
+  totalProviderNetAmount: number
+  paidProviderAmount: number
+  paidCommission: number
+  pendingProviderAmount: number
+  pendingCommission: number
 }

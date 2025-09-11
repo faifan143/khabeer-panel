@@ -121,7 +121,7 @@ export function KhabeerServiceForm({
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="commission" className="text-sm font-medium text-right">
-                                العمولة (ر.ع.) <span className="text-gray-400">(اختياري)</span>
+                                {t('categories.commissionOMR')} <span className="text-gray-400">(اختياري)</span>
                             </Label>
                             <Input
                                 id="commission"
