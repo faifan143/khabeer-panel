@@ -661,7 +661,7 @@ export default function OrdersManagementPage() {
                                                     <TableCell className={isRTL ? 'text-right' : 'text-left'}>
                                                         <div className="space-y-1">
                                                             <div className="text-sm font-medium text-gray-900">
-                                                                {order.service?.state || t('orders.notApplicable')}
+                                                                {order.service?.category?.state || t('orders.notApplicable')}
                                                             </div>
                                                             {order.locationDetails && (
                                                                 <div className="text-xs text-muted-foreground truncate max-w-32">
