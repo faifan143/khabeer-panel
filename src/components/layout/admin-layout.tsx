@@ -7,17 +7,7 @@ import { useLogout } from "@/lib/api/hooks/useAuth"
 import { ChevronDown, ChevronUp, LogOut } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useTranslation } from "react-i18next"
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+import { RTLConfirmationDialog } from "@/components/ui/rtl-confirmation-dialog"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -207,8 +197,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                     </div>
 
                                     <DropdownMenuSeparator />
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
+                                    <RTLConfirmationDialog
+                                        trigger={
                                             <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="p-3 cursor-pointer hover:bg-accent">
                                                 <div className={`flex items-center ${i18n.language === 'ar' ? ' ' : 'space-x-3'}`}>
                                                     <LogOut className="h-4 w-4" />
@@ -218,25 +208,15 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                                     </div>
                                                 </div>
                                             </DropdownMenuItem>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>{t('user.confirmLogout')}</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    {t('user.logoutMessage')}
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-                                                <AlertDialogAction
-                                                    onClick={handleLogout}
-                                                    className="bg-red-500 hover:bg-red-600 text-white"
-                                                >
-                                                    {t('common.logout')}
-                                                </AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
+                                        }
+                                        title={t('user.confirmLogout')}
+                                        description={t('user.logoutMessage')}
+                                        confirmText={t('common.logout')}
+                                        cancelText={t('common.cancel')}
+                                        onConfirm={handleLogout}
+                                        confirmVariant="destructive"
+                                        confirmClassName="bg-red-500 hover:bg-red-600 text-white"
+                                    />
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>

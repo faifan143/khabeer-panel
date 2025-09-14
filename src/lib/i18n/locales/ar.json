@@ -42,7 +42,7 @@
     "ordersManagement": "إدارة الطلبات",
     "usersManagement": "إدارة المستخدمين",
     "categoriesServices": "الفئات والخدمات",
-    "providerVerification": "التحقق من المزودين",
+    "providerVerification": "إدارة للمزودين",
     "incomeFinance": "الدخل والمالية",
     "invoiceManagement": "إدارة الفواتير",
     "ratingsReviews": "التقييمات والمراجعات",
@@ -495,12 +495,12 @@
     }
   },
   "providers": {
-    "title": "التحقق من المزودين",
+    "title": "إدارة للمزودين",
     "subtitle": "مراجعة والموافقة على طلبات المزودين",
     "pending": "في الانتظار",
     "approved": "موافق عليه",
     "rejected": "مرفوض",
-    "verifiedProviders": "المزودون الموثقون",
+    "verifiedProviders": " الموثقون",
     "documentVerified": "وثائق موثقة",
     "activeProviders": "المزودون النشطون",
     "currentlyActive": "نشط حالياً",
@@ -510,7 +510,7 @@
     "allTimeEarnings": "الأرباح لجميع الأوقات",
     "pendingRequests": "الطلبات المعلقة",
     "awaitingApproval": "في انتظار الموافقة",
-    "providerJoinRequests": "طلبات انضمام المزودين",
+    "providerJoinRequests": "طلبات انضمام ",
     "filterByStatus": "تصفية حسب الحالة",
     "allStatus": "جميع الحالات",
     "active": "نشط",
@@ -586,6 +586,7 @@
     "yes": "نعم",
     "no": "لا",
     "noServicesAvailable": "لا توجد خدمات متاحة",
+    "noProvidersAvailable": "لا توجد مزودين متاحين",
     "noServicesDescription": "لم يقم هذا المزود بإضافة أي خدمات بعد.",
     "loadingJoinRequests": "جاري تحميل طلبات الانضمام...",
     "pleaseWaitFetching": "يرجى الانتظار بينما نقوم بجلب أحدث البيانات",
@@ -753,7 +754,7 @@
     "allTimeReviews": "جميع المراجعات",
     "averageRating": "متوسط التقييم",
     "fiveStarRatings": "تقييمات 5 نجوم",
-    "percentageOfTotal": "{percentage}% من الإجمالي",
+    "percentageOfTotal": " من الإجمالي",
     "verifiedReviews": "المراجعات الموثقة",
     "confirmedPurchases": "المشتريات المؤكدة",
     "reportedReviews": "المراجعات المبلغ عنها",
@@ -1042,6 +1043,24 @@
     "documentType": "مستند"
   },
   "khabeer": {
-    "name": "الخبير"
+    "name": "خبير"
+  },
+  "login": {
+    "title": "مرحباً بعودتك",
+    "subtitle": "سجل الدخول إلى حساب خبير الإداري",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "أدخل بريدك الإلكتروني",
+    "password": "كلمة المرور",
+    "passwordPlaceholder": "أدخل كلمة المرور",
+    "signIn": "تسجيل الدخول",
+    "signingIn": "جاري تسجيل الدخول...",
+    "loading": "جاري التحميل...",
+    "redirectingToDashboard": "جاري التوجيه إلى لوحة التحكم...",
+    "validation": {
+      "emailRequired": "البريد الإلكتروني مطلوب",
+      "emailInvalid": "يرجى إدخال بريد إلكتروني صحيح",
+      "passwordRequired": "كلمة المرور مطلوبة",
+      "passwordMinLength": "يجب أن تكون كلمة المرور 6 أحرف على الأقل"
+    }
   }
 }

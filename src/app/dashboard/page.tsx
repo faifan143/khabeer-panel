@@ -11,6 +11,7 @@ import { formatCurrency } from "@/lib/utils"
 import { useTranslation } from "react-i18next"
 import { useState } from "react"
 import { Avatar, AvatarImage, AvatarFallback } from "@radix-ui/react-avatar"
+import { getLocalizedStateName } from "@/lib/constants/oman-states"
 
 export default function DashboardPage() {
   const { data: dashboardStats, isLoading: dashboardLoading } = useDashboardStats()
@@ -29,9 +30,9 @@ export default function DashboardPage() {
     const currencySymbol = currentLocale === 'ar' ? 'ر.ع.' : 'OMR'
     const parts = currencyString.split(` ${currencySymbol}`)
     return (
-      <span>
+      <span className="flex items-center gap-1 rtl:flex-row-reverse">
         {parts[0]}
-        <span className="text-sm text-muted-foreground ml-1">{currencySymbol}</span>
+        <span className="text-sm text-muted-foreground">{currencySymbol}</span>
       </span>
     )
   }
@@ -150,116 +151,74 @@ export default function DashboardPage() {
                     {t('dashboard.showAll')}
                   </button>
                 </DialogTrigger>
-                <DialogContent className="max-w-6xl max-h-[85vh]">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-3 text-2xl">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <MapPin className="h-6 w-6 text-primary" />
-                      </div>
+                <DialogContent className="max-w-5xl max-h-[85vh] w-[90vw] rtl:text-right ltr:text-left rtl:dir-rtl ltr:dir-ltr">
+                  <DialogHeader className="pb-4">
+                    <DialogTitle className="flex items-center gap-3 text-xl font-semibold rtl:gap-3 ">
+                      <MapPin className="h-5 w-5 text-primary" />
                       {t('dashboard.servicesByState')}
                     </DialogTitle>
                   </DialogHeader>
-                  <ScrollArea className="h-[70vh] pr-4">
-                    <div className="space-y-8">
+                  <ScrollArea className="h-[70vh]">
+                    <div className="space-y-6">
                       {stateBreakdown.services.map((stateGroup, index) => (
-                        <div key={index} className="space-y-4">
-                          {/* State Header */}
-                          <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-4 border border-primary/20">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-primary rounded-lg">
-                                  <MapPin className="h-5 w-5 text-white" />
-                                </div>
-                                <div>
-                                  <h3 className="text-xl font-bold text-primary">{stateGroup.state}</h3>
-                                  <p className="text-sm text-muted-foreground">
-                                    {stateGroup.services.length} {t('dashboard.services')} available
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-2xl font-bold text-primary">{stateGroup.services.length}</div>
-                                <div className="text-xs text-muted-foreground">Services</div>
-                              </div>
+                        <div key={index} className="space-y-3">
+                          {/* Minimal State Header */}
+                          <div className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-lg border rtl:flex-row-reverse">
+                            <div className="flex items-center gap-3 rtl:gap-3 rtl:flex-row-reverse">
+                              <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                              <h3 className="font-semibold text-primary">{getLocalizedStateName(stateGroup.state, i18n.language as 'en' | 'ar')}</h3>
+                              <span className="text-sm text-muted-foreground">
+                                {stateGroup.services.length} {t('dashboard.services')}
+                              </span>
+                            </div>
+                            <div className="text-sm font-medium text-primary">
+                              {stateGroup.services.length}
                             </div>
                           </div>
 
-                          {/* Services Grid */}
-                          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                          {/* Simple Services List */}
+                          <div className="space-y-1">
                             {stateGroup.services.map((service) => (
-                              <Card key={service.id} className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md hover:scale-[1.02]">
-                                <CardContent className="p-6">
-                                  <div className="space-y-4">
-                                    {/* Service Icon & Name */}
-                                    <div className="flex items-start gap-3">
-                                      <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                        <Sparkles className="h-6 w-6 text-red-500" />
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <h4 className="font-semibold text-base break-words group-hover:text-primary transition-colors">
-                                          {service.name}
-                                        </h4>
-                                        {service.description && (
-                                          <p className="text-sm text-muted-foreground mt-1 break-words line-clamp-2">
-                                            {service.description}
-                                          </p>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    {/* Category Badge */}
-                                    {service.category && (
-                                      <div className="flex justify-start">
-                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                          {service.category.name}
+                              <div key={service.id} className="flex items-center gap-3 py-2 px-1 hover:bg-gray-50 transition-colors rtl:gap-3 rtl:flex-row-reverse">
+                                <div className="w-6 h-6 bg-red-100 rounded flex items-center justify-center flex-shrink-0">
+                                  <Sparkles className="h-3 w-3 text-red-500" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-medium text-sm truncate text-right rtl:text-right ltr:text-left">{service.name}</h4>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground rtl:gap-2 ltr:gap-2 rtl:flex-row-reverse">
+                                    <span className="flex items-center gap-1 rtl:flex-row-reverse">
+                                      {service.orderCount}
+                                      <span className="text-sm text-muted-foreground">{t('dashboard.orders')}</span>
+                                    </span>
+                                    {service.price && (
+                                      <>
+                                        <span>•</span>
+                                        <span className="text-green-600 font-medium">
+                                          {renderCurrency(service.price)}
                                         </span>
-                                      </div>
+                                      </>
                                     )}
-
-                                    {/* Stats & Price */}
-                                    <div className="space-y-3">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                          <Package className="h-4 w-4 text-muted-foreground" />
-                                          <span className="text-sm text-muted-foreground">
-                                            {service.orderCount} {t('dashboard.orders')}
-                                          </span>
-                                        </div>
-                                        {service.price && (
-                                          <div className="text-right">
-                                            <div className="text-lg font-bold text-green-600">
-                                              {renderCurrency(service.price)}
-                                            </div>
-                                            <div className="text-xs text-muted-foreground">Price</div>
-                                          </div>
-                                        )}
-                                      </div>
-
-                                      {!service.price && (
-                                        <div className="text-center py-2">
-                                          <span className="text-sm text-muted-foreground italic">
-                                            Price on request
-                                          </span>
-                                        </div>
-                                      )}
-                                    </div>
+                                    {service.category && (
+                                      <>
+                                        <span>•</span>
+                                        <span className="text-blue-600">{service.category.name}</span>
+                                      </>
+                                    )}
                                   </div>
-                                </CardContent>
-                              </Card>
+                                </div>
+                              </div>
                             ))}
                           </div>
                         </div>
                       ))}
                       {stateBreakdown.services.length === 0 && (
-                        <div className="text-center py-16">
-                          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Sparkles className="h-12 w-12 text-gray-400" />
-                          </div>
-                          <h3 className="text-xl font-semibold text-muted-foreground mb-2">
+                        <div className="text-center py-12">
+                          <Sparkles className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                          <h3 className="text-lg font-medium text-muted-foreground mb-1">
                             {t('dashboard.noServicesFound')}
                           </h3>
-                          <p className="text-muted-foreground">
-                            No services are currently available in any state.
+                          <p className="text-sm text-muted-foreground">
+                            {t('dashboard.noServicesAvailable')}
                           </p>
                         </div>
                       )}
@@ -313,126 +272,87 @@ export default function DashboardPage() {
                     {t('dashboard.showAll')}
                   </button>
                 </DialogTrigger>
-                <DialogContent className="max-w-6xl max-h-[85vh]">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-3 text-2xl">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <MapPin className="h-6 w-6 text-primary" />
-                      </div>
+                <DialogContent className="max-w-5xl max-h-[85vh] w-[90vw] rtl:text-right ltr:text-left rtl:dir-rtl ltr:dir-ltr">
+                  <DialogHeader className="pb-4">
+                    <DialogTitle className="flex items-center gap-3 text-xl font-semibold rtl:gap-3 ">
+                      <MapPin className="h-5 w-5 text-primary" />
                       {t('dashboard.providersByState')}
                     </DialogTitle>
                   </DialogHeader>
-                  <ScrollArea className="h-[70vh] pr-4">
-                    <div className="space-y-8">
+                  <ScrollArea className="h-[70vh]">
+                    <div className="space-y-6">
                       {stateBreakdown.providers.map((stateGroup, index) => (
-                        <div key={index} className="space-y-4">
-                          {/* State Header */}
-                          <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-xl p-4 border border-primary/20">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-primary rounded-lg">
-                                  <MapPin className="h-5 w-5 text-white" />
-                                </div>
-                                <div>
-                                  <h3 className="text-xl font-bold text-primary">{stateGroup.state}</h3>
-                                  <p className="text-sm text-muted-foreground">
-                                    {stateGroup.providers.length} {t('dashboard.providers')} available
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-2xl font-bold text-primary">{stateGroup.providers.length}</div>
-                                <div className="text-xs text-muted-foreground">Providers</div>
-                              </div>
+                        <div key={index} className="space-y-3">
+                          {/* Minimal State Header */}
+                          <div className="flex items-center justify-between py-3 px-4 bg-gray-50 rounded-lg border rtl:flex-row-reverse">
+                            <div className="flex items-center gap-3 rtl:gap-3 rtl:flex-row-reverse">
+                              <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                              <h3 className="font-semibold text-primary">{getLocalizedStateName(stateGroup.state, i18n.language as 'en' | 'ar')}</h3>
+                              <span className="text-sm text-muted-foreground">
+                                {stateGroup.providers.length}
+                                {t('dashboard.providers')}
+                              </span>
+                            </div>
+                            <div className="text-sm font-medium text-primary">
+                              {stateGroup.providers.length}
                             </div>
                           </div>
 
-                          {/* Providers Grid */}
-                          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                          {/* Simple Providers List */}
+                          <div className="space-y-1">
                             {stateGroup.providers.map((provider) => (
-                              <Card key={provider.id} className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md hover:scale-[1.02]">
-                                <CardContent className="p-6">
-                                  <div className="space-y-4">
-                                    {/* Provider Avatar & Name */}
-                                    <div className="flex items-start gap-3">
-                                      <Avatar className="h-16 w-16 rounded-xl flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                                        <AvatarImage
-                                          src={provider.image ? process.env.NEXT_PUBLIC_API_URL_IMAGE + provider.image : undefined}
-                                          alt={provider.name}
-                                          className="rounded-xl object-cover"
-                                        />
-                                        <AvatarFallback className="bg-gradient-to-br from-primary/10 to-primary/20 text-primary rounded-xl">
-                                          <Star className="h-8 w-8" />
-                                        </AvatarFallback>
-                                      </Avatar>
-                                      <div className="flex-1 min-w-0">
-                                        <h4 className="font-semibold text-base break-words group-hover:text-primary transition-colors">
-                                          {provider.name}
-                                        </h4>
-                                        <p className="text-sm text-muted-foreground mt-1 break-words line-clamp-2">
-                                          {provider.description}
-                                        </p>
-                                      </div>
-                                    </div>
-
-                                    {/* Status Badges */}
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      {provider.isVerified && (
-                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                                          {t('dashboard.verified')}
-                                        </span>
-                                      )}
-                                      {provider.isActive && (
-                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                          <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-                                          {t('dashboard.active')}
-                                        </span>
-                                      )}
-                                    </div>
-
-                                    {/* Stats & Rating */}
-                                    <div className="space-y-3">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                          <Package className="h-4 w-4 text-muted-foreground" />
-                                          <span className="text-sm text-muted-foreground">
-                                            {provider.orderCount} {t('dashboard.orders')}
-                                          </span>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                          <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                                          <span className="text-sm font-medium">{provider.rating.toFixed(1)}</span>
-                                        </div>
-                                      </div>
-
-                                      {/* Phone Number */}
-                                      {provider.phone && (
-                                        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                          <span className="text-sm text-muted-foreground break-all">
-                                            {provider.phone}
-                                          </span>
-                                        </div>
-                                      )}
-                                    </div>
+                              <div key={provider.id} className="flex items-center gap-3 py-2 px-1 hover:bg-gray-50 transition-colors rtl:gap-3 rtl:flex-row-reverse">
+                                <Avatar className="h-8 w-8 rounded flex-shrink-0">
+                                  <AvatarImage
+                                    src={provider.image ? process.env.NEXT_PUBLIC_API_URL_IMAGE + provider.image : undefined}
+                                    alt={provider.name}
+                                    className="rounded object-cover"
+                                  />
+                                  <AvatarFallback className="bg-primary/10 text-primary rounded">
+                                    <Star className="h-4 w-4" />
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1 rtl:gap-2 rtl:flex-row-reverse">
+                                    <h4 className="font-medium text-sm truncate text-right rtl:text-right ltr:text-left">{provider.name}</h4>
+                                    {provider.isVerified && (
+                                      <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                                    )}
+                                    {provider.isActive && (
+                                      <span className="text-xs text-blue-600 flex-shrink-0">{t('dashboard.active')}</span>
+                                    )}
                                   </div>
-                                </CardContent>
-                              </Card>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground rtl:gap-2 ltr:gap-2 rtl:flex-row-reverse">
+                                    <span className="flex items-center gap-1 rtl:flex-row-reverse">
+                                      {provider.orderCount}
+                                      <span className="text-sm text-muted-foreground">{t('dashboard.orders')}</span>
+                                    </span>
+                                    <span>•</span>
+                                    <div className="flex items-center gap-1">
+                                      <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                                      <span>{provider.rating.toFixed(1)}</span>
+                                    </div>
+                                    {provider.phone && (
+                                      <>
+                                        <span>•</span>
+                                        <span className="truncate max-w-20">{provider.phone}</span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
                             ))}
                           </div>
                         </div>
                       ))}
                       {stateBreakdown.providers.length === 0 && (
-                        <div className="text-center py-16">
-                          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Star className="h-12 w-12 text-gray-400" />
-                          </div>
-                          <h3 className="text-xl font-semibold text-muted-foreground mb-2">
+                        <div className="text-center py-12">
+                          <Star className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                          <h3 className="text-lg font-medium text-muted-foreground mb-1">
                             {t('dashboard.noProvidersFound')}
                           </h3>
-                          <p className="text-muted-foreground">
-                            No providers are currently available in any state.
+                          <p className="text-sm text-muted-foreground">
+                            {t('dashboard.noProvidersAvailable')}
                           </p>
                         </div>
                       )}

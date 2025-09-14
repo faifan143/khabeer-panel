@@ -115,14 +115,15 @@ export function Sidebar({ isCollapsed, onCollapse, className }: SidebarProps) {
                 className={cn(
                     "hidden md:flex md:flex-col md:fixed md:inset-y-0 md:z-50",
                     isCollapsed ? "md:w-16" : "md:w-64",
+                    isRTL ? "md:right-0" : "md:left-0",
                     className
                 )}
             >
-                <div className="flex flex-col flex-grow bg-gradient-to-b from-slate-800 to-slate-900 border-r border-slate-700">
+                <div className={`flex flex-col flex-grow bg-gradient-to-b from-slate-800 to-slate-900 ${isRTL ? 'border-l' : 'border-r'} border-slate-700`}>
                     {/* Header */}
                     <div className="flex items-center justify-between h-16 px-4 border-b border-slate-700">
                         {!isCollapsed && (
-                            <div className="flex items-center space-x-2">
+                            <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : 'flex-row'} space-x-2`}>
                                 <button
                                     onClick={() => onCollapse?.(!isCollapsed)}
                                     className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"
@@ -164,7 +165,8 @@ export function Sidebar({ isCollapsed, onCollapse, className }: SidebarProps) {
                                         key={item.href}
                                         href={item.href}
                                         className={cn(
-                                            "group flex rtl:flex-row-reverse items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                                            "group flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                                            isRTL ? "flex-row-reverse" : "flex-row",
                                             isActive
                                                 ? "bg-red-500 text-white shadow-lg"
                                                 : "text-slate-300 hover:bg-slate-700 hover:text-white",
@@ -174,7 +176,7 @@ export function Sidebar({ isCollapsed, onCollapse, className }: SidebarProps) {
                                         <item.icon className={cn(
                                             "h-5 w-5 transition-colors",
                                             isActive ? "text-white" : "text-slate-400 group-hover:text-white",
-                                            isCollapsed ? "mx-0" : "mx-3"
+                                            isCollapsed ? "mx-0" : (isRTL ? "ml-3" : "mr-3")
                                         )} />
                                         {!isCollapsed && (
                                             <span className="truncate">{item.title}</span>
@@ -191,11 +193,11 @@ export function Sidebar({ isCollapsed, onCollapse, className }: SidebarProps) {
                     {/* Footer */}
                     {!isCollapsed && (
                         <div className="p-4 border-t border-slate-700">
-                            <div className="flex items-center space-x-3">
+                            <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : 'flex-row'} space-x-3`}>
                                 <div className="w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center">
                                     <span className="text-white text-sm font-medium">A</span>
                                 </div>
-                                <div className="flex-1 min-w-0">
+                                <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
                                     <p className="text-sm font-medium text-white truncate">{t('user.adminUser')}</p>
                                     <p className="text-xs text-slate-400 truncate">admin@khabeer.com</p>
                                 </div>

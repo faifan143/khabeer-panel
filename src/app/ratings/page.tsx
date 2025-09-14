@@ -131,7 +131,7 @@ export default function RatingsPage() {
             <AdminLayout>
                 <div className="space-y-6">
                     {/* Statistics Cards */}
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                    <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3">
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">{t('ratings.totalRatings')}</CardTitle>
@@ -166,41 +166,16 @@ export default function RatingsPage() {
                             <CardContent>
                                 <div className="text-2xl font-bold">{stats.fiveStar}</div>
                                 <p className="text-xs text-muted-foreground">
-                                    {t('ratings.percentageOfTotal', { percentage: stats.percentage })}
+                                    {stats.percentage}% {t('ratings.percentageOfTotal')}
                                 </p>
                             </CardContent>
                         </Card>
 
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">{t('ratings.verifiedReviews')}</CardTitle>
-                                <ThumbsUp className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{stats.verified}</div>
-                                <p className="text-xs text-muted-foreground">
-                                    {t('ratings.confirmedPurchases')}
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">{t('ratings.reportedReviews')}</CardTitle>
-                                <ThumbsDown className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{stats.reported}</div>
-                                <p className="text-xs text-muted-foreground">
-                                    {t('ratings.needsAttention')}
-                                </p>
-                            </CardContent>
-                        </Card>
                     </div>
 
                     {/* Ratings Table */}
                     <Card>
-                        <CardHeader className="flex items-center justify-between">
+                        <CardHeader className="flex flex-col lg:flex-row items-center justify-between">
                             <div>
                                 <CardTitle>{t('ratings.allRatings', { count: filteredRatings.length })}</CardTitle>
                                 <p className="text-sm text-muted-foreground">
@@ -208,7 +183,7 @@ export default function RatingsPage() {
                                 </p>
                             </div>
 
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-4 mt-1 lg:mt-0">
                                 <div className="relative">
                                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                                     <Input

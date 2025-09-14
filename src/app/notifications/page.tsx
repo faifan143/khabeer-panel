@@ -298,7 +298,7 @@ export default function NotificationsPage() {
 
                     {/* Notifications Table */}
                     <Card>
-                        <CardHeader className="flex items-center justify-between">
+                        <CardHeader className="flex flex-col lg:flex-row items-center justify-between">
                             <div>
                                 <CardTitle>{t('notifications.notificationHistory')} ({filteredNotifications.length})</CardTitle>
                                 <p className="text-sm text-muted-foreground">

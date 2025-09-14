@@ -2,7 +2,7 @@
 
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { AdminLayout } from "@/components/layout/admin-layout"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { RTLConfirmationDialog } from "@/components/ui/rtl-confirmation-dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -65,7 +65,8 @@ const StatCard = ({
     icon: Icon,
     color,
     trend,
-    description
+    description,
+    isRTL
 }: {
     title: string
     value: string | number
@@ -73,17 +74,18 @@ const StatCard = ({
     color: string
     trend?: { value: number; isPositive: boolean }
     description?: string
+    isRTL?: boolean
 }) => (
     <Card className="group hover:shadow-md transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50/50">
         <CardContent className="px-4">
-            <div className="flex items-center justify-between">
-                <div className="flex-1">
+            <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} justify-between`}>
+                <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                     <p className="text-xs font-medium text-muted-foreground">{title}</p>
-                    <div className="flex items-baseline space-x-2">
+                    <div className={`flex items-baseline ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
                         <p className="text-base font-bold text-gray-900">{value}</p>
                         {trend && (
                             <div className={`flex items-center text-xs font-medium ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                                {trend.isPositive ? <Zap className="h-3 w-3 mr-1" /> : <Zap className="h-3 w-3 mr-1 rotate-180" />}
+                                {trend.isPositive ? <Zap className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} /> : <Zap className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'} rotate-180`} />}
                                 {Math.abs(trend.value)}%
                             </div>
                         )}
@@ -461,13 +463,14 @@ export default function ProviderVerificationPage() {
             <AdminLayout>
                 <div className="space-y-8">
                     {/* Enhanced Stats Display */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
                         <StatCard
                             title={t('providers.verifiedProviders')}
                             value={providerStats.total}
                             icon={ShieldCheck}
                             color="bg-gradient-to-br from-green-500 to-emerald-600"
                             description={t('providers.documentVerified')}
+                            isRTL={isRTL}
                         />
                         <StatCard
                             title={t('providers.activeProviders')}
@@ -475,6 +478,7 @@ export default function ProviderVerificationPage() {
                             icon={UserCheck}
                             color="bg-gradient-to-br from-blue-500 to-indigo-600"
                             description={t('providers.currentlyActive')}
+                            isRTL={isRTL}
                         />
                         <StatCard
                             title={t('providers.inactiveProviders')}
@@ -482,6 +486,7 @@ export default function ProviderVerificationPage() {
                             icon={UserX}
                             color="bg-gradient-to-br from-red-500 to-pink-600"
                             description={t('providers.deactivated')}
+                            isRTL={isRTL}
                         />
                         <StatCard
                             title={t('providers.totalIncome')}
@@ -489,6 +494,7 @@ export default function ProviderVerificationPage() {
                             icon={DollarSign}
                             color="bg-gradient-to-br from-emerald-500 to-teal-600"
                             description={t('providers.allTimeEarnings')}
+                            isRTL={isRTL}
                         />
                         <StatCard
                             title={t('providers.pendingRequests')}
@@ -496,12 +502,13 @@ export default function ProviderVerificationPage() {
                             icon={Clock}
                             color="bg-gradient-to-br from-yellow-500 to-orange-600"
                             description={t('providers.awaitingApproval')}
+                            isRTL={isRTL}
                         />
                     </div>
 
                     {/* Main Tabs */}
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                        <div className="flex md:flex-row flex-col md:items-center md:justify-between">
+                        <div className="flex lg:flex-row flex-col lg:items-center lg:justify-between">
                             <TabsList className="grid w-auto grid-cols-2 bg-gray-100 p-1">
                                 <TabsTrigger
                                     value="verified"
@@ -635,8 +642,8 @@ export default function ProviderVerificationPage() {
                                                             <FileText className="h-4 w-4" />
                                                         </Button>
                                                         {!provider.isActive ? (
-                                                            <AlertDialog>
-                                                                <AlertDialogTrigger asChild>
+                                                            <RTLConfirmationDialog
+                                                                trigger={
                                                                     <Button
                                                                         variant="ghost"
                                                                         size="sm"
@@ -644,28 +651,18 @@ export default function ProviderVerificationPage() {
                                                                     >
                                                                         <UserCheck className="h-4 w-4" />
                                                                     </Button>
-                                                                </AlertDialogTrigger>
-                                                                <AlertDialogContent>
-                                                                    <AlertDialogHeader>
-                                                                        <AlertDialogTitle>{t('providers.activateProvider')}</AlertDialogTitle>
-                                                                        <AlertDialogDescription>
-                                                                            {t('providers.activateProviderConfirm').replace('{name}', provider.name)}
-                                                                        </AlertDialogDescription>
-                                                                    </AlertDialogHeader>
-                                                                    <AlertDialogFooter>
-                                                                        <AlertDialogCancel>{t('providers.cancel')}</AlertDialogCancel>
-                                                                        <AlertDialogAction
-                                                                            onClick={() => handleActivateProvider(provider.id)}
-                                                                            className="bg-green-600 hover:bg-green-700"
-                                                                        >
-                                                                            {t('providers.activate')}
-                                                                        </AlertDialogAction>
-                                                                    </AlertDialogFooter>
-                                                                </AlertDialogContent>
-                                                            </AlertDialog>
+                                                                }
+                                                                title={t('providers.activateProvider')}
+                                                                description={t('providers.activateProviderConfirm').replace('{name}', provider.name)}
+                                                                confirmText={t('providers.activate')}
+                                                                cancelText={t('providers.cancel')}
+                                                                onConfirm={() => handleActivateProvider(provider.id)}
+                                                                confirmVariant="default"
+                                                                confirmClassName="bg-green-600 hover:bg-green-700"
+                                                            />
                                                         ) : (
-                                                            <AlertDialog>
-                                                                <AlertDialogTrigger asChild>
+                                                            <RTLConfirmationDialog
+                                                                trigger={
                                                                     <Button
                                                                         variant="ghost"
                                                                         size="sm"
@@ -673,25 +670,14 @@ export default function ProviderVerificationPage() {
                                                                     >
                                                                         <UserX className="h-4 w-4" />
                                                                     </Button>
-                                                                </AlertDialogTrigger>
-                                                                <AlertDialogContent>
-                                                                    <AlertDialogHeader>
-                                                                        <AlertDialogTitle>{t('providers.deactivateProvider')}</AlertDialogTitle>
-                                                                        <AlertDialogDescription>
-                                                                            {t('providers.deactivateProviderConfirm').replace('{name}', provider.name)}
-                                                                        </AlertDialogDescription>
-                                                                    </AlertDialogHeader>
-                                                                    <AlertDialogFooter>
-                                                                        <AlertDialogCancel>{t('providers.cancel')}</AlertDialogCancel>
-                                                                        <AlertDialogAction
-                                                                            onClick={() => handleDeactivateProvider(provider.id)}
-                                                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                                                        >
-                                                                            {t('providers.deactivate')}
-                                                                        </AlertDialogAction>
-                                                                    </AlertDialogFooter>
-                                                                </AlertDialogContent>
-                                                            </AlertDialog>
+                                                                }
+                                                                title={t('providers.deactivateProvider')}
+                                                                description={t('providers.deactivateProviderConfirm').replace('{name}', provider.name)}
+                                                                confirmText={t('providers.deactivate')}
+                                                                cancelText={t('providers.cancel')}
+                                                                onConfirm={() => handleDeactivateProvider(provider.id)}
+                                                                confirmVariant="destructive"
+                                                            />
                                                         )}
                                                     </div>
                                                 </CardContent>
@@ -712,7 +698,7 @@ export default function ProviderVerificationPage() {
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.commissionFetched')}</TableHead>
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.documents')}</TableHead>
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.status')}</TableHead>
-                                                <TableHead className={`font-semibold ${isRTL ? 'text-left' : 'text-right'}`}>{t('providers.tableHeaders.actions')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.actions')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -824,8 +810,8 @@ export default function ProviderVerificationPage() {
                                                                     <Eye className="h-4 w-4" />
                                                                 </Button>
                                                                 {!provider.isActive ? (
-                                                                    <AlertDialog>
-                                                                        <AlertDialogTrigger asChild>
+                                                                    <RTLConfirmationDialog
+                                                                        trigger={
                                                                             <Button
                                                                                 variant="ghost"
                                                                                 size="sm"
@@ -833,28 +819,18 @@ export default function ProviderVerificationPage() {
                                                                             >
                                                                                 <UserCheck className="h-4 w-4" />
                                                                             </Button>
-                                                                        </AlertDialogTrigger>
-                                                                        <AlertDialogContent dir="rtl">
-                                                                            <AlertDialogHeader>
-                                                                                <AlertDialogTitle>{t('providers.activateProvider')}</AlertDialogTitle>
-                                                                                <AlertDialogDescription>
-                                                                                    {t('providers.activateProviderConfirm').replace('{name}', provider.name)}
-                                                                                </AlertDialogDescription>
-                                                                            </AlertDialogHeader>
-                                                                            <AlertDialogFooter>
-                                                                                <AlertDialogCancel>{t('providers.cancel')}</AlertDialogCancel>
-                                                                                <AlertDialogAction
-                                                                                    onClick={() => handleActivateProvider(provider.id)}
-                                                                                    className="bg-green-600 hover:bg-green-700"
-                                                                                >
-                                                                                    {t('providers.activate')}
-                                                                                </AlertDialogAction>
-                                                                            </AlertDialogFooter>
-                                                                        </AlertDialogContent>
-                                                                    </AlertDialog>
+                                                                        }
+                                                                        title={t('providers.activateProvider')}
+                                                                        description={t('providers.activateProviderConfirm').replace('{name}', provider.name)}
+                                                                        confirmText={t('providers.activate')}
+                                                                        cancelText={t('providers.cancel')}
+                                                                        onConfirm={() => handleActivateProvider(provider.id)}
+                                                                        confirmVariant="default"
+                                                                        confirmClassName="bg-green-600 hover:bg-green-700"
+                                                                    />
                                                                 ) : (
-                                                                    <AlertDialog>
-                                                                        <AlertDialogTrigger asChild>
+                                                                    <RTLConfirmationDialog
+                                                                        trigger={
                                                                             <Button
                                                                                 variant="ghost"
                                                                                 size="sm"
@@ -862,25 +838,14 @@ export default function ProviderVerificationPage() {
                                                                             >
                                                                                 <UserX className="h-4 w-4" />
                                                                             </Button>
-                                                                        </AlertDialogTrigger>
-                                                                        <AlertDialogContent dir="rtl">
-                                                                            <AlertDialogHeader className="">
-                                                                                <AlertDialogTitle>{t('providers.deactivateProvider')}</AlertDialogTitle>
-                                                                                <AlertDialogDescription>
-                                                                                    {t('providers.deactivateProviderConfirm').replace('{name}', provider.name)}
-                                                                                </AlertDialogDescription>
-                                                                            </AlertDialogHeader>
-                                                                            <AlertDialogFooter>
-                                                                                <AlertDialogCancel>{t('providers.cancel')}</AlertDialogCancel>
-                                                                                <AlertDialogAction
-                                                                                    onClick={() => handleDeactivateProvider(provider.id)}
-                                                                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                                                                >
-                                                                                    {t('providers.deactivate')}
-                                                                                </AlertDialogAction>
-                                                                            </AlertDialogFooter>
-                                                                        </AlertDialogContent>
-                                                                    </AlertDialog>
+                                                                        }
+                                                                        title={t('providers.deactivateProvider')}
+                                                                        description={t('providers.deactivateProviderConfirm').replace('{name}', provider.name)}
+                                                                        confirmText={t('providers.deactivate')}
+                                                                        cancelText={t('providers.cancel')}
+                                                                        onConfirm={() => handleDeactivateProvider(provider.id)}
+                                                                        confirmVariant="destructive"
+                                                                    />
                                                                 )}
                                                             </div>
                                                         </TableCell>
@@ -930,7 +895,7 @@ export default function ProviderVerificationPage() {
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.contactInfo')}</TableHead>
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.state')}</TableHead>
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.requestDate')}</TableHead>
-                                                <TableHead className={`font-semibold ${isRTL ? 'text-left' : 'text-right'}`}>{t('providers.tableHeaders.actions')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('providers.tableHeaders.actions')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -989,8 +954,8 @@ export default function ProviderVerificationPage() {
                                                     </TableCell>
                                                     <TableCell className={isRTL ? 'text-left' : 'text-right'}>
                                                         <div className={`flex items-center ${isRTL ? 'justify-start  space-x-2' : 'justify-end space-x-2'}`}>
-                                                            <AlertDialog>
-                                                                <AlertDialogTrigger asChild>
+                                                            <RTLConfirmationDialog
+                                                                trigger={
                                                                     <Button
                                                                         variant="ghost"
                                                                         size="sm"
@@ -998,27 +963,17 @@ export default function ProviderVerificationPage() {
                                                                     >
                                                                         <CheckCircle className="h-4 w-4" />
                                                                     </Button>
-                                                                </AlertDialogTrigger>
-                                                                <AlertDialogContent>
-                                                                    <AlertDialogHeader>
-                                                                        <AlertDialogTitle>{t('providers.approveJoinRequest')}</AlertDialogTitle>
-                                                                        <AlertDialogDescription>
-                                                                            {t('providers.approveJoinRequestConfirm').replace('{name}', request.provider?.name || t('providers.thisProvider'))}
-                                                                        </AlertDialogDescription>
-                                                                    </AlertDialogHeader>
-                                                                    <AlertDialogFooter>
-                                                                        <AlertDialogCancel>{t('providers.cancel')}</AlertDialogCancel>
-                                                                        <AlertDialogAction
-                                                                            onClick={() => handleApproveJoinRequest(request.id)}
-                                                                            className="bg-green-600 hover:bg-green-700"
-                                                                        >
-                                                                            {t('providers.approve')}
-                                                                        </AlertDialogAction>
-                                                                    </AlertDialogFooter>
-                                                                </AlertDialogContent>
-                                                            </AlertDialog>
-                                                            <AlertDialog>
-                                                                <AlertDialogTrigger asChild>
+                                                                }
+                                                                title={t('providers.approveJoinRequest')}
+                                                                description={t('providers.approveJoinRequestConfirm').replace('{name}', request.provider?.name || t('providers.thisProvider'))}
+                                                                confirmText={t('providers.approve')}
+                                                                cancelText={t('providers.cancel')}
+                                                                onConfirm={() => handleApproveJoinRequest(request.id)}
+                                                                confirmVariant="default"
+                                                                confirmClassName="bg-green-600 hover:bg-green-700"
+                                                            />
+                                                            <RTLConfirmationDialog
+                                                                trigger={
                                                                     <Button
                                                                         variant="ghost"
                                                                         size="sm"
@@ -1026,25 +981,14 @@ export default function ProviderVerificationPage() {
                                                                     >
                                                                         <XCircle className="h-4 w-4" />
                                                                     </Button>
-                                                                </AlertDialogTrigger>
-                                                                <AlertDialogContent>
-                                                                    <AlertDialogHeader>
-                                                                        <AlertDialogTitle>{t('providers.rejectJoinRequest')}</AlertDialogTitle>
-                                                                        <AlertDialogDescription>
-                                                                            {t('providers.rejectJoinRequestConfirm').replace('{name}', request.provider?.name || t('providers.thisProvider'))}
-                                                                        </AlertDialogDescription>
-                                                                    </AlertDialogHeader>
-                                                                    <AlertDialogFooter>
-                                                                        <AlertDialogCancel>{t('providers.cancel')}</AlertDialogCancel>
-                                                                        <AlertDialogAction
-                                                                            onClick={() => handleRejectJoinRequest(request.id)}
-                                                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                                                        >
-                                                                            {t('providers.reject')}
-                                                                        </AlertDialogAction>
-                                                                    </AlertDialogFooter>
-                                                                </AlertDialogContent>
-                                                            </AlertDialog>
+                                                                }
+                                                                title={t('providers.rejectJoinRequest')}
+                                                                description={t('providers.rejectJoinRequestConfirm').replace('{name}', request.provider?.name || t('providers.thisProvider'))}
+                                                                confirmText={t('providers.reject')}
+                                                                cancelText={t('providers.cancel')}
+                                                                onConfirm={() => handleRejectJoinRequest(request.id)}
+                                                                confirmVariant="destructive"
+                                                            />
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>

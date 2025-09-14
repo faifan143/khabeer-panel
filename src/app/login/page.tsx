@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
 import { useRouter } from "next/navigation"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,18 +14,22 @@ import { useAuthStore } from "@/lib/stores/auth.store"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 
 
-const loginSchema = yup.object({
-  email: yup.string().email("Please enter a valid email").required("Email is required"),
-  password: yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
-}).required()
-
-type LoginFormData = yup.InferType<typeof loginSchema>
+type LoginFormData = {
+  email: string
+  password: string
+}
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
+  const { t } = useTranslation()
   const { login, isAuthenticated, isLoading, isInitialized } = useAuthStore()
   const loginMutation = useLogin()
+
+  const loginSchema = yup.object({
+    email: yup.string().email(t('login.validation.emailInvalid')).required(t('login.validation.emailRequired')),
+    password: yup.string().min(6, t('login.validation.passwordMinLength')).required(t('login.validation.passwordRequired')),
+  }).required()
 
   const {
     register,
@@ -62,7 +67,7 @@ export default function LoginPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
         <div className="flex items-center space-x-2">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading...</span>
+          <span>{t('login.loading')}</span>
         </div>
       </div>
     )
@@ -74,7 +79,7 @@ export default function LoginPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
         <div className="flex items-center space-x-2">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Redirecting to dashboard...</span>
+          <span>{t('login.redirectingToDashboard')}</span>
         </div>
       </div>
     )
@@ -88,9 +93,9 @@ export default function LoginPage() {
             <span className="text-white text-2xl font-bold">K</span>
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+            <CardTitle className="text-2xl font-bold">{t('login.title')}</CardTitle>
             <CardDescription>
-              Sign in to your Khabeer Admin account
+              {t('login.subtitle')}
             </CardDescription>
           </div>
         </CardHeader>
@@ -99,12 +104,12 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
-                Email
+                {t('login.email')}
               </label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
+                placeholder={t('login.emailPlaceholder')}
                 {...register("email")}
                 className={errors.email ? "border-red-500" : ""}
               />
@@ -115,13 +120,13 @@ export default function LoginPage() {
 
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium">
-                Password
+                {t('login.password')}
               </label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
+                  placeholder={t('login.passwordPlaceholder')}
                   {...register("password")}
                   className={errors.password ? "border-red-500" : ""}
                 />
@@ -146,20 +151,13 @@ export default function LoginPage() {
               {loginMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
+                  {t('login.signingIn')}
                 </>
               ) : (
-                "Sign In"
+                t('login.signIn')
               )}
             </Button>
           </form>
-
-          <div className="text-center text-sm text-gray-600">
-            <p>Demo Credentials:</p>
-            <p className="font-mono text-xs mt-1">
-              admin@khabeer.com / admin123
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

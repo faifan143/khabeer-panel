@@ -8,8 +8,8 @@ import { Toaster } from "react-hot-toast"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Khabeer Admin Panel",
-  description: "Admin panel for Khabeer service marketplace",
+  title: "Khabir Admin Panel",
+  description: "Admin panel for Khabir service marketplace",
 }
 
 export default function RootLayout({
