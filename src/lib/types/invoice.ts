@@ -50,7 +50,8 @@ export interface Invoice {
     }
     service: {
       id: number
-      title: string
+      titleAr: string
+      titleEn: string
       description: string
       price: number
     }
@@ -64,7 +65,8 @@ export interface ServiceBreakdown {
   commission: number
   totalPrice: number
   serviceImage: string
-  serviceTitle: string
+  serviceTitleAr: string
+  serviceTitleEn: string
   commissionAmount: number
   serviceDescription: string
 }

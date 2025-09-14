@@ -391,8 +391,8 @@
       "fileType": "يرجى رفع ملف صورة صالح (JPEG، PNG، GIF)"
     },
     "fileStatus": {
-      "selected": "تم التحديد: {fileName}",
-      "currentImage": "الصورة الحالية: {fileName}"
+      "selected": "تم التحديد:",
+      "currentImage": "الصورة الحالية:"
     },
     "deleteConfirmations": {
       "categoryTitle": "حذف الفئة",

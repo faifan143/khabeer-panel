@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { StateSelector } from "@/components/ui/state-selector"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
@@ -39,19 +40,6 @@ import { useMemo, useState } from "react"
 import toast from "react-hot-toast"
 import { useTranslation } from "react-i18next"
 
-// Oman Governorates constant
-const OMAN_GOVERNORATES = [
-    { value: "Muscat", label: "Muscat - مسقط" },
-    { value: "Dhofar", label: "Dhofar - ظفار" },
-    { value: "Musandam", label: "Musandam - مسندم" },
-    { value: "Buraimi", label: "Buraimi - البريمي" },
-    { value: "Dakhiliyah", label: "Dakhiliyah - الداخلية" },
-    { value: "North Al Batinah", label: "North Al Batinah - شمال الباطنة" },
-    { value: "South Al Batinah", label: "South Al Batinah - جنوب الباطنة" },
-    { value: "North Al Sharqiyah", label: "North Al Sharqiyah - شمال الشرقية" },
-    { value: "South Al Sharqiyah", label: "South Al Sharqiyah - جنوب الشرقية" },
-    { value: "Al Wusta", label: "Al Wusta - الوسطى" }
-]
 
 // Loading Skeleton Components
 const CategoryCardSkeleton = () => (
@@ -207,7 +195,8 @@ export default function CategoriesServicesPage() {
 
     const filteredServices = useMemo(() => {
         let filtered = services.filter(service =>
-            service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            service.titleAr.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            service.titleEn.toLowerCase().includes(searchTerm.toLowerCase()) ||
             service.description.toLowerCase().includes(searchTerm.toLowerCase())
         )
 
@@ -229,7 +218,8 @@ export default function CategoriesServicesPage() {
 
     // Service form state
     const [serviceForm, setServiceForm] = useState<CreateServiceDto>({
-        title: "",
+        titleAr: "",
+        titleEn: "",
         description: "",
         commission: 0,
         whatsapp: "",
@@ -249,7 +239,8 @@ export default function CategoriesServicesPage() {
 
     const resetServiceForm = () => {
         setServiceForm({
-            title: "",
+            titleAr: "",
+            titleEn: "",
             description: "",
             commission: 0,
             whatsapp: "",
@@ -334,7 +325,8 @@ export default function CategoriesServicesPage() {
     const handleServiceEdit = (service: Service) => {
         setSelectedService(service)
         setServiceForm({
-            title: service.title,
+            titleAr: service.titleAr,
+            titleEn: service.titleEn,
             description: service.description,
             commission: service.commission || 0,
             whatsapp: service.whatsapp,
@@ -503,7 +495,7 @@ export default function CategoriesServicesPage() {
                                             </Button>
                                         </DialogTrigger>
                                         <DialogContent className="sm:max-w-[500px]">
-                                            <DialogHeader>
+                                            <DialogHeader className="rtl:text-right">
                                                 <DialogTitle className="text-xl">
                                                     {selectedCategory ? t('categories.editCategory') : t('categories.addCategory')}
                                                 </DialogTitle>
@@ -551,33 +543,21 @@ export default function CategoriesServicesPage() {
                                                     </div>
                                                     {categoryImageFile && (
                                                         <p className="text-xs text-green-600">
-                                                            {t('categories.fileStatus.selected', { fileName: categoryImageFile.name })}
+                                                            {t('categories.fileStatus.selected') + " " + categoryImageFile.name}
                                                         </p>
                                                     )}
                                                     {selectedCategory?.image && !categoryImageFile && (
                                                         <p className="text-xs text-muted-foreground">
-                                                            {t('categories.fileStatus.currentImage', { fileName: selectedCategory.image })}
+                                                            {t('categories.fileStatus.currentImage') + " " + selectedCategory.image}
                                                         </p>
                                                     )}
                                                 </div>
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="state" className="text-sm font-medium">{t('categories.state')}</Label>
-                                                    <Select
-                                                        value={categoryForm.state}
-                                                        onValueChange={(value) => setCategoryForm({ ...categoryForm, state: value })}
-                                                    >
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder={t('categories.selectState')} />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {OMAN_GOVERNORATES.map((governorate) => (
-                                                                <SelectItem key={governorate.value} value={governorate.value}>
-                                                                    {governorate.label}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
+                                                <StateSelector
+                                                    value={categoryForm.state}
+                                                    onChange={(state) => setCategoryForm({ ...categoryForm, state })}
+                                                    placeholder={t('categories.selectState')}
+                                                    label={t('categories.state')}
+                                                />
                                                 <DialogFooter>
                                                     <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>
                                                         {t('categories.cancel')}
@@ -871,13 +851,14 @@ export default function CategoriesServicesPage() {
                                                     <div className="flex items-start space-x-4 flex-1">
                                                         <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
                                                             {service.image ? (
-                                                                <img src={getServiceImageUrl(service.image)} alt={service.title} className="w-full h-full object-cover" />
+                                                                <img src={getServiceImageUrl(service.image)} alt={service.titleEn} className="w-full h-full object-cover" />
                                                             ) : (
                                                                 <Package className="h-6 w-6 text-white" />
                                                             )}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <h3 className="font-semibold text-gray-900 truncate">{service.title}</h3>
+                                                            <h3 className="font-semibold text-gray-900 truncate">{service.titleEn}</h3>
+                                                            <p className="text-sm text-muted-foreground truncate">{service.titleAr}</p>
                                                             <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{service.description}</p>
                                                             <div className="flex items-center justify-between mt-3">
                                                                 <div className="flex items-center space-x-2">
@@ -930,7 +911,7 @@ export default function CategoriesServicesPage() {
                                                                 <AlertDialogHeader>
                                                                     <AlertDialogTitle>{t('categories.deleteConfirmations.serviceTitle')}</AlertDialogTitle>
                                                                     <AlertDialogDescription>
-                                                                        {t('categories.deleteConfirmations.serviceDescription', { title: service.title })}:
+                                                                        {t('categories.deleteConfirmations.serviceDescription', { title: service.titleEn })}:
                                                                         <br />• {t('categories.deleteConfirmations.invoicesAndOrdersForService')}
                                                                         <br />• {t('categories.deleteConfirmations.providerServicesForService')}
                                                                     </AlertDialogDescription>
@@ -971,13 +952,14 @@ export default function CategoriesServicesPage() {
                                                         <div className="flex items-center space-x-3">
                                                             <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center overflow-hidden">
                                                                 {service.image ? (
-                                                                    <img src={getServiceImageUrl(service.image)} alt={service.title} className="w-full h-full object-cover" />
+                                                                    <img src={getServiceImageUrl(service.image)} alt={service.titleEn} className="w-full h-full object-cover" />
                                                                 ) : (
                                                                     <Package className="h-5 w-5 text-white" />
                                                                 )}
                                                             </div>
                                                             <div className="max-w-[300px]">
-                                                                <div className="font-semibold text-gray-900 truncate">{service.title}</div>
+                                                                <div className="font-semibold text-gray-900 truncate">{service.titleEn}</div>
+                                                                <div className="text-sm text-muted-foreground truncate">{service.titleAr}</div>
                                                                 <div className="text-sm text-muted-foreground line-clamp-1">
                                                                     {service.description}
                                                                 </div>
@@ -1023,7 +1005,7 @@ export default function CategoriesServicesPage() {
                                                                     <AlertDialogHeader>
                                                                         <AlertDialogTitle>{t('categories.deleteConfirmations.serviceTitle')}</AlertDialogTitle>
                                                                         <AlertDialogDescription>
-                                                                            {t('categories.deleteConfirmations.serviceDescription', { title: service.title })}:
+                                                                            {t('categories.deleteConfirmations.serviceDescription', { title: service.titleEn })}:
                                                                             <br />• {t('categories.deleteConfirmations.invoicesAndOrdersForService')}
                                                                             <br />• {t('categories.deleteConfirmations.providerServicesForService')}
                                                                         </AlertDialogDescription>

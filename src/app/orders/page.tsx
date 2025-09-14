@@ -192,7 +192,7 @@ export default function OrdersManagementPage() {
             order.bookingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
             order.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             order.provider?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.service?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            order.service?.titleEn.toLowerCase().includes(searchTerm.toLowerCase()) ||
             order.location?.toLowerCase().includes(searchTerm.toLowerCase())
         )
 
@@ -532,7 +532,7 @@ export default function OrdersManagementPage() {
                                                             </Badge>
                                                             <span className="text-xs text-muted-foreground font-mono">#{order.bookingId}</span>
                                                         </div>
-                                                        <h3 className="font-semibold text-gray-900 mb-1 text-right">{order.service?.title}</h3>
+                                                        <h3 className="font-semibold text-gray-900 mb-1 text-right">{order.service?.titleEn}</h3>
                                                         <p className="text-sm text-muted-foreground mb-3 text-right">{order.service?.description}</p>
                                                     </div>
                                                 </div>
@@ -680,7 +680,7 @@ export default function OrdersManagementPage() {
                                                     </TableCell>
                                                     <TableCell className={isRTL ? 'text-right' : 'text-left'}>
                                                         <div className="space-y-1">
-                                                            <div className="font-medium text-gray-900">{order.service?.title}</div>
+                                                            <div className="font-medium text-gray-900">{order.service?.titleEn}</div>
                                                             {order.service?.category?.titleEn && (
                                                                 <div className="text-sm text-muted-foreground">
                                                                     {order.service.category.titleEn}
@@ -821,7 +821,7 @@ export default function OrdersManagementPage() {
                                         <div>
                                             <Label className="text-sm font-medium">{t('orders.service')}</Label>
                                             <div className="mt-1 p-3 bg-gray-50 rounded-lg">
-                                                <div className="font-semibold">{selectedOrder.service?.title}</div>
+                                                <div className="font-semibold">{selectedOrder.service?.titleEn}</div>
                                                 <div className="text-sm text-muted-foreground">{selectedOrder.service?.description}</div>
                                             </div>
                                         </div>

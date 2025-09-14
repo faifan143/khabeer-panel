@@ -67,7 +67,7 @@ export default function RatingsPage() {
             const matchesSearch =
                 rating.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 rating.provider?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                rating.order?.service?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                rating.order?.service?.titleEn?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 rating.comment?.toLowerCase().includes(searchQuery.toLowerCase())
 
             const matchesRating = ratingFilter === "all" ||
@@ -289,7 +289,7 @@ export default function RatingsPage() {
                                                     </TableCell>
                                                     <TableCell>
                                                         <div>
-                                                            <div className="font-medium">{rating.order?.service?.title || t('ratings.notApplicable')}</div>
+                                                            <div className="font-medium">{rating.order?.service?.titleEn || t('ratings.notApplicable')}</div>
                                                             <div className="text-sm text-muted-foreground">{rating.order?.service?.category?.titleEn || t('ratings.notApplicable')}-{rating.order?.service?.category?.titleAr || t('ratings.notApplicable')}</div>
                                                             {rating.order?.bookingId && (
                                                                 <div className="text-xs text-muted-foreground">#{rating.order.bookingId}</div>
@@ -365,7 +365,7 @@ export default function RatingsPage() {
                                                                                     </div>
                                                                                     <div>
                                                                                         <span className="text-muted-foreground">{t('ratings.serviceLabel')}</span>
-                                                                                        <div className="font-medium">{selectedRating.order.service?.title || t('ratings.unknown')}</div>
+                                                                                        <div className="font-medium">{selectedRating.order.service?.titleEn || t('ratings.unknown')}</div>
                                                                                     </div>
                                                                                     <div>
                                                                                         <span className="text-muted-foreground">{t('ratings.categoryLabel')}</span>

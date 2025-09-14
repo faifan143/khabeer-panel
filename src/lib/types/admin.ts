@@ -55,12 +55,14 @@ export interface ServiceStats {
   total: number
   popularServices: Array<{
     id: number
-    name: string
+    nameAr: string
+    nameEn: string
     description: string
     price: number
     category: {
       id: number
-      name: string
+      nameAr: string
+      nameEn: string
     }
     orderCount: number
   }>
@@ -139,7 +141,8 @@ export interface AdminProvider {
     isActive: boolean
     service: {
       id: number
-      title: string
+      titleAr: string
+      titleEn: string
       description: string
       commission: number
       whatsapp: string
@@ -191,7 +194,8 @@ export interface AdminProviderJoinRequest {
       isActive: boolean
       service: {
         id: number
-        title: string
+        titleAr: string
+        titleEn: string
         description: string
         commission: number
         whatsapp: string

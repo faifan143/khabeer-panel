@@ -87,7 +87,7 @@ export default function IncomePage() {
       invoice.orderId?.toString().includes(searchTerm.toLowerCase()) ||
       invoice.order?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.order?.provider?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.order?.service?.title?.toLowerCase().includes(searchTerm.toLowerCase())
+      invoice.order?.service?.titleEn?.toLowerCase().includes(searchTerm.toLowerCase())
     )
   }, [invoices, searchTerm])
 
@@ -326,9 +326,9 @@ export default function IncomePage() {
                       </TableHead>
                       <TableHead
                         className="font-semibold cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSort('order.service.title')}
+                        onClick={() => handleSort('order.service.titleEn')}
                       >
-                        Service {sortField === 'order.service.title' && (sortDirection === 'asc' ? '↑' : '↓')}
+                        Service {sortField === 'order.service.titleEn' && (sortDirection === 'asc' ? '↑' : '↓')}
                       </TableHead>
                       <TableHead
                         className="font-semibold cursor-pointer hover:bg-gray-100"
@@ -379,7 +379,7 @@ export default function IncomePage() {
                             <div className="text-sm">{formatDate(invoice.createdAt)}</div>
                           </TableCell>
                           <TableCell>
-                            <div className="font-medium">{invoice.order?.service?.title || 'N/A'}</div>
+                            <div className="font-medium">{invoice.order?.service?.titleEn || 'N/A'}</div>
                             {invoice.order?.service?.category?.titleEn && (
                               <div className="text-sm text-muted-foreground">
                                 {invoice.order.service.category.titleEn}
@@ -505,7 +505,7 @@ export default function IncomePage() {
                   <div className="space-y-2">
                     <div>
                       <Label className="text-sm text-muted-foreground">Service Title</Label>
-                      <p className="font-medium">{selectedInvoice.order?.service?.title || 'N/A'}</p>
+                      <p className="font-medium">{selectedInvoice.order?.service?.titleEn || 'N/A'}</p>
                     </div>
                     <div>
                       <Label className="text-sm text-muted-foreground">Description</Label>

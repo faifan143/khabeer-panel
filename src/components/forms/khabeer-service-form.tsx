@@ -5,8 +5,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { StateSelector } from '@/components/ui/state-selector'
 import { useTranslation } from 'react-i18next'
 import { CreateServiceDto, UpdateServiceDto, Service } from '@/lib/api/types'
 import { Upload } from 'lucide-react'
@@ -19,19 +19,6 @@ interface KhabeerServiceFormProps {
     isLoading: boolean
 }
 
-// Oman Governorates constant
-const OMAN_GOVERNORATES = [
-    { value: "Muscat", label: "Muscat - مسقط" },
-    { value: "Dhofar", label: "Dhofar - ظفار" },
-    { value: "Musandam", label: "Musandam - مسندم" },
-    { value: "Buraimi", label: "Buraimi - البريمي" },
-    { value: "Dakhiliyah", label: "Dakhiliyah - الداخلية" },
-    { value: "North Al Batinah", label: "North Al Batinah - شمال الباطنة" },
-    { value: "South Al Batinah", label: "South Al Batinah - جنوب الباطنة" },
-    { value: "North Al Sharqiyah", label: "North Al Sharqiyah - شمال الشرقية" },
-    { value: "South Al Sharqiyah", label: "South Al Sharqiyah - جنوب الشرقية" },
-    { value: "Al Wusta", label: "Al Wusta - الوسطى" }
-]
 
 export function KhabeerServiceForm({
     isOpen,
@@ -42,7 +29,8 @@ export function KhabeerServiceForm({
 }: KhabeerServiceFormProps) {
     const { t } = useTranslation()
     const [serviceForm, setServiceForm] = useState<CreateServiceDto>({
-        title: selectedService?.title || "",
+        titleAr: selectedService?.titleAr || "",
+        titleEn: selectedService?.titleEn || "",
         description: selectedService?.description || "",
         commission: selectedService?.commission || undefined,
         whatsapp: selectedService?.whatsapp || "",
@@ -89,18 +77,33 @@ export function KhabeerServiceForm({
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-2">
-                        <Label htmlFor="serviceTitle" className="text-sm font-medium text-right">
-                            عنوان الخدمة <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                            id="serviceTitle"
-                            value={serviceForm.title}
-                            onChange={(e) => setServiceForm({ ...serviceForm, title: e.target.value })}
-                            placeholder="أدخل عنوان الخدمة"
-                            required
-                            className="text-right"
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="serviceTitleAr" className="text-sm font-medium text-right">
+                                عنوان الخدمة (عربي) <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                                id="serviceTitleAr"
+                                value={serviceForm.titleAr}
+                                onChange={(e) => setServiceForm({ ...serviceForm, titleAr: e.target.value })}
+                                placeholder="أدخل العنوان بالعربية"
+                                required
+                                className="text-right"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="serviceTitleEn" className="text-sm font-medium text-right">
+                                Service Title (English) <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                                id="serviceTitleEn"
+                                value={serviceForm.titleEn}
+                                onChange={(e) => setServiceForm({ ...serviceForm, titleEn: e.target.value })}
+                                placeholder="Enter title in English"
+                                required
+                                className="text-right"
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-2">
@@ -152,33 +155,13 @@ export function KhabeerServiceForm({
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="state" className="text-sm font-medium text-right">
-                            الولاية <span className="text-gray-400">(اختياري)</span>
-                        </Label>
-                        <Select
-                            value={serviceForm.state || "none"}
-                            onValueChange={(value) => {
-                                if (value && value !== "none") {
-                                    setServiceForm({ ...serviceForm, state: value })
-                                } else {
-                                    setServiceForm({ ...serviceForm, state: undefined })
-                                }
-                            }}
-                        >
-                            <SelectTrigger className="text-right">
-                                <SelectValue placeholder="اختر الولاية" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="none">لا توجد ولاية</SelectItem>
-                                {OMAN_GOVERNORATES.map((governorate) => (
-                                    <SelectItem key={governorate.value} value={governorate.value}>
-                                        {governorate.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                    <StateSelector
+                        value={serviceForm.state}
+                        onChange={(state) => setServiceForm({ ...serviceForm, state })}
+                        placeholder="اختر الولاية"
+                        label="الولاية"
+                        className="text-right"
+                    />
 
                     <div className="space-y-2">
                         <Label htmlFor="serviceImage" className="text-sm font-medium text-right">

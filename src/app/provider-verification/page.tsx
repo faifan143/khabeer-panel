@@ -976,7 +976,7 @@ export default function ProviderVerificationPage() {
                                                             </div>
                                                             <div className="text-sm text-muted-foreground">
                                                                 Services: {request.provider?.providerServices?.length > 0 ?
-                                                                    request.provider.providerServices.map(ps => ps.service?.title).filter(Boolean).join(', ') :
+                                                                    request.provider.providerServices.map(ps => ps.service?.titleEn).filter(Boolean).join(', ') :
                                                                     'N/A'}
                                                             </div>
                                                         </div>
@@ -1175,7 +1175,7 @@ export default function ProviderVerificationPage() {
                                                 <div className="mt-1 space-y-2">
                                                     {selectedProvider.providerServices.map((service, index: number) => (
                                                         <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                                                            <div className="font-semibold">{service.service?.title}</div>
+                                                            <div className="font-semibold">{service.service?.titleEn}</div>
                                                             <div className="text-sm text-muted-foreground">{service.service?.description}</div>
                                                             <div className="text-sm font-medium text-green-600 mt-1">
                                                                 {t('providers.price')} {formatCurrency(service.price, i18n.language)}
@@ -1413,7 +1413,7 @@ export default function ProviderVerificationPage() {
                                                                             {/* Service Header */}
                                                                             <div className="flex items-center justify-between">
                                                                                 <div className="flex-1">
-                                                                                    <h4 className="font-medium text-gray-900">{ps.service?.title}</h4>
+                                                                                    <h4 className="font-medium text-gray-900">{ps.service?.titleEn}</h4>
                                                                                     <p className="text-sm text-muted-foreground mt-1">
                                                                                         {ps.service?.description || t('providers.noDescriptionAvailable')}
                                                                                     </p>

@@ -27,7 +27,8 @@ const transformInvoiceResponse = (apiInvoice: any): Invoice => {
       // Keep the original service data for backward compatibility
       service: {
         id: apiInvoice.order.serviceId,
-        title: apiInvoice.order.service?.title || apiInvoice.order.servicesBreakdown?.[0]?.serviceTitle || '',
+        titleAr: apiInvoice.order.service?.titleAr || apiInvoice.order.servicesBreakdown?.[0]?.serviceTitleAr || '',
+        titleEn: apiInvoice.order.service?.titleEn || apiInvoice.order.servicesBreakdown?.[0]?.serviceTitleEn || '',
         description: apiInvoice.order.service?.description || apiInvoice.order.servicesBreakdown?.[0]?.serviceDescription || '',
         price: apiInvoice.order.servicesBreakdown?.[0]?.unitPrice || 0
       }

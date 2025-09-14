@@ -111,7 +111,8 @@ export type ServiceType = 'NORMAL' | 'KHABEER'
 
 export interface Service extends BaseEntity {
   image: string
-  title: string
+  titleAr: string
+  titleEn: string
   description: string
   commission: number | null
   whatsapp: string
@@ -122,7 +123,8 @@ export interface Service extends BaseEntity {
 }
 
 export interface CreateServiceDto {
-  title: string
+  titleAr: string
+  titleEn: string
   description: string
   commission?: number
   whatsapp: string
@@ -132,7 +134,8 @@ export interface CreateServiceDto {
 }
 
 export interface UpdateServiceDto {
-  title?: string
+  titleAr?: string
+  titleEn?: string
   description?: string
   commission?: number
   whatsapp?: string

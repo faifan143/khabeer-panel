@@ -402,7 +402,7 @@ export default function InvoicesPage() {
                             </TableCell>
                             <TableCell className="px-6">
                               <div>
-                                <p className="font-medium">{invoice.order?.service.title}</p>
+                                <p className="font-medium">{invoice.order?.service.titleEn}</p>
                                 <p className="text-sm text-muted-foreground">{t("invoices.basePrice")} {formatCurrency(invoice.order?.service.price || 0, i18n.language)}</p>
                               </div>
                             </TableCell>
