@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useTranslation } from 'react-i18next'
+import { useHydrationSafe } from '@/lib/hooks/useHydrationSafe'
 import {
     Users,
     FolderOpen,
@@ -28,6 +29,7 @@ const fetchStats = async () => {
 
 export function DashboardStats() {
     const { t } = useTranslation()
+    const isClient = useHydrationSafe()
     const { data: stats, isLoading, error } = useQuery({
         queryKey: ['dashboard-stats'],
         queryFn: fetchStats,
@@ -39,7 +41,7 @@ export function DashboardStats() {
                 {[...Array(4)].map((_, i) => (
                     <Card key={i}>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">{t('dashboard.dashboardStats.loading')}</CardTitle>
+                            <CardTitle className="text-sm font-medium">{isClient ? t('dashboard.dashboardStats.loading') : 'Loading...'}</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="h-8 bg-muted animate-pulse rounded" />
@@ -55,10 +57,10 @@ export function DashboardStats() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-destructive">{t('dashboard.dashboardStats.error')}</CardTitle>
+                        <CardTitle className="text-sm font-medium text-destructive">{isClient ? t('dashboard.dashboardStats.error') : 'Error'}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-2xl font-bold text-destructive">{t('dashboard.dashboardStats.failedToLoad')}</p>
+                        <p className="text-2xl font-bold text-destructive">{isClient ? t('dashboard.dashboardStats.failedToLoad') : 'Failed to load'}</p>
                     </CardContent>
                 </Card>
             </div>

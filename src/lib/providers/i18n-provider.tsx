@@ -12,7 +12,7 @@ export function I18nProvider({ children }: I18nProviderProps) {
     const { i18n } = useTranslation()
 
     useEffect(() => {
-        // Initialize i18n and set initial language
+        // Only change language on client side after hydration
         const savedLanguage = localStorage.getItem('i18nextLng')
         if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'ar')) {
             i18n.changeLanguage(savedLanguage)

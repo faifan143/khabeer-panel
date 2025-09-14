@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAuthStore } from "@/lib/stores/auth.store"
 import { useTranslation } from "react-i18next"
 import { Loader2 } from "lucide-react"
+import { useHydrationSafe } from "@/lib/hooks/useHydrationSafe"
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -15,6 +16,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   const { t } = useTranslation()
   const { isAuthenticated, isLoading, isInitialized, user } = useAuthStore()
   const router = useRouter()
+  const isClient = useHydrationSafe()
 
   useEffect(() => {
     if (isInitialized && !isAuthenticated) {
@@ -38,7 +40,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center space-x-2">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span>{t('common.loading')}</span>
+          <span>{isClient ? t('common.loading') : 'Loading...'}</span>
         </div>
       </div>
     )

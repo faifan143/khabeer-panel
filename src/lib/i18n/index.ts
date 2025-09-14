@@ -21,6 +21,7 @@ i18n
     .init({
         resources,
         fallbackLng: 'en',
+        lng: 'en', // Force initial language to prevent hydration mismatch
         debug: process.env.NODE_ENV === 'development',
 
         interpolation: {
