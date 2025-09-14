@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -19,6 +19,7 @@ import { formatCurrency } from "@/lib/utils"
 import { SearchBox } from "@/components/ui/search-box"
 import {
     CheckCircle,
+    ChevronDown,
     Clock,
     DollarSign,
     Eye,
@@ -57,7 +58,8 @@ const StatCard = ({
     icon: Icon,
     color,
     trend,
-    description
+    description,
+    isRTL
 }: {
     title: string
     value: string | number
@@ -65,6 +67,7 @@ const StatCard = ({
     color: string
     trend?: { value: number; isPositive: boolean }
     description?: string
+    isRTL: boolean
 }) => (
     <Card className="group hover:shadow-md transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50/50">
         <CardContent className="px-4">
@@ -75,7 +78,7 @@ const StatCard = ({
                         <p className="text-base font-bold text-gray-900">{value}</p>
                         {trend && (
                             <div className={`flex items-center text-xs font-medium ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                                {trend.isPositive ? <Zap className="h-3 w-3 mr-1" /> : <Zap className="h-3 w-3 mr-1 rotate-180" />}
+                                {trend.isPositive ? <Zap className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} /> : <Zap className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'} rotate-180`} />}
                                 {Math.abs(trend.value)}%
                             </div>
                         )}
@@ -123,6 +126,25 @@ const getStatusIcon = (status: string) => {
             return <XCircle className="h-4 w-4" />
         default:
             return <Package className="h-4 w-4" />
+    }
+}
+
+const getTabLabel = (tabValue: string, t: any) => {
+    switch (tabValue) {
+        case 'all':
+            return t('orders.allOrders')
+        case 'pending':
+            return t('orders.pending')
+        case 'accepted':
+            return t('orders.accepted')
+        case 'in_progress':
+            return t('orders.inProgress')
+        case 'completed':
+            return t('orders.completed')
+        case 'cancelled':
+            return t('orders.cancelled')
+        default:
+            return t('orders.allOrders')
     }
 }
 
@@ -345,7 +367,7 @@ export default function OrdersManagementPage() {
         return (
             <span className="font-semibold">
                 {parts[0]}
-                <span className="text-sm text-muted-foreground ml-1 font-normal">{currencySymbol}</span>
+                <span className={`text-sm text-muted-foreground ${isRTL ? 'mr-1' : 'ml-1'} font-normal`}>{currencySymbol}</span>
             </span>
         )
     }
@@ -372,6 +394,7 @@ export default function OrdersManagementPage() {
                             icon={Package}
                             color="bg-gradient-to-br from-blue-500 to-indigo-600"
                             description={t('orders.allOrders')}
+                            isRTL={isRTL}
                         />
                         <StatCard
                             title={t('orders.pending')}
@@ -379,6 +402,7 @@ export default function OrdersManagementPage() {
                             icon={Clock}
                             color="bg-gradient-to-br from-yellow-500 to-orange-600"
                             description={t('orders.awaitingConfirmation')}
+                            isRTL={isRTL}
                         />
                         <StatCard
                             title={t('orders.inProgress')}
@@ -386,6 +410,7 @@ export default function OrdersManagementPage() {
                             icon={Truck}
                             color="bg-gradient-to-br from-orange-500 to-red-600"
                             description={t('orders.beingProcessed')}
+                            isRTL={isRTL}
                         />
                         <StatCard
                             title={t('orders.completed')}
@@ -393,6 +418,7 @@ export default function OrdersManagementPage() {
                             icon={CheckCircle}
                             color="bg-gradient-to-br from-green-500 to-emerald-600"
                             description={t('orders.successfullyDelivered')}
+                            isRTL={isRTL}
                         />
                         <StatCard
                             title={t('orders.totalRevenue')}
@@ -400,6 +426,7 @@ export default function OrdersManagementPage() {
                             icon={DollarSign}
                             color="bg-gradient-to-br from-emerald-500 to-teal-600"
                             description={t('orders.allTimeRevenue')}
+                            isRTL={isRTL}
                         />
                         <StatCard
                             title={t('orders.commission')}
@@ -407,105 +434,169 @@ export default function OrdersManagementPage() {
                             icon={DollarSign}
                             color="bg-gradient-to-br from-purple-500 to-violet-600"
                             description={t('orders.platformEarnings')}
+                            isRTL={isRTL}
                         />
                     </div>
 
-                    {/* Enhanced Tabs */}
+                    {/* Enhanced Tabs - Responsive with Dropdown */}
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                        <div className="flex items-center justify-between">
-                            <TabsList className="grid w-auto grid-cols-6 bg-gray-100 p-1">
+                        <div className="flex flex-col items-center justify-between">
+                            {/* Dropdown for md and below */}
+                            <div className="lg:hidden w-full max-w-sm mb-4">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full justify-between h-10 text-sm font-medium"
+                                        >
+                                            {getTabLabel(activeTab, t)}
+                                            <ChevronDown className={`h-4 w-4 ${isRTL ? 'mr-2' : 'ml-2'}`} />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-full min-w-[200px]">
+                                        <DropdownMenuItem
+                                            onClick={() => setActiveTab("all")}
+                                            className={`cursor-pointer ${activeTab === "all" ? "bg-gray-100" : ""}`}
+                                        >
+                                            {t('orders.allOrders')}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => setActiveTab("pending")}
+                                            className={`cursor-pointer ${activeTab === "pending" ? "bg-gray-100" : ""}`}
+                                        >
+                                            {t('orders.pending')}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => setActiveTab("accepted")}
+                                            className={`cursor-pointer ${activeTab === "accepted" ? "bg-gray-100" : ""}`}
+                                        >
+                                            {t('orders.accepted')}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => setActiveTab("in_progress")}
+                                            className={`cursor-pointer ${activeTab === "in_progress" ? "bg-gray-100" : ""}`}
+                                        >
+                                            {t('orders.inProgress')}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => setActiveTab("completed")}
+                                            className={`cursor-pointer ${activeTab === "completed" ? "bg-gray-100" : ""}`}
+                                        >
+                                            {t('orders.completed')}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            onClick={() => setActiveTab("cancelled")}
+                                            className={`cursor-pointer ${activeTab === "cancelled" ? "bg-gray-100" : ""}`}
+                                        >
+                                            {t('orders.cancelled')}
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+
+                            {/* Tabs for lg and above */}
+                            <TabsList className="hidden lg:grid grid-cols-6 bg-gray-100 p-1 rounded-lg w-full">
                                 <TabsTrigger
                                     value="all"
-                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-sm font-medium transition-all duration-200"
                                 >
                                     {t('orders.allOrders')}
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="pending"
-                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-sm font-medium transition-all duration-200"
                                 >
                                     {t('orders.pending')}
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="accepted"
-                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-sm font-medium transition-all duration-200"
                                 >
                                     {t('orders.accepted')}
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="in_progress"
-                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-sm font-medium transition-all duration-200"
                                 >
                                     {t('orders.inProgress')}
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="completed"
-                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-sm font-medium transition-all duration-200"
                                 >
                                     {t('orders.completed')}
                                 </TabsTrigger>
                                 <TabsTrigger
                                     value="cancelled"
-                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                                    className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-sm font-medium transition-all duration-200"
                                 >
                                     {t('orders.cancelled')}
                                 </TabsTrigger>
                             </TabsList>
 
-                            <div className="flex items-center space-x-3">
-                                {/* Search Box */}
-                                <SearchBox
-                                    placeholder={t('orders.searchOrders')}
-                                    value={searchTerm}
-                                    onChange={setSearchTerm}
-                                    className="w-64"
-                                />
-                                {/* Status Filter */}
-                                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                    <SelectTrigger className="w-40">
-                                        <SelectValue placeholder={t('orders.filterByStatus')} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">{t('orders.allStatus')}</SelectItem>
-                                        <SelectItem value="pending">{t('orders.pending')}</SelectItem>
-                                        <SelectItem value="accepted">{t('orders.accepted')}</SelectItem>
-                                        <SelectItem value="in_progress">{t('orders.in_progress')}</SelectItem>
-                                        <SelectItem value="completed">{t('orders.completed')}</SelectItem>
-                                        <SelectItem value="cancelled">{t('orders.cancelled')}</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                            {/* Filters Section - Responsive Layout */}
+                            <div className="w-full mt-2 flex md:flex-row flex-col md:justify-between  md:items-center">
+                                {/* Row 1: Search Box - Full width on mobile, constrained on desktop */}
+                                <div className="mb-3 md:mb-0 ">
+                                    <SearchBox
+                                        placeholder={t('orders.searchOrders')}
+                                        value={searchTerm}
+                                        onChange={setSearchTerm}
+                                        className="w-full md:w-64"
+                                    />
+                                </div>
 
-                                {/* Date Filter */}
-                                <Select value={dateFilter} onValueChange={setDateFilter}>
-                                    <SelectTrigger className="w-40">
-                                        <SelectValue placeholder={t('orders.filterByDate')} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">{t('orders.allTime')}</SelectItem>
-                                        <SelectItem value="today">{t('orders.today')}</SelectItem>
-                                        <SelectItem value="week">{t('orders.thisWeek')}</SelectItem>
-                                        <SelectItem value="month">{t('orders.thisMonth')}</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                {/* Row 2: Filters - Responsive layout */}
+                                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center">
+                                    {/* Status Filter */}
+                                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                        <SelectTrigger className="w-full sm:w-40 h-9 text-sm">
+                                            <SelectValue placeholder={t('orders.filterByStatus')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">{t('orders.allStatus')}</SelectItem>
+                                            <SelectItem value="pending">{t('orders.pending')}</SelectItem>
+                                            <SelectItem value="accepted">{t('orders.accepted')}</SelectItem>
+                                            <SelectItem value="in_progress">{t('orders.in_progress')}</SelectItem>
+                                            <SelectItem value="completed">{t('orders.completed')}</SelectItem>
+                                            <SelectItem value="cancelled">{t('orders.cancelled')}</SelectItem>
+                                        </SelectContent>
+                                    </Select>
 
-                                {/* View Toggle */}
-                                <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
-                                    <Button
-                                        variant={viewMode === "grid" ? "default" : "ghost"}
-                                        size="sm"
-                                        onClick={() => setViewMode("grid")}
-                                        className="h-8 w-8 p-0"
-                                    >
-                                        <Package className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        variant={viewMode === "list" ? "default" : "ghost"}
-                                        size="sm"
-                                        onClick={() => setViewMode("list")}
-                                        className="h-8 w-8 p-0"
-                                    >
-                                        <Filter className="h-4 w-4" />
-                                    </Button>
+                                    {/* Date Filter */}
+                                    <Select value={dateFilter} onValueChange={setDateFilter}>
+                                        <SelectTrigger className="w-full sm:w-40 h-9 text-sm">
+                                            <SelectValue placeholder={t('orders.filterByDate')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">{t('orders.allTime')}</SelectItem>
+                                            <SelectItem value="today">{t('orders.today')}</SelectItem>
+                                            <SelectItem value="week">{t('orders.thisWeek')}</SelectItem>
+                                            <SelectItem value="month">{t('orders.thisMonth')}</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+
+                                    {/* View Toggle - Compact and touch-friendly */}
+                                    <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1 self-start">
+                                        <Button
+                                            variant={viewMode === "grid" ? "default" : "ghost"}
+                                            size="sm"
+                                            onClick={() => setViewMode("grid")}
+                                            className="h-8 w-8 p-0 touch-manipulation"
+                                            aria-label="Grid view"
+                                        >
+                                            <Package className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant={viewMode === "list" ? "default" : "ghost"}
+                                            size="sm"
+                                            onClick={() => setViewMode("list")}
+                                            className="h-8 w-8 p-0 touch-manipulation"
+                                            aria-label="List view"
+                                        >
+                                            <Filter className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -525,37 +616,37 @@ export default function OrdersManagementPage() {
                                             <CardContent className="p-6">
                                                 <div className="flex items-start justify-between mb-4">
                                                     <div className="flex-1">
-                                                        <div className="flex items-center space-x-2 mb-2">
+                                                        <div className={`flex items-center ${isRTL ? '' : 'space-x-2'} mb-2`}>
                                                             <Badge variant="outline" className={`${getStatusColor(order.status)}`}>
                                                                 {getStatusIcon(order.status)}
-                                                                <span className="ml-1 capitalize">{t(`orders.${order.status}`)}</span>
+                                                                <span className={`${isRTL ? 'mr-1' : 'ml-1'} capitalize`}>{t(`orders.${order.status}`)}</span>
                                                             </Badge>
                                                             <span className="text-xs text-muted-foreground font-mono">#{order.bookingId}</span>
                                                         </div>
-                                                        <h3 className="font-semibold text-gray-900 mb-1 text-right">{order.service?.titleEn}</h3>
-                                                        <p className="text-sm text-muted-foreground mb-3 text-right">{order.service?.description}</p>
+                                                        <h3 className={`font-semibold text-gray-900 mb-1 ${isRTL ? 'text-right' : 'text-left'}`}>{order.service?.titleEn}</h3>
+                                                        <p className={`text-sm text-muted-foreground mb-3 ${isRTL ? 'text-right' : 'text-left'}`}>{order.service?.description}</p>
                                                     </div>
                                                 </div>
 
                                                 <div className="space-y-3">
                                                     <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-muted-foreground text-right">{t('orders.customer')}:</span>
-                                                        <span className="font-medium text-right">{order.user?.name}</span>
+                                                        <span className={`text-muted-foreground ${isRTL ? 'text-right' : 'text-left'}`}>{t('orders.customer')}:</span>
+                                                        <span className={`font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{order.user?.name}</span>
                                                     </div>
                                                     <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-muted-foreground text-right">{t('orders.provider')}:</span>
-                                                        <span className="font-medium text-right">{order.provider?.name}</span>
+                                                        <span className={`text-muted-foreground ${isRTL ? 'text-right' : 'text-left'}`}>{t('orders.provider')}:</span>
+                                                        <span className={`font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{order.provider?.name}</span>
                                                     </div>
                                                     <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-muted-foreground text-right">{t('orders.amount')}:</span>
-                                                        <span className="font-semibold text-green-600 text-right">{renderCurrency(order.totalAmount)}</span>
+                                                        <span className={`text-muted-foreground ${isRTL ? 'text-right' : 'text-left'}`}>{t('orders.amount')}:</span>
+                                                        <span className={`font-semibold text-green-600 ${isRTL ? 'text-right' : 'text-left'}`}>{renderCurrency(order.totalAmount)}</span>
                                                     </div>
                                                     <div className="flex items-center justify-between text-sm">
-                                                        <span className="text-muted-foreground text-right">{t('orders.date')}:</span>
-                                                        <span className="font-medium text-left">{formatDate(order.orderDate)}</span>
+                                                        <span className={`text-muted-foreground ${isRTL ? 'text-right' : 'text-left'}`}>{t('orders.date')}:</span>
+                                                        <span className={`font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{formatDate(order.orderDate)}</span>
                                                     </div>
                                                     {order.location && (
-                                                        <div className="flex items-center space-x-2 text-sm">
+                                                        <div className={`flex items-center ${isRTL ? '' : 'space-x-2'} text-sm`}>
                                                             <MapPin className="h-4 w-4 text-muted-foreground" />
                                                             <span className="text-muted-foreground truncate">{order.location}</span>
                                                         </div>
@@ -572,7 +663,7 @@ export default function OrdersManagementPage() {
                                                         }}
                                                         className="h-8 px-3 text-xs hover:bg-blue-50"
                                                     >
-                                                        <Eye className="h-3 w-3 mr-1" />
+                                                        <Eye className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                         {t('orders.view')}
                                                     </Button>
                                                     {order.status === 'pending' && (
@@ -586,7 +677,7 @@ export default function OrdersManagementPage() {
                                                                 }}
                                                                 className="h-8 px-3 text-xs hover:bg-green-50 text-green-700 border-green-200"
                                                             >
-                                                                <CheckCircle className="h-3 w-3 mr-1" />
+                                                                <CheckCircle className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                                 {t('orders.accept')}
                                                             </Button>
                                                             <Button
@@ -598,7 +689,7 @@ export default function OrdersManagementPage() {
                                                                 }}
                                                                 className="h-8 px-3 text-xs hover:bg-red-50 text-red-700 border-red-200"
                                                             >
-                                                                <XCircle className="h-3 w-3 mr-1" />
+                                                                <XCircle className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                                 {t('orders.reject')}
                                                             </Button>
                                                         </>
@@ -610,7 +701,7 @@ export default function OrdersManagementPage() {
                                                             onClick={() => handleOrderComplete(order.id)}
                                                             className="h-8 px-3 text-xs hover:bg-green-50 text-green-700 border-green-200"
                                                         >
-                                                            <CheckCircle className="h-3 w-3 mr-1" />
+                                                            <CheckCircle className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                             {t('orders.complete')}
                                                         </Button>
                                                     )}
@@ -623,7 +714,7 @@ export default function OrdersManagementPage() {
                                                         }}
                                                         className="h-8 px-3 text-xs hover:bg-red-50 text-red-700 border-red-200"
                                                     >
-                                                        <XCircle className="h-3 w-3 mr-1" />
+                                                        <XCircle className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                         {t('orders.cancel')}
                                                     </Button>
                                                 </div>
@@ -715,7 +806,7 @@ export default function OrdersManagementPage() {
                                                                 }}
                                                                 className="h-8 px-3 text-xs hover:bg-blue-50"
                                                             >
-                                                                <Eye className="h-3 w-3 mr-1" />
+                                                                <Eye className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                                 {t('orders.view')}
                                                             </Button>
                                                             {order.status === 'pending' && (
@@ -729,7 +820,7 @@ export default function OrdersManagementPage() {
                                                                         }}
                                                                         className="h-8 px-2 text-xs hover:bg-green-50 text-green-700 border-green-200"
                                                                     >
-                                                                        <CheckCircle className="h-3 w-3 mr-1" />
+                                                                        <CheckCircle className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                                         {t('orders.accept')}
                                                                     </Button>
                                                                     <Button
@@ -741,7 +832,7 @@ export default function OrdersManagementPage() {
                                                                         }}
                                                                         className="h-8 px-2 text-xs hover:bg-red-50 text-red-700 border-red-200"
                                                                     >
-                                                                        <XCircle className="h-3 w-3 mr-1" />
+                                                                        <XCircle className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                                         {t('orders.reject')}
                                                                     </Button>
                                                                 </div>
@@ -753,7 +844,7 @@ export default function OrdersManagementPage() {
                                                                     onClick={() => handleOrderComplete(order.id)}
                                                                     className="h-8 px-3 text-xs hover:bg-green-50 text-green-700 border-green-200"
                                                                 >
-                                                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                                                    <CheckCircle className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                                     {t('orders.complete')}
                                                                 </Button>
                                                             )}
@@ -766,7 +857,7 @@ export default function OrdersManagementPage() {
                                                                 }}
                                                                 className="h-8 px-3 text-xs hover:bg-red-50 text-red-700 border-red-200"
                                                             >
-                                                                <XCircle className="h-3 w-3 mr-1" />
+                                                                <XCircle className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                                 {t('orders.cancel')}
                                                             </Button>
                                                         </div>
@@ -812,7 +903,7 @@ export default function OrdersManagementPage() {
                                             <Label className="text-sm font-medium">{t('orders.status')}</Label>
                                             <Badge variant="outline" className={`${getStatusColor(selectedOrder.status)}`}>
                                                 {getStatusIcon(selectedOrder.status)}
-                                                <span className="ml-1 capitalize">{t(`orders.${selectedOrder.status}`)}</span>
+                                                <span className={`${isRTL ? 'mr-1' : 'ml-1'} capitalize`}>{t(`orders.${selectedOrder.status}`)}</span>
                                             </Badge>
                                         </div>
                                     </div>
@@ -915,7 +1006,7 @@ export default function OrdersManagementPage() {
                                         disabled={updateStatusMutation.isPending}
                                         className="h-12"
                                     >
-                                        <CheckCircle className="h-4 w-4 mr-2" />
+                                        <CheckCircle className={`h-4 w-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                                         {t('orders.accept')}
                                     </Button>
                                     <Button

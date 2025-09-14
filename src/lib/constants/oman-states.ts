@@ -173,3 +173,14 @@ export const getStateByValue = (stateValue: string) => {
     }
     return null;
 };
+
+// Function to get localized state name
+export const getLocalizedStateName = (stateValue: string, language: 'en' | 'ar' = 'en'): string => {
+    for (const governorate of OMAN_STATES) {
+        const state = governorate.states.find(s => s.value === stateValue);
+        if (state) {
+            return language === 'ar' ? state.label.ar : state.label.en;
+        }
+    }
+    return stateValue; // Return original value if not found
+};

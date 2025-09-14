@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
 import { Label } from './label';
 import { OMAN_STATES, getGovernorates, getStatesByGovernorate } from '@/lib/constants/oman-states';
+import { useTranslation } from 'react-i18next';
 
 interface StateSelectorProps {
     value?: string;
@@ -18,12 +19,14 @@ interface StateSelectorProps {
 export function StateSelector({
     value,
     onChange,
-    placeholder = "اختر الولاية",
-    label = "الولاية",
+    placeholder,
+    label,
     required = false,
     disabled = false,
     className = ""
 }: StateSelectorProps) {
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar';
     const [selectedGovernorate, setSelectedGovernorate] = useState<string>("");
     const [selectedState, setSelectedState] = useState<string>("");
     const [availableStates, setAvailableStates] = useState<Array<{ value: string; label: { en: string; ar: string } }>>([]);
@@ -64,24 +67,24 @@ export function StateSelector({
     const governorates = getGovernorates();
 
     return (
-        <div className={` flex items-center gap-2   ${className}`}>
+        <div className={`flex items-center gap-2 ${isRTL ? 'rtl:gap-2 ' : ''} ${className}`}>
             {/* Governorate Selection */}
-            <div className="space-y-2">
-                <Label htmlFor="governorate" className="text-sm font-medium text-right">
-                    المحافظة
+            <div className={`space-y-2 ${isRTL ? 'rtl:space-y-2' : ''}`}>
+                <Label htmlFor="governorate" className={`text-sm font-medium ${isRTL ? 'text-right rtl:text-right rtl:block' : 'text-left'}`}>
+                    {t('common.governorate')}
                 </Label>
                 <Select
                     value={selectedGovernorate}
                     onValueChange={handleGovernorateChange}
                     disabled={disabled}
                 >
-                    <SelectTrigger className="text-right">
-                        <SelectValue placeholder="اختر المحافظة" />
+                    <SelectTrigger className={`${isRTL ? 'text-right rtl:text-right rtl:justify-end' : 'text-left'}`}>
+                        <SelectValue placeholder={t('common.selectGovernorate')} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className={isRTL ? 'rtl:text-right' : ''}>
                         {governorates.map((governorate) => (
-                            <SelectItem key={governorate.en} value={governorate.en}>
-                                {governorate.ar}
+                            <SelectItem key={governorate.en} value={governorate.en} className={isRTL ? 'rtl:text-right' : ''}>
+                                {isRTL ? governorate.ar : governorate.en}
                             </SelectItem>
                         ))}
                     </SelectContent>
@@ -89,28 +92,28 @@ export function StateSelector({
             </div>
 
             {/* State Selection */}
-            <div className="space-y-2">
-                <Label htmlFor="state" className="text-sm font-medium text-right">
-                    {label} {required && <span className="text-red-500">*</span>}
+            <div className={`space-y-2 ${isRTL ? 'rtl:space-y-2' : ''}`}>
+                <Label htmlFor="state" className={`text-sm font-medium ${isRTL ? 'text-right rtl:text-right rtl:block' : 'text-left'}`}>
+                    {label || t('common.state')} {required && <span className={`text-red-500 ${isRTL ? 'rtl:mr-1' : 'ml-1'}`}>*</span>}
                 </Label>
                 <Select
                     value={selectedState}
                     onValueChange={handleStateChange}
                     disabled={disabled || !selectedGovernorate}
                 >
-                    <SelectTrigger className="text-right">
-                        <SelectValue placeholder={placeholder} />
+                    <SelectTrigger className={`${isRTL ? 'text-right rtl:text-right rtl:justify-end' : 'text-left'}`}>
+                        <SelectValue placeholder={placeholder || t('common.selectState')} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className={isRTL ? 'rtl:text-right' : ''}>
                         {availableStates.length > 0 ? (
                             availableStates.map((state) => (
-                                <SelectItem key={state.value} value={state.value}>
-                                    {state.label.ar}
+                                <SelectItem key={state.value} value={state.value} className={isRTL ? 'rtl:text-right' : ''}>
+                                    {isRTL ? state.label.ar : state.label.en}
                                 </SelectItem>
                             ))
                         ) : (
-                            <SelectItem value="no-states" disabled>
-                                اختر المحافظة أولاً
+                            <SelectItem value="no-states" disabled className={isRTL ? 'rtl:text-right' : ''}>
+                                {t('common.selectGovernorateFirst')}
                             </SelectItem>
                         )}
                     </SelectContent>

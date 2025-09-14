@@ -16,12 +16,22 @@ export class ServicesService {
   }
 
   static async getNormalServices(page: number = 1, limit: number = 10): Promise<PaginatedResponse<Service>> {
-    const response = await api.get<PaginatedResponse<Service>>(`/services/normal?page=${page}&limit=${limit}`)
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      serviceType: 'NORMAL'
+    })
+    const response = await api.get<PaginatedResponse<Service>>(`/services?${params.toString()}`)
     return response.data
   }
 
   static async getKhabeerServices(page: number = 1, limit: number = 10): Promise<PaginatedResponse<Service>> {
-    const response = await api.get<PaginatedResponse<Service>>(`/services/khabeer?page=${page}&limit=${limit}`)
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      serviceType: 'KHABEER'
+    })
+    const response = await api.get<PaginatedResponse<Service>>(`/services?${params.toString()}`)
     return response.data
   }
 

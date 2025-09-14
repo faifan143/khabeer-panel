@@ -125,9 +125,9 @@ export interface Service extends BaseEntity {
 export interface CreateServiceDto {
   titleAr: string
   titleEn: string
-  description: string
+  description?: string
   commission?: number
-  whatsapp: string
+  whatsapp?: string
   categoryId?: number
   state?: string
   serviceType?: ServiceType

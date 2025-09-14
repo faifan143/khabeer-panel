@@ -501,7 +501,7 @@ export default function ProviderVerificationPage() {
 
                     {/* Main Tabs */}
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                        <div className="flex items-center justify-between">
+                        <div className="flex md:flex-row flex-col md:items-center md:justify-between">
                             <TabsList className="grid w-auto grid-cols-2 bg-gray-100 p-1">
                                 <TabsTrigger
                                     value="verified"
@@ -517,7 +517,7 @@ export default function ProviderVerificationPage() {
                                 </TabsTrigger>
                             </TabsList>
 
-                            <div className="flex items-center space-x-3">
+                            <div className="flex items-center space-x-3 mt-2 md:mt-0">
                                 {/* Search Box */}
                                 <SearchBox
                                     placeholder={activeTab === "verified" ? t('providers.searchProviders') : t('providers.searchRequests')}
@@ -721,7 +721,7 @@ export default function ProviderVerificationPage() {
                                                 return (
                                                     <TableRow key={provider.id} className="hover:bg-gray-50/50">
                                                         <TableCell>
-                                                            <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
+                                                            <div className={`flex items-center ${isRTL ? ' space-x-3' : 'space-x-3'}`}>
                                                                 <Avatar className="h-10 w-10">
                                                                     <AvatarImage src={process.env.NEXT_PUBLIC_API_URL_IMAGE + provider.image} alt={provider.name} />
                                                                     <AvatarFallback>{provider.name.charAt(0)}</AvatarFallback>
@@ -811,7 +811,7 @@ export default function ProviderVerificationPage() {
                                                             </Badge>
                                                         </TableCell>
                                                         <TableCell className={isRTL ? 'text-left' : 'text-right'}>
-                                                            <div className={`flex items-center ${isRTL ? 'justify-start space-x-reverse space-x-2' : 'justify-end space-x-2'}`}>
+                                                            <div className={`flex items-center ${isRTL ? 'justify-start  space-x-2' : 'justify-end space-x-2'}`}>
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
@@ -834,7 +834,7 @@ export default function ProviderVerificationPage() {
                                                                                 <UserCheck className="h-4 w-4" />
                                                                             </Button>
                                                                         </AlertDialogTrigger>
-                                                                        <AlertDialogContent>
+                                                                        <AlertDialogContent dir="rtl">
                                                                             <AlertDialogHeader>
                                                                                 <AlertDialogTitle>{t('providers.activateProvider')}</AlertDialogTitle>
                                                                                 <AlertDialogDescription>
@@ -863,8 +863,8 @@ export default function ProviderVerificationPage() {
                                                                                 <UserX className="h-4 w-4" />
                                                                             </Button>
                                                                         </AlertDialogTrigger>
-                                                                        <AlertDialogContent>
-                                                                            <AlertDialogHeader>
+                                                                        <AlertDialogContent dir="rtl">
+                                                                            <AlertDialogHeader className="">
                                                                                 <AlertDialogTitle>{t('providers.deactivateProvider')}</AlertDialogTitle>
                                                                                 <AlertDialogDescription>
                                                                                     {t('providers.deactivateProviderConfirm').replace('{name}', provider.name)}
@@ -937,7 +937,7 @@ export default function ProviderVerificationPage() {
                                             {joinRequests.map((request) => (
                                                 <TableRow key={request.id} className="hover:bg-gray-50/50">
                                                     <TableCell>
-                                                        <div className={`flex items-center ${isRTL ? 'space-x-reverse space-x-3' : 'space-x-3'}`}>
+                                                        <div className={`flex items-center ${isRTL ? ' space-x-3' : 'space-x-3'}`}>
                                                             <Avatar className="h-10 w-10">
                                                                 <AvatarImage src={process.env.NEXT_PUBLIC_API_URL_IMAGE + request.provider?.image} alt={request.provider?.name || t('providers.provider')} />
                                                                 <AvatarFallback>
@@ -988,7 +988,7 @@ export default function ProviderVerificationPage() {
                                                         <div className="text-sm">{formatDate(request.requestDate)}</div>
                                                     </TableCell>
                                                     <TableCell className={isRTL ? 'text-left' : 'text-right'}>
-                                                        <div className={`flex items-center ${isRTL ? 'justify-start space-x-reverse space-x-2' : 'justify-end space-x-2'}`}>
+                                                        <div className={`flex items-center ${isRTL ? 'justify-start  space-x-2' : 'justify-end space-x-2'}`}>
                                                             <AlertDialog>
                                                                 <AlertDialogTrigger asChild>
                                                                     <Button

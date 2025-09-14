@@ -1,16 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { StateSelector } from '@/components/ui/state-selector'
 import { useTranslation } from 'react-i18next'
 import { CreateServiceDto, UpdateServiceDto, Service, Category } from '@/lib/api/types'
 import { Upload } from 'lucide-react'
+import { getLocalizedStateName } from '@/lib/constants/oman-states'
 
 interface NormalServiceFormProps {
     isOpen: boolean
@@ -30,18 +30,31 @@ export function NormalServiceForm({
     categories,
     isLoading
 }: NormalServiceFormProps) {
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
+    const isRTL = i18n.language === 'ar'
     const [serviceForm, setServiceForm] = useState<CreateServiceDto>({
         titleAr: selectedService?.titleAr || "",
         titleEn: selectedService?.titleEn || "",
-        description: selectedService?.description || "",
         commission: selectedService?.commission || 0,
-        whatsapp: selectedService?.whatsapp || "",
         categoryId: selectedService?.categoryId || undefined,
-        state: selectedService?.state || undefined,
         serviceType: 'NORMAL'
     })
     const [serviceImageFile, setServiceImageFile] = useState<File | null>(null)
+
+    // Group categories by state
+    const groupedCategories = useMemo(() => {
+        const groups: { [key: string]: Category[] } = {}
+
+        categories.forEach(category => {
+            const state = category.state || t('common.noState')
+            if (!groups[state]) {
+                groups[state] = []
+            }
+            groups[state].push(category)
+        })
+
+        return groups
+    }, [categories, t])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -84,94 +97,67 @@ export function NormalServiceForm({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[600px]" dir="rtl">
-                <DialogHeader>
-                    <DialogTitle>
-                        {selectedService ? 'تعديل الخدمة' : 'إضافة خدمة عادية'}
+            <DialogContent className="sm:max-w-[600px]" >
+                <DialogHeader className={isRTL ? 'rtl:text-right' : ''}>
+                    <DialogTitle className={`${isRTL ? 'rtl:text-right rtl:font-semibold' : ''}`}>
+                        {selectedService ? t('categories.normalServiceForm.editTitle') : t('categories.normalServiceForm.title')}
                     </DialogTitle>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className={`space-y-6 ${isRTL ? 'rtl:space-y-6' : ''}`}>
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="serviceTitleAr" className="text-sm font-medium text-right">
-                                عنوان الخدمة (عربي) <span className="text-red-500">*</span>
+                        <div className={`space-y-2 ${isRTL ? 'rtl:space-y-2' : ''}`}>
+                            <Label htmlFor="serviceTitleAr" className={`text-sm font-medium ${isRTL ? 'text-right rtl:text-right rtl:block' : 'text-left'}`}>
+                                {t('categories.normalServiceForm.arabicTitle')} <span className={`text-red-500 ${isRTL ? 'rtl:mr-1' : 'ml-1'}`}>*</span>
                             </Label>
                             <Input
                                 id="serviceTitleAr"
                                 value={serviceForm.titleAr}
                                 onChange={(e) => setServiceForm({ ...serviceForm, titleAr: e.target.value })}
-                                placeholder="أدخل العنوان بالعربية"
+                                placeholder={t('categories.normalServiceForm.enterArabicTitle')}
                                 required
-                                className="text-right"
+                                className={`${isRTL ? 'text-right rtl:text-right rtl:placeholder:text-right' : 'text-left'}`}
+
                             />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="serviceTitleEn" className="text-sm font-medium text-right">
-                                Service Title (English) <span className="text-red-500">*</span>
+                        <div className={`space-y-2 ${isRTL ? 'rtl:space-y-2' : ''}`}>
+                            <Label htmlFor="serviceTitleEn" className={`text-sm font-medium ${isRTL ? 'text-right rtl:text-right rtl:block' : 'text-left'}`}>
+                                {t('categories.normalServiceForm.englishTitle')} <span className={`text-red-500 ${isRTL ? 'rtl:mr-1' : 'ml-1'}`}>*</span>
                             </Label>
                             <Input
                                 id="serviceTitleEn"
                                 value={serviceForm.titleEn}
                                 onChange={(e) => setServiceForm({ ...serviceForm, titleEn: e.target.value })}
-                                placeholder="Enter title in English"
+                                placeholder={t('categories.normalServiceForm.enterEnglishTitle')}
                                 required
-                                className="text-right"
+                                className={`${isRTL ? 'text-right rtl:text-right rtl:placeholder:text-right' : 'text-left'}`}
+
                             />
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="description" className="text-sm font-medium text-right">
-                            الوصف <span className="text-red-500">*</span>
+
+                    <div className={`space-y-2 ${isRTL ? 'rtl:space-y-2' : ''}`}>
+                        <Label htmlFor="commission" className={`text-sm font-medium ${isRTL ? 'text-right rtl:text-right rtl:block' : 'text-left'}`}>
+                            {t('categories.normalServiceForm.commission')} <span className={`text-red-500 ${isRTL ? 'rtl:mr-1' : 'ml-1'}`}>*</span>
                         </Label>
-                        <Textarea
-                            id="description"
-                            value={serviceForm.description}
-                            onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
-                            placeholder="أدخل وصف الخدمة"
-                            rows={3}
+                        <Input
+                            id="commission"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={serviceForm.commission}
+                            onChange={(e) => setServiceForm({ ...serviceForm, commission: parseFloat(e.target.value) || 0 })}
+                            placeholder={t('categories.normalServiceForm.enterCommission')}
                             required
-                            className="text-right"
+                            className={`${isRTL ? 'text-right rtl:text-right rtl:placeholder:text-right' : 'text-left'}`}
+
                         />
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="commission" className="text-sm font-medium text-right">
-                                {t('categories.commissionOMR')} <span className="text-red-500">*</span>
-                            </Label>
-                            <Input
-                                id="commission"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={serviceForm.commission}
-                                onChange={(e) => setServiceForm({ ...serviceForm, commission: parseFloat(e.target.value) || 0 })}
-                                placeholder="أدخل مبلغ العمولة"
-                                required
-                                className="text-right"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="whatsapp" className="text-sm font-medium text-right">
-                                رقم الواتساب <span className="text-red-500">*</span>
-                            </Label>
-                            <Input
-                                id="whatsapp"
-                                value={serviceForm.whatsapp}
-                                onChange={(e) => setServiceForm({ ...serviceForm, whatsapp: e.target.value })}
-                                placeholder="أدخل رقم الواتساب"
-                                required
-                                className="text-right"
-                            />
-                        </div>
-                    </div>
-                    <div className='flex items-center gap-2'>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="categoryId" className="text-sm font-medium text-right">
-                                الفئة <span className="text-red-500">*</span>
+                    <div className={`flex items-center gap-2 ${isRTL ? 'rtl:gap-2 ' : ''}`}>
+                        <div className={`space-y-2 ${isRTL ? 'rtl:space-y-2' : ''}`}>
+                            <Label htmlFor="categoryId" className={`text-sm font-medium ${isRTL ? 'text-right rtl:text-right rtl:block' : 'text-left'}`}>
+                                {t('categories.normalServiceForm.category')} <span className={`text-red-500 ${isRTL ? 'rtl:mr-1' : 'ml-1'}`}>*</span>
                             </Label>
                             <Select
                                 value={serviceForm.categoryId?.toString() || ""}
@@ -180,34 +166,34 @@ export function NormalServiceForm({
                                         setServiceForm({ ...serviceForm, categoryId: parseInt(value) })
                                     }
                                 }}
+                                required
                             >
-                                <SelectTrigger className="text-right">
-                                    <SelectValue placeholder="اختر الفئة" />
+                                <SelectTrigger className={`${isRTL ? 'text-right rtl:text-right rtl:justify-end' : 'text-left'}`}>
+                                    <SelectValue placeholder={t('categories.normalServiceForm.selectCategory')} />
                                 </SelectTrigger>
-                                <SelectContent>
-                                    {categories.map((category) => (
-                                        <SelectItem key={category.id} value={category.id.toString()}>
-                                            {category.titleAr} - {category.titleEn}
-                                        </SelectItem>
+                                <SelectContent className={isRTL ? 'rtl:text-right' : ''}>
+                                    {Object.entries(groupedCategories).map(([state, stateCategories]) => (
+                                        <div key={state}>
+                                            <div className={`px-2 py-1.5 text-xs font-semibold text-muted-foreground ${isRTL ? 'rtl:text-right' : ''}`}>
+                                                {getLocalizedStateName(state, i18n.language as 'en' | 'ar')}
+                                            </div>
+                                            {stateCategories.map((category) => (
+                                                <SelectItem key={category.id} value={category.id.toString()} className={`pl-6 ${isRTL ? 'rtl:text-right' : ''}`}>
+                                                    {category.titleAr} - {category.titleEn}
+                                                </SelectItem>
+                                            ))}
+                                        </div>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
-
-                        <StateSelector
-                            value={serviceForm.state}
-                            onChange={(state) => setServiceForm({ ...serviceForm, state })}
-                            placeholder="اختر الولاية"
-                            label="الولاية"
-                            className="text-right"
-                        />
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="serviceImage" className="text-sm font-medium text-right">
-                            صورة الخدمة
+                    <div className={`space-y-2 ${isRTL ? 'rtl:space-y-2' : ''}`}>
+                        <Label htmlFor="serviceImage" className={`text-sm font-medium ${isRTL ? 'text-right rtl:text-right rtl:block' : 'text-left'}`}>
+                            {t('categories.normalServiceForm.serviceImage')}
                         </Label>
-                        <div className="flex items-center space-x-2">
+                        <div className={`flex items-center gap-2 ${isRTL ? 'rtl:gap-2 ' : ''}`}>
                             <Input
                                 id="serviceImage"
                                 type="file"
@@ -221,31 +207,36 @@ export function NormalServiceForm({
                             <Upload className="h-4 w-4 text-muted-foreground" />
                         </div>
                         {serviceImageFile && (
-                            <p className="text-xs text-green-600 text-right">
-                                تم اختيار: {serviceImageFile.name}
+                            <p className={`text-xs text-green-600 ${isRTL ? 'text-right rtl:text-right' : 'text-left'}`}>
+                                {t('categories.normalServiceForm.fileSelected')} {serviceImageFile.name}
                             </p>
                         )}
                         {selectedService?.image && !serviceImageFile && (
-                            <p className="text-xs text-muted-foreground text-right">
-                                الصورة الحالية: {selectedService.image}
+                            <p className={`text-xs text-muted-foreground ${isRTL ? 'text-right rtl:text-right' : 'text-left'}`}>
+                                {t('categories.normalServiceForm.currentImage')} {selectedService.image}
                             </p>
                         )}
                     </div>
 
-                    <DialogFooter className="flex-row-reverse">
-                        <Button type="button" variant="outline" onClick={onClose}>
-                            إلغاء
+                    <DialogFooter className={`flex flex-col sm:flex-row gap-2 ${isRTL ? 'rtl:gap-2 ' : ''}`}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={onClose}
+                            className={`w-full sm:w-auto ${isRTL ? 'rtl:w-full rtl:sm:w-auto' : ''}`}
+                        >
+                            {t('common.cancel')}
                         </Button>
                         <Button
                             type="submit"
                             disabled={isLoading}
-                            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                            className={`w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 ${isRTL ? 'rtl:w-full rtl:sm:w-auto' : ''}`}
                         >
-                            {selectedService ? 'تحديث الخدمة' : 'إنشاء الخدمة'}
+                            {selectedService ? t('categories.normalServiceForm.updateService') : t('categories.normalServiceForm.createService')}
                         </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     )
 }

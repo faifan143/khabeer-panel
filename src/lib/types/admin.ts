@@ -19,8 +19,8 @@ export interface DashboardStats {
   popularServices: Array<{
     id: number
     name: string
-    description: string
-    price: number
+    description: string | null
+    price: number | null
     category: {
       id: number
       name: string
@@ -41,6 +41,38 @@ export interface DashboardStats {
     rating: number
   }>
   orderStats: OrderStats
+  stateBreakdown: {
+    providers: Array<{
+      state: string
+      providers: Array<{
+        id: number
+        name: string
+        email: string
+        phone: string
+        description: string
+        image: string | null
+        state: string
+        isActive: boolean
+        isVerified: boolean
+        orderCount: number
+        rating: number
+      }>
+    }>
+    services: Array<{
+      state: string
+      services: Array<{
+        id: number
+        name: string
+        description: string | null
+        price: number | null
+        category: {
+          id: number
+          name: string
+        } | null
+        orderCount: number
+      }>
+    }>
+  }
 }
 
 export interface OverviewStats {

@@ -1,6 +1,9 @@
 "use client"
 
 import { ProtectedRoute } from "@/components/auth/protected-route"
+import { KhabeerServiceForm } from "@/components/forms/khabeer-service-form"
+import { NormalServiceForm } from "@/components/forms/normal-service-form"
+import { ServiceTypeSelectionDialog } from "@/components/forms/service-type-selection-dialog"
 import { AdminLayout } from "@/components/layout/admin-layout"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
@@ -9,32 +12,26 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { SearchBox } from "@/components/ui/search-box"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { StateSelector } from "@/components/ui/state-selector"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
 import { useCategories, useCreateCategory, useCreateService, useDeleteCategory, useDeleteService, useServices, useUpdateCategory, useUpdateService } from "@/lib/api/hooks/useServices"
-import { Category, CreateCategoryDto, CreateServiceDto, Service, UpdateCategoryDto, UpdateServiceDto, ServiceType } from "@/lib/api/types"
-import { ServiceTypeSelectionDialog } from "@/components/forms/service-type-selection-dialog"
-import { NormalServiceForm } from "@/components/forms/normal-service-form"
-import { KhabeerServiceForm } from "@/components/forms/khabeer-service-form"
+import { Category, CreateCategoryDto, CreateServiceDto, Service, ServiceType, UpdateCategoryDto, UpdateServiceDto } from "@/lib/api/types"
 import { formatCurrency } from "@/lib/utils"
 import { getCategoryImageUrl, getServiceImageUrl } from "@/lib/utils/image"
-import { SearchBox } from "@/components/ui/search-box"
+import { getLocalizedStateName } from "@/lib/constants/oman-states"
 import {
-    CheckCircle,
     DollarSign,
     Edit,
-    Filter,
     Grid,
     List,
     Package,
     Plus,
     Trash2,
     TrendingUp,
-    Upload,
-    XCircle
+    Upload
 } from "lucide-react"
 import { useMemo, useState } from "react"
 import toast from "react-hot-toast"
@@ -90,27 +87,27 @@ const StatCard = ({
     trend?: { value: number; isPositive: boolean }
     description?: string
 }) => (
-    <Card className="group hover:shadow-md transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50/50">
-        <CardContent className="px-4">
+    <Card className="group hover:shadow-md transition-all duration-200 border-0 bg-gradient-to-br from-white to-gray-50/50">
+        <CardContent className="px-2 py-3">
             <div className="flex items-center justify-between">
-                <div className="flex-1">
-                    <p className="text-xs font-medium text-muted-foreground">{title}</p>
-                    <div className="flex items-baseline space-x-2">
-                        <p className="text-base font-bold text-gray-900">{value}</p>
+                <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-muted-foreground truncate">{title}</p>
+                    <div className="flex items-baseline space-x-1">
+                        <p className="text-sm font-bold text-gray-900 truncate">{value}</p>
                         {trend && (
                             <div className={`flex items-center text-xs font-medium ${trend.isPositive ? 'text-green-600' : 'text-red-600'
                                 }`}>
-                                {trend.isPositive ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingUp className="h-3 w-3 mr-1 rotate-180" />}
+                                {trend.isPositive ? <TrendingUp className="h-3 w-3 mr-0.5" /> : <TrendingUp className="h-3 w-3 mr-0.5 rotate-180" />}
                                 {Math.abs(trend.value)}%
                             </div>
                         )}
                     </div>
                     {description && (
-                        <p className="text-xs text-muted-foreground">{description}</p>
+                        <p className="text-xs text-muted-foreground truncate">{description}</p>
                     )}
                 </div>
-                <div className={`w-8 h-8 rounded-md flex items-center justify-center ${color} group-hover:scale-105 transition-transform duration-300`}>
-                    <Icon className="h-4 w-4 text-white" />
+                <div className={`w-6 h-6 rounded-md flex items-center justify-center ${color} group-hover:scale-105 transition-transform duration-200 flex-shrink-0`}>
+                    <Icon className="h-3 w-3 text-white" />
                 </div>
             </div>
         </CardContent>
@@ -119,6 +116,7 @@ const StatCard = ({
 
 export default function CategoriesServicesPage() {
     const { t, i18n } = useTranslation()
+    const isRTL = i18n.language === 'ar'
     const [activeTab, setActiveTab] = useState("categories")
     const [searchTerm, setSearchTerm] = useState("")
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
@@ -197,8 +195,15 @@ export default function CategoriesServicesPage() {
         let filtered = services.filter(service =>
             service.titleAr.toLowerCase().includes(searchTerm.toLowerCase()) ||
             service.titleEn.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            service.description.toLowerCase().includes(searchTerm.toLowerCase())
+            (service.serviceType === 'KHABEER' && service.description.toLowerCase().includes(searchTerm.toLowerCase()))
         )
+
+        // Apply service type filter
+        if (serviceTypeFilter !== "all") {
+            filtered = filtered.filter(service =>
+                service.serviceType === serviceTypeFilter
+            )
+        }
 
         if (filterStatus !== "all") {
             filtered = filtered.filter(service =>
@@ -207,7 +212,7 @@ export default function CategoriesServicesPage() {
         }
 
         return filtered
-    }, [services, searchTerm, filterStatus])
+    }, [services, searchTerm, filterStatus, serviceTypeFilter])
 
     // Category form state
     const [categoryForm, setCategoryForm] = useState<CreateCategoryDto>({
@@ -241,9 +246,6 @@ export default function CategoriesServicesPage() {
         setServiceForm({
             titleAr: "",
             titleEn: "",
-            description: "",
-            commission: 0,
-            whatsapp: "",
             categoryId: undefined,
             state: undefined,
             serviceType: 'NORMAL'
@@ -327,11 +329,10 @@ export default function CategoriesServicesPage() {
         setServiceForm({
             titleAr: service.titleAr,
             titleEn: service.titleEn,
-            description: service.description,
-            commission: service.commission || 0,
-            whatsapp: service.whatsapp,
+            description: service.serviceType === 'KHABEER' ? service.description : undefined,
+            commission: service.serviceType === 'NORMAL' ? (service.commission || 0) : undefined,
+            whatsapp: service.serviceType === 'KHABEER' ? service.whatsapp : undefined,
             categoryId: service.categoryId || undefined,
-            state: service.state,
             serviceType: service.serviceType
         })
         setServiceImageFile(null)
@@ -403,231 +404,239 @@ export default function CategoriesServicesPage() {
     return (
         <ProtectedRoute>
             <AdminLayout>
-                <div className="space-y-8">
-                    {/* Enhanced Tabs */}
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                        <div className="flex items-center justify-between">
-                            <TabsList className="grid w-auto grid-cols-2 bg-gray-100 p-1">
-                                <TabsTrigger
-                                    value="categories"
-                                    className="px-8 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                                >
-                                    {t('categories.categories')}
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="services"
-                                    className="px-8 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                                >
-                                    {t('categories.services')}
-                                </TabsTrigger>
-                            </TabsList>
-
-                            <div className="flex items-center space-x-3">
-                                {/* Search Box */}
-                                <SearchBox
-                                    placeholder={activeTab === "categories" ? t('categories.searchCategories') : t('categories.searchServices')}
-                                    value={searchTerm}
-                                    onChange={setSearchTerm}
-                                    className="w-64"
-                                />
-                                {/* Status Filter */}
-                                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                                    <SelectTrigger className="w-40">
-                                        <SelectValue placeholder={t('categories.filterByStatus')} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">{t('categories.all')}</SelectItem>
-                                        {activeTab === "categories" ? (
-                                            <>
-                                                <SelectItem value="withState">{t('categories.withState')}</SelectItem>
-                                                <SelectItem value="withoutState">{t('categories.withoutState')}</SelectItem>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <SelectItem value="withCategory">{t('categories.withCategory')}</SelectItem>
-                                                <SelectItem value="withoutCategory">{t('categories.withoutCategory')}</SelectItem>
-                                            </>
-                                        )}
-                                    </SelectContent>
-                                </Select>
-
-                                {/* Service Type Filter - Only show for services tab */}
-                                {activeTab === "services" && (
-                                    <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
-                                        <SelectTrigger className="w-40">
-                                            <SelectValue placeholder={t('categories.filterByType')} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">{t('categories.allTypes')}</SelectItem>
-                                            <SelectItem value="NORMAL">{t('categories.normalServices')}</SelectItem>
-                                            <SelectItem value="KHABEER">{t('categories.khabeerServices')}</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                )}
-
-                                {/* View Toggle */}
-                                <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
-                                    <Button
-                                        variant={viewMode === "grid" ? "default" : "ghost"}
-                                        size="sm"
-                                        onClick={() => setViewMode("grid")}
-                                        className="h-8 w-8 p-0"
+                <div className="space-y-4">
+                    {/* Enhanced Tabs - Compact Responsive Solution */}
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3">
+                        {/* Mobile-First Header Layout */}
+                        <div className="space-y-2">
+                            {/* Tabs Section */}
+                            <div className="flex justify-center sm:justify-start">
+                                <TabsList className="grid w-full max-w-md sm:w-auto grid-cols-2 bg-gray-100 p-0.5 rounded-lg">
+                                    <TabsTrigger
+                                        value="categories"
+                                        className="px-2 xs:px-3 sm:px-4 md:px-6 py-1.5 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs xs:text-sm font-medium transition-all duration-200"
                                     >
-                                        <Grid className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        variant={viewMode === "list" ? "default" : "ghost"}
-                                        size="sm"
-                                        onClick={() => setViewMode("list")}
-                                        className="h-8 w-8 p-0"
+                                        <span className="truncate">{t('categories.categories')}</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger
+                                        value="services"
+                                        className="px-2 xs:px-3 sm:px-4 md:px-6 py-1.5 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs xs:text-sm font-medium transition-all duration-200"
                                     >
-                                        <List className="h-4 w-4" />
-                                    </Button>
+                                        <span className="truncate">{t('categories.services')}</span>
+                                    </TabsTrigger>
+                                </TabsList>
+                            </div>
+
+                            {/* Controls Section - Compact Layout */}
+                            <div className=" flex justify-between items-center gap-2">
+                                {/* Search Row */}
+                                <div className="w-1/2">
+                                    <SearchBox
+                                        placeholder={activeTab === "categories" ? t('categories.searchCategories') : t('categories.searchServices')}
+                                        value={searchTerm}
+                                        onChange={setSearchTerm}
+                                        className="w-full"
+                                    />
+                                </div>
+                                {/* Filters Section */}
+                                <div className="flex flex-col xs:flex-row gap-1.5 xs:gap-2 flex-1 w-1/2">
+
+                                    {/* Service Type Filter - Only show for services tab */}
+                                    {activeTab === "services" && (
+                                        <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
+                                            <SelectTrigger className="w-full xs:w-auto xs:min-w-[100px] h-8 text-xs">
+                                                <SelectValue placeholder={t('categories.filterByType')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">{t('categories.allTypes')}</SelectItem>
+                                                <SelectItem value="NORMAL">{t('categories.normalServices')}</SelectItem>
+                                                <SelectItem value="KHABEER">{t('categories.khabeerServices')}</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    )}
                                 </div>
 
-                                {/* Add Button */}
-                                {activeTab === "categories" ? (
-                                    <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-                                        <DialogTrigger asChild>
-                                            <Button onClick={resetCategoryForm} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                                                <Plus className="h-4 w-4 mr-2" />
-                                                {t('categories.addCategory')}
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="sm:max-w-[500px]">
-                                            <DialogHeader className="rtl:text-right">
-                                                <DialogTitle className="text-xl">
-                                                    {selectedCategory ? t('categories.editCategory') : t('categories.addCategory')}
-                                                </DialogTitle>
-                                                <DialogDescription>
-                                                    {selectedCategory ? t('categories.updateCategoryInfo') : t('categories.createNewCategory')}
-                                                </DialogDescription>
-                                            </DialogHeader>
-                                            <form onSubmit={handleCategorySubmit} className="space-y-6">
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="titleEn" className="text-sm font-medium">{t('categories.englishTitle')}</Label>
-                                                        <Input
-                                                            id="titleEn"
-                                                            value={categoryForm.titleEn}
-                                                            onChange={(e) => setCategoryForm({ ...categoryForm, titleEn: e.target.value })}
-                                                            placeholder={t('categories.enterEnglishTitle')}
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="titleAr" className="text-sm font-medium">{t('categories.arabicTitle')}</Label>
-                                                        <Input
-                                                            id="titleAr"
-                                                            value={categoryForm.titleAr}
-                                                            onChange={(e) => setCategoryForm({ ...categoryForm, titleAr: e.target.value })}
-                                                            placeholder={t('categories.enterArabicTitle')}
-                                                            required
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label htmlFor="categoryImage" className="text-sm font-medium">{t('categories.image')}</Label>
-                                                    <div className="flex items-center space-x-2">
-                                                        <Input
-                                                            id="categoryImage"
-                                                            type="file"
-                                                            accept="image/*"
-                                                            onChange={(e) => {
-                                                                const file = e.target.files?.[0]
-                                                                if (file) handleImageUpload(file, 'category')
-                                                            }}
-                                                            className="flex-1"
-                                                        />
-                                                        <Upload className="h-4 w-4 text-muted-foreground" />
-                                                    </div>
-                                                    {categoryImageFile && (
-                                                        <p className="text-xs text-green-600">
-                                                            {t('categories.fileStatus.selected') + " " + categoryImageFile.name}
-                                                        </p>
-                                                    )}
-                                                    {selectedCategory?.image && !categoryImageFile && (
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {t('categories.fileStatus.currentImage') + " " + selectedCategory.image}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <StateSelector
-                                                    value={categoryForm.state}
-                                                    onChange={(state) => setCategoryForm({ ...categoryForm, state })}
-                                                    placeholder={t('categories.selectState')}
-                                                    label={t('categories.state')}
-                                                />
-                                                <DialogFooter>
-                                                    <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>
-                                                        {t('categories.cancel')}
-                                                    </Button>
-                                                    <Button
-                                                        type="submit"
-                                                        disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
-                                                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                                                    >
-                                                        {selectedCategory ? t('categories.updateCategory') : t('categories.createCategory')}
-                                                    </Button>
-                                                </DialogFooter>
-                                            </form>
-                                        </DialogContent>
-                                    </Dialog>
-                                ) : (
-                                    <ServiceTypeSelectionDialog onServiceTypeSelect={handleServiceTypeSelect}>
-                                        <Button onClick={resetServiceForm} className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
-                                            <Plus className="h-4 w-4 mr-2" />
-                                            {t('categories.addService')}
+                            </div>
+
+
+                            {/* Filters and Actions Row - Compact */}
+                            <div className="flex flex-col xs:flex-row gap-1.5 xs:gap-2">
+
+                                {/* Actions Section - Compact */}
+                                <div className="flex items-center justify-between xs:justify-end gap-1.5">
+                                    {/* View Toggle - Compact */}
+                                    <div className="flex items-center space-x-0.5 bg-gray-100 rounded-lg p-0.5">
+                                        <Button
+                                            variant={viewMode === "grid" ? "default" : "ghost"}
+                                            size="sm"
+                                            onClick={() => setViewMode("grid")}
+                                            className="h-7 w-7 p-0 touch-manipulation"
+                                            aria-label="Grid view"
+                                        >
+                                            <Grid className="h-3.5 w-3.5" />
                                         </Button>
-                                    </ServiceTypeSelectionDialog>
-                                )}
+                                        <Button
+                                            variant={viewMode === "list" ? "default" : "ghost"}
+                                            size="sm"
+                                            onClick={() => setViewMode("list")}
+                                            className="h-7 w-7 p-0 touch-manipulation"
+                                            aria-label="List view"
+                                        >
+                                            <List className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </div>
+
+                                    {/* Add Button - Compact */}
+                                    {activeTab === "categories" ? (
+                                        <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+                                            <DialogTrigger asChild>
+                                                <Button
+                                                    onClick={resetCategoryForm}
+                                                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-xs px-2 py-1.5 h-8 touch-manipulation whitespace-nowrap"
+                                                >
+                                                    <Plus className="h-3 w-3 mr-1" />
+                                                    <span className="hidden xs:inline">{t('categories.addCategory')}</span>
+                                                    <span className="xs:hidden">{t('categories.add')}</span>
+                                                </Button>
+                                            </DialogTrigger>
+                                            <DialogContent className="w-[95vw] max-w-[500px] max-h-[85vh] overflow-y-auto">
+                                                <DialogHeader className="rtl:text-right">
+                                                    <DialogTitle className="text-base sm:text-lg">
+                                                        {selectedCategory ? t('categories.editCategory') : t('categories.addCategory')}
+                                                    </DialogTitle>
+                                                    <DialogDescription className="text-xs sm:text-sm">
+                                                        {selectedCategory ? t('categories.updateCategoryInfo') : t('categories.createNewCategory')}
+                                                    </DialogDescription>
+                                                </DialogHeader>
+                                                <form onSubmit={handleCategorySubmit} className="space-y-3 sm:space-y-4">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                        <div className="space-y-1.5">
+                                                            <Label htmlFor="titleEn" className="text-xs font-medium">{t('categories.englishTitle')}</Label>
+                                                            <Input
+                                                                id="titleEn"
+                                                                value={categoryForm.titleEn}
+                                                                onChange={(e) => setCategoryForm({ ...categoryForm, titleEn: e.target.value })}
+                                                                placeholder={t('categories.enterEnglishTitle')}
+                                                                className="h-8 text-sm"
+                                                                required
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1.5">
+                                                            <Label htmlFor="titleAr" className="text-xs font-medium">{t('categories.arabicTitle')}</Label>
+                                                            <Input
+                                                                id="titleAr"
+                                                                value={categoryForm.titleAr}
+                                                                onChange={(e) => setCategoryForm({ ...categoryForm, titleAr: e.target.value })}
+                                                                placeholder={t('categories.enterArabicTitle')}
+                                                                className="h-8 text-sm"
+                                                                required
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label htmlFor="categoryImage" className="text-xs font-medium">{t('categories.image')}</Label>
+                                                        <div className="flex items-center space-x-2">
+                                                            <Input
+                                                                id="categoryImage"
+                                                                type="file"
+                                                                accept="image/*"
+                                                                onChange={(e) => {
+                                                                    const file = e.target.files?.[0]
+                                                                    if (file) handleImageUpload(file, 'category')
+                                                                }}
+                                                                className="flex-1 h-8 text-xs"
+                                                            />
+                                                            <Upload className="h-3 w-3 text-muted-foreground" />
+                                                        </div>
+                                                        {categoryImageFile && (
+                                                            <p className="text-xs text-green-600 truncate">
+                                                                {t('categories.fileStatus.selected') + " " + categoryImageFile.name}
+                                                            </p>
+                                                        )}
+                                                        {selectedCategory?.image && !categoryImageFile && (
+                                                            <p className="text-xs text-muted-foreground truncate">
+                                                                {t('categories.fileStatus.currentImage') + " " + selectedCategory.image}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <StateSelector
+                                                        value={categoryForm.state}
+                                                        onChange={(state) => setCategoryForm({ ...categoryForm, state })}
+                                                        placeholder={t('categories.selectState')}
+                                                        label={t('categories.state')}
+                                                    />
+                                                    <DialogFooter className="flex flex-col sm:flex-row gap-1.5 sm:gap-2 sm:justify-end">
+                                                        <Button type="button" variant="outline" onClick={() => setIsCategoryDialogOpen(false)} className="w-full sm:w-auto h-8 text-xs">
+                                                            {t('categories.cancel')}
+                                                        </Button>
+                                                        <Button
+                                                            type="submit"
+                                                            disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
+                                                            className="w-full sm:w-auto h-8 text-xs bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                                                        >
+                                                            {selectedCategory ? t('categories.updateCategory') : t('categories.createCategory')}
+                                                        </Button>
+                                                    </DialogFooter>
+                                                </form>
+                                            </DialogContent>
+                                        </Dialog>
+                                    ) : (
+                                        <ServiceTypeSelectionDialog onServiceTypeSelect={handleServiceTypeSelect}>
+                                            <Button
+                                                onClick={resetServiceForm}
+                                                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-xs px-2 py-1.5 h-8 touch-manipulation whitespace-nowrap"
+                                            >
+                                                <Plus className="h-3 w-3 mr-1" />
+                                                <span className="hidden xs:inline">{t('categories.addService')}</span>
+                                                <span className="xs:hidden">{t('categories.add')}</span>
+                                            </Button>
+                                        </ServiceTypeSelectionDialog>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
                         {/* Categories Tab */}
-                        <TabsContent value="categories" className="space-y-6">
-                            {/* Enhanced Stats Display */}
-
-
-                            {/* Categories Display */}
+                        <TabsContent value="categories" className="space-y-3">
+                            {/* Categories Display - Compact Responsive Grid */}
                             {categoriesLoading ? (
-                                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                <div className="grid gap-2 xs:gap-3 sm:gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
                                     {Array.from({ length: 6 }).map((_, i) => (
                                         <CategoryCardSkeleton key={i} />
                                     ))}
                                 </div>
                             ) : viewMode === "grid" ? (
-                                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                <div className="grid gap-2 xs:gap-3 sm:gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
                                     {filteredCategories.map((category) => {
                                         return (
-                                            <Card key={category.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50/50 hover:from-blue-50/50 hover:to-indigo-50/50">
-                                                <CardContent className="p-6">
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="flex items-center space-x-4 flex-1">
-                                                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+                                            <Card key={category.id} className="group hover:shadow-lg transition-all duration-200 border-0 bg-gradient-to-br from-white to-gray-50/50 hover:from-blue-50/50 hover:to-indigo-50/50 touch-manipulation">
+                                                <CardContent className="p-2 xs:p-3 sm:p-4">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center space-x-2 xs:space-x-3 flex-1 min-w-0">
+                                                            <div className="w-6 h-6 xs:w-8 xs:h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md xs:rounded-lg flex items-center justify-center shadow-md overflow-hidden flex-shrink-0">
                                                                 {
                                                                     category.image && getCategoryImageUrl(category.image) ? (
                                                                         <img src={getCategoryImageUrl(category.image)} alt={category.titleEn} className="w-full h-full object-cover" />
                                                                     ) : (
-                                                                        <Package className="h-6 w-6 text-white" />
+                                                                        <Package className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-white" />
                                                                     )
                                                                 }
                                                             </div>
                                                             <div className="flex-1 min-w-0">
-                                                                <h3 className="font-semibold text-gray-900 truncate">{category.titleEn}</h3>
-                                                                <p className="text-sm text-muted-foreground truncate mt-1">{category.titleAr}</p>
-                                                                <div className="flex items-center mt-3">
+                                                                <h3 className="font-semibold text-gray-900 truncate text-xs xs:text-sm sm:text-base">{category.titleEn}</h3>
+                                                                <p className="text-xs text-muted-foreground truncate">{category.titleAr}</p>
+                                                                <div className="flex items-center mt-1">
                                                                     {category.state && category.state.trim() !== '' ? (
                                                                         <Badge
                                                                             variant="outline"
-                                                                            className="text-xs px-3 py-1 bg-blue-50 text-blue-700 border-blue-200"
+                                                                            className="text-xs px-1.5 py-0.5 bg-blue-50 text-blue-700 border-blue-200"
                                                                         >
-                                                                            📍 {category.state}
+                                                                            📍 {getLocalizedStateName(category.state, isRTL ? 'ar' : 'en')}
                                                                         </Badge>
                                                                     ) : (
                                                                         <Badge
                                                                             variant="secondary"
-                                                                            className="text-xs px-3 py-1 bg-gray-100 text-gray-600"
+                                                                            className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-600"
                                                                         >
                                                                             {t('categories.noLocation')}
                                                                         </Badge>
@@ -635,19 +644,25 @@ export default function CategoriesServicesPage() {
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <div className="flex items-center space-x-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 onClick={() => handleCategoryEdit(category)}
-                                                                className="h-8 w-8 p-0 hover:bg-blue-100"
+                                                                className="h-6 w-6 xs:h-7 xs:w-7 p-0 hover:bg-blue-100 touch-manipulation"
+                                                                aria-label="Edit category"
                                                             >
-                                                                <Edit className="h-4 w-4" />
+                                                                <Edit className="h-3 w-3" />
                                                             </Button>
                                                             <AlertDialog>
                                                                 <AlertDialogTrigger asChild>
-                                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-red-100">
-                                                                        <Trash2 className="h-4 w-4" />
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-6 w-6 xs:h-7 xs:w-7 p-0 hover:bg-red-100 touch-manipulation"
+                                                                        aria-label="Delete category"
+                                                                    >
+                                                                        <Trash2 className="h-3 w-3" />
                                                                     </Button>
                                                                 </AlertDialogTrigger>
                                                                 <AlertDialogContent>
@@ -680,102 +695,104 @@ export default function CategoriesServicesPage() {
                                 </div>
                             ) : (
                                 <Card className="border-0 shadow-lg">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow className="bg-gray-50 ">
-                                                <TableHead className="font-semibold rtl:text-right  ">{t('categories.tableHeaders.category')}</TableHead>
-                                                <TableHead className="font-semibold rtl:text-right ">{t('categories.tableHeaders.state')}</TableHead>
-                                                <TableHead className="font-semibold rtl:text-right ">{t('categories.tableHeaders.actions')}</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {filteredCategories.map((category) => {
-                                                return (
-                                                    <TableRow key={category.id} className="hover:bg-gray-50/50">
-                                                        <TableCell>
-                                                            <div className="flex items-center space-x-3">
-                                                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center overflow-hidden">
-                                                                    {category.image ? (
-                                                                        <img src={getCategoryImageUrl(category.image)} alt={category.titleEn} className="w-full h-full object-cover" />
-                                                                    ) : (
-                                                                        <Package className="h-5 w-5 text-white" />
-                                                                    )}
+                                    <div className="overflow-x-auto">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow className="bg-gray-50 ">
+                                                    <TableHead className="font-semibold rtl:text-right min-w-[200px]">{t('categories.tableHeaders.category')}</TableHead>
+                                                    <TableHead className="font-semibold rtl:text-right min-w-[120px]">{t('categories.tableHeaders.state')}</TableHead>
+                                                    <TableHead className="font-semibold rtl:text-right min-w-[100px]">{t('categories.tableHeaders.actions')}</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {filteredCategories.map((category) => {
+                                                    return (
+                                                        <TableRow key={category.id} className="hover:bg-gray-50/50">
+                                                            <TableCell>
+                                                                <div className="flex items-center space-x-3">
+                                                                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center overflow-hidden">
+                                                                        {category.image ? (
+                                                                            <img src={getCategoryImageUrl(category.image)} alt={category.titleEn} className="w-full h-full object-cover" />
+                                                                        ) : (
+                                                                            <Package className="h-5 w-5 text-white" />
+                                                                        )}
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="font-semibold text-gray-900">{category.titleEn}</div>
+                                                                        <div className="text-sm text-muted-foreground">{category.titleAr}</div>
+                                                                    </div>
                                                                 </div>
-                                                                <div>
-                                                                    <div className="font-semibold text-gray-900">{category.titleEn}</div>
-                                                                    <div className="text-sm text-muted-foreground">{category.titleAr}</div>
+                                                            </TableCell>
+                                                            <TableCell>
+                                                                {category.state && category.state.trim() !== '' ? (
+                                                                    <Badge
+                                                                        variant="outline"
+                                                                        className="bg-blue-50 text-blue-700 border-blue-200"
+                                                                    >
+                                                                        📍 {getLocalizedStateName(category.state, isRTL ? 'ar' : 'en')}
+                                                                    </Badge>
+                                                                ) : (
+                                                                    <Badge
+                                                                        variant="secondary"
+                                                                        className="bg-gray-100 text-gray-600"
+                                                                    >
+                                                                        {t('categories.noLocation')}
+                                                                    </Badge>
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell className="text-right">
+                                                                <div className="flex items-center justify-end space-x-2">
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        onClick={() => handleCategoryEdit(category)}
+                                                                        className="h-8 w-8 p-0 hover:bg-blue-100"
+                                                                    >
+                                                                        <Edit className="h-4 w-4" />
+                                                                    </Button>
+                                                                    <AlertDialog>
+                                                                        <AlertDialogTrigger asChild>
+                                                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-red-100">
+                                                                                <Trash2 className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </AlertDialogTrigger>
+                                                                        <AlertDialogContent>
+                                                                            <AlertDialogHeader>
+                                                                                <AlertDialogTitle>{t('categories.deleteConfirmations.categoryTitle')}</AlertDialogTitle>
+                                                                                <AlertDialogDescription>
+                                                                                    {t('categories.deleteConfirmations.categoryDescription', { title: category.titleEn })}:
+                                                                                    <br />• {t('categories.deleteConfirmations.allServicesInCategory')}
+                                                                                    <br />• {t('categories.deleteConfirmations.allInvoicesAndOrders')}
+                                                                                    <br />• {t('categories.deleteConfirmations.allProviderServices')}
+                                                                                </AlertDialogDescription>
+                                                                            </AlertDialogHeader>
+                                                                            <AlertDialogFooter>
+                                                                                <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                                                                                <AlertDialogAction
+                                                                                    onClick={() => handleCategoryDelete(category.id)}
+                                                                                    className="bg-red-600 hover:bg-red-700"
+                                                                                >
+                                                                                    {t('categories.deleteCategory')}
+                                                                                </AlertDialogAction>
+                                                                            </AlertDialogFooter>
+                                                                        </AlertDialogContent>
+                                                                    </AlertDialog>
                                                                 </div>
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            {category.state && category.state.trim() !== '' ? (
-                                                                <Badge
-                                                                    variant="outline"
-                                                                    className="bg-blue-50 text-blue-700 border-blue-200"
-                                                                >
-                                                                    📍 {category.state}
-                                                                </Badge>
-                                                            ) : (
-                                                                <Badge
-                                                                    variant="secondary"
-                                                                    className="bg-gray-100 text-gray-600"
-                                                                >
-                                                                    {t('categories.noLocation')}
-                                                                </Badge>
-                                                            )}
-                                                        </TableCell>
-                                                        <TableCell className="text-right">
-                                                            <div className="flex items-center justify-end space-x-2">
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    onClick={() => handleCategoryEdit(category)}
-                                                                    className="h-8 w-8 p-0 hover:bg-blue-100"
-                                                                >
-                                                                    <Edit className="h-4 w-4" />
-                                                                </Button>
-                                                                <AlertDialog>
-                                                                    <AlertDialogTrigger asChild>
-                                                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-red-100">
-                                                                            <Trash2 className="h-4 w-4" />
-                                                                        </Button>
-                                                                    </AlertDialogTrigger>
-                                                                    <AlertDialogContent>
-                                                                        <AlertDialogHeader>
-                                                                            <AlertDialogTitle>{t('categories.deleteConfirmations.categoryTitle')}</AlertDialogTitle>
-                                                                            <AlertDialogDescription>
-                                                                                {t('categories.deleteConfirmations.categoryDescription', { title: category.titleEn })}:
-                                                                                <br />• {t('categories.deleteConfirmations.allServicesInCategory')}
-                                                                                <br />• {t('categories.deleteConfirmations.allInvoicesAndOrders')}
-                                                                                <br />• {t('categories.deleteConfirmations.allProviderServices')}
-                                                                            </AlertDialogDescription>
-                                                                        </AlertDialogHeader>
-                                                                        <AlertDialogFooter>
-                                                                            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-                                                                            <AlertDialogAction
-                                                                                onClick={() => handleCategoryDelete(category.id)}
-                                                                                className="bg-red-600 hover:bg-red-700"
-                                                                            >
-                                                                                {t('categories.deleteCategory')}
-                                                                            </AlertDialogAction>
-                                                                        </AlertDialogFooter>
-                                                                    </AlertDialogContent>
-                                                                </AlertDialog>
-                                                            </div>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                )
-                                            })}
-                                        </TableBody>
-                                    </Table>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )
+                                                })}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
                                 </Card>
                             )}
                         </TabsContent>
 
                         {/* Services Tab */}
-                        <TabsContent value="services" className="space-y-6">
-                            {/* Enhanced Stats Display */}
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <TabsContent value="services" className="space-y-3">
+                            {/* Enhanced Stats Display - Compact Responsive */}
+                            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 xs:gap-3">
                                 <StatCard
                                     title={t('categories.totalServices')}
                                     value={serviceStats.total}
@@ -813,76 +830,82 @@ export default function CategoriesServicesPage() {
                                 />
                             </div>
 
-                            {/* Services Display */}
+                            {/* Services Display - Compact Responsive Grid */}
                             {servicesLoading ? (
-                                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                <div className="grid gap-2 xs:gap-3 sm:gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
                                     {Array.from({ length: 6 }).map((_, i) => (
                                         <ServiceCardSkeleton key={i} />
                                     ))}
                                 </div>
                             ) : viewMode === "grid" ? (
-                                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                <div className="grid gap-2 xs:gap-3 sm:gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
                                     {filteredServices.map((service) => (
-                                        <Card key={service.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50/50 hover:from-green-50/50 hover:to-emerald-50/50">
-                                            <CardContent className="p-6">
-                                                <div className="flex items-start justify-between">
-                                                    <div className="flex items-start space-x-4 flex-1">
-                                                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+                                        <Card key={service.id} className="group hover:shadow-lg transition-all duration-200 border-0 bg-gradient-to-br from-white to-gray-50/50 hover:from-green-50/50 hover:to-emerald-50/50 touch-manipulation">
+                                            <CardContent className="p-2 xs:p-3 sm:p-4">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center space-x-2 xs:space-x-3 flex-1 min-w-0">
+                                                        <div className="w-6 h-6 xs:w-8 xs:h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md xs:rounded-lg flex items-center justify-center shadow-md overflow-hidden flex-shrink-0">
                                                             {service.image ? (
                                                                 <img src={getServiceImageUrl(service.image)} alt={service.titleEn} className="w-full h-full object-cover" />
                                                             ) : (
-                                                                <Package className="h-6 w-6 text-white" />
+                                                                <Package className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5 text-white" />
                                                             )}
                                                         </div>
                                                         <div className="flex-1 min-w-0">
-                                                            <h3 className="font-semibold text-gray-900 truncate">{service.titleEn}</h3>
-                                                            <p className="text-sm text-muted-foreground truncate">{service.titleAr}</p>
-                                                            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{service.description}</p>
-                                                            <div className="flex items-center justify-between mt-3">
-                                                                <div className="flex items-center space-x-2">
-                                                                    {service.commission && (
-                                                                        <span className="text-sm font-medium text-gray-900">
-                                                                            {renderCurrency(service.commission)}
-                                                                        </span>
-                                                                    )}
-                                                                    <Badge
-                                                                        variant="outline"
-                                                                        className={`text-xs px-2 py-1 ${service.serviceType === 'NORMAL'
-                                                                            ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                                                            : 'bg-purple-50 text-purple-700 border-purple-200'
-                                                                            }`}
-                                                                    >
-                                                                        {service.serviceType === 'NORMAL' ? 'NORMAL' : 'KHABEER'}
+                                                            <h3 className="font-semibold text-gray-900 truncate text-xs xs:text-sm sm:text-base">{service.titleEn}</h3>
+                                                            <p className="text-xs text-muted-foreground truncate">{service.titleAr}</p>
+                                                            {service.serviceType === 'KHABEER' && (
+                                                                <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">{service.description}</p>
+                                                            )}
+                                                            <div className="flex flex-wrap items-center gap-1 mt-1">
+                                                                {service.serviceType === 'NORMAL' && service.commission && (
+                                                                    <span className="text-xs font-medium text-gray-900">
+                                                                        {renderCurrency(service.commission)}
+                                                                    </span>
+                                                                )}
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className={`text-xs px-1 py-0.5 ${service.serviceType === 'NORMAL'
+                                                                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                                                        : 'bg-purple-50 text-purple-700 border-purple-200'
+                                                                        }`}
+                                                                >
+                                                                    {service.serviceType === 'NORMAL' ? t('categories.normalServices') : t('categories.khabeerServices')}
+                                                                </Badge>
+                                                                {service.category ? (
+                                                                    <Badge variant="outline" className="text-xs px-1 py-0.5">
+                                                                        {service.category.titleEn}-{service.category.titleAr}
                                                                     </Badge>
-                                                                    {service.category ? (
-                                                                        <Badge variant="outline" className="text-xs px-2 py-1">
-                                                                            {service.category.titleEn}
-                                                                        </Badge>
-                                                                    ) : (
-                                                                        <Badge variant="outline" className={`text-xs px-2 py-1 ${service.serviceType === 'KHABEER'
-                                                                            ? 'bg-purple-50 text-purple-700 border-purple-200'
-                                                                            : 'bg-gray-50 text-gray-700 border-gray-200'
-                                                                            }`}>
-                                                                            {service.serviceType === 'KHABEER' ? 'فئة خبير' : 'لا توجد فئة'}
-                                                                        </Badge>
-                                                                    )}
-                                                                </div>
+                                                                ) : (
+                                                                    <Badge variant="outline" className={`text-xs px-1 py-0.5 ${service.serviceType === 'KHABEER'
+                                                                        ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                                                        : 'bg-gray-50 text-gray-700 border-gray-200'
+                                                                        }`}>
+                                                                        {service.serviceType === 'KHABEER' ? t('categories.khabeerCategory') : t('categories.noCategory')}
+                                                                    </Badge>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <div className="flex items-center space-x-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
                                                             onClick={() => handleServiceEdit(service)}
-                                                            className="h-8 w-8 p-0 hover:bg-green-100"
+                                                            className="h-6 w-6 xs:h-7 xs:w-7 p-0 hover:bg-green-100 touch-manipulation"
+                                                            aria-label="Edit service"
                                                         >
-                                                            <Edit className="h-4 w-4" />
+                                                            <Edit className="h-3 w-3" />
                                                         </Button>
                                                         <AlertDialog>
                                                             <AlertDialogTrigger asChild>
-                                                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-red-100">
-                                                                    <Trash2 className="h-4 w-4" />
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    className="h-6 w-6 xs:h-7 xs:w-7 p-0 hover:bg-red-100 touch-manipulation"
+                                                                    aria-label="Delete service"
+                                                                >
+                                                                    <Trash2 className="h-3 w-3" />
                                                                 </Button>
                                                             </AlertDialogTrigger>
                                                             <AlertDialogContent>
@@ -913,98 +936,107 @@ export default function CategoriesServicesPage() {
                                 </div>
                             ) : (
                                 <Card className="border-0 shadow-lg">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow className="bg-gray-50">
-                                                <TableHead className="font-semibold  rtl:text-right">{t('categories.tableHeaders.service')}</TableHead>
-                                                <TableHead className="font-semibold  rtl:text-right">{t('categories.tableHeaders.category')}</TableHead>
-                                                <TableHead className="font-semibold  rtl:text-right">{t('categories.tableHeaders.commission')}</TableHead>
-                                                <TableHead className="font-semibold  rtl:text-right">{t('categories.tableHeaders.whatsapp')}</TableHead>
-                                                <TableHead className="font-semibold  rtl:text-right ">{t('categories.tableHeaders.actions')}</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {filteredServices.map((service) => (
-                                                <TableRow key={service.id} className="hover:bg-gray-50/50">
-                                                    <TableCell>
-                                                        <div className="flex items-center space-x-3">
-                                                            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center overflow-hidden">
-                                                                {service.image ? (
-                                                                    <img src={getServiceImageUrl(service.image)} alt={service.titleEn} className="w-full h-full object-cover" />
-                                                                ) : (
-                                                                    <Package className="h-5 w-5 text-white" />
-                                                                )}
-                                                            </div>
-                                                            <div className="max-w-[300px]">
-                                                                <div className="font-semibold text-gray-900 truncate">{service.titleEn}</div>
-                                                                <div className="text-sm text-muted-foreground truncate">{service.titleAr}</div>
-                                                                <div className="text-sm text-muted-foreground line-clamp-1">
-                                                                    {service.description}
+                                    <div className="overflow-x-auto">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow className="bg-gray-50">
+                                                    <TableHead className="font-semibold rtl:text-right min-w-[250px]">{t('categories.tableHeaders.service')}</TableHead>
+                                                    <TableHead className="font-semibold rtl:text-right min-w-[150px]">{t('categories.tableHeaders.category')}</TableHead>
+                                                    <TableHead className="font-semibold rtl:text-right min-w-[100px]">{t('categories.tableHeaders.commission')}</TableHead>
+                                                    <TableHead className="font-semibold rtl:text-right min-w-[120px]">{t('categories.tableHeaders.whatsapp')}</TableHead>
+                                                    <TableHead className="font-semibold rtl:text-right min-w-[100px]">{t('categories.tableHeaders.actions')}</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {filteredServices.map((service) => (
+                                                    <TableRow key={service.id} className="hover:bg-gray-50/50">
+                                                        <TableCell>
+                                                            <div className="flex items-center space-x-3">
+                                                                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center overflow-hidden">
+                                                                    {service.image ? (
+                                                                        <img src={getServiceImageUrl(service.image)} alt={service.titleEn} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        <Package className="h-5 w-5 text-white" />
+                                                                    )}
+                                                                </div>
+                                                                <div className="max-w-[300px]">
+                                                                    <div className="font-semibold text-gray-900 truncate">{service.titleEn}</div>
+                                                                    <div className="text-sm text-muted-foreground truncate">{service.titleAr}</div>
+                                                                    {service.serviceType === 'KHABEER' && (
+                                                                        <div className="text-sm text-muted-foreground line-clamp-1">
+                                                                            {service.description}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {service.category ? (
-                                                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                                                {service.category.titleEn} {service.category.titleAr}
-                                                            </Badge>
-                                                        ) : (
-                                                            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                                                                {service.serviceType === 'KHABEER' ? 'فئة خبير' : t('categories.noCategory')}
-                                                            </Badge>
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <span className="font-semibold text-gray-900">
-                                                            {service.commission !== null ? renderCurrency(service.commission) : 'N/A'}
-                                                        </span>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <span className="text-sm text-muted-foreground font-mono">{service.whatsapp}</span>
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <div className="flex items-center justify-end space-x-2">
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => handleServiceEdit(service)}
-                                                                className="h-8 w-8 p-0 hover:bg-green-100"
-                                                            >
-                                                                <Edit className="h-4 w-4" />
-                                                            </Button>
-                                                            <AlertDialog>
-                                                                <AlertDialogTrigger asChild>
-                                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-red-100">
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    </Button>
-                                                                </AlertDialogTrigger>
-                                                                <AlertDialogContent>
-                                                                    <AlertDialogHeader>
-                                                                        <AlertDialogTitle>{t('categories.deleteConfirmations.serviceTitle')}</AlertDialogTitle>
-                                                                        <AlertDialogDescription>
-                                                                            {t('categories.deleteConfirmations.serviceDescription', { title: service.titleEn })}:
-                                                                            <br />• {t('categories.deleteConfirmations.invoicesAndOrdersForService')}
-                                                                            <br />• {t('categories.deleteConfirmations.providerServicesForService')}
-                                                                        </AlertDialogDescription>
-                                                                    </AlertDialogHeader>
-                                                                    <AlertDialogFooter>
-                                                                        <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-                                                                        <AlertDialogAction
-                                                                            onClick={() => handleServiceDelete(service.id)}
-                                                                            className="bg-red-600 hover:bg-red-700"
-                                                                        >
-                                                                            {t('categories.deleteService')}
-                                                                        </AlertDialogAction>
-                                                                    </AlertDialogFooter>
-                                                                </AlertDialogContent>
-                                                            </AlertDialog>
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {service.category ? (
+                                                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                                                    {service.category.titleEn} {service.category.titleAr}
+                                                                </Badge>
+                                                            ) : (
+                                                                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                                                                    {service.serviceType === 'KHABEER' ? t('categories.khabeerCategory') : t('categories.noCategory')}
+                                                                </Badge>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <span className="font-semibold text-gray-900">
+                                                                {service.serviceType === 'NORMAL'
+                                                                    ? (service.commission !== null ? renderCurrency(service.commission) : 'N/A')
+                                                                    : '-'
+                                                                }
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <span className="text-sm text-muted-foreground font-mono">
+                                                                {service.serviceType === 'KHABEER' ? service.whatsapp : '-'}
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <div className="flex items-center justify-end space-x-2">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => handleServiceEdit(service)}
+                                                                    className="h-8 w-8 p-0 hover:bg-green-100"
+                                                                >
+                                                                    <Edit className="h-4 w-4" />
+                                                                </Button>
+                                                                <AlertDialog>
+                                                                    <AlertDialogTrigger asChild>
+                                                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-red-100">
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </AlertDialogTrigger>
+                                                                    <AlertDialogContent>
+                                                                        <AlertDialogHeader>
+                                                                            <AlertDialogTitle>{t('categories.deleteConfirmations.serviceTitle')}</AlertDialogTitle>
+                                                                            <AlertDialogDescription>
+                                                                                {t('categories.deleteConfirmations.serviceDescription', { title: service.titleEn })}:
+                                                                                <br />• {t('categories.deleteConfirmations.invoicesAndOrdersForService')}
+                                                                                <br />• {t('categories.deleteConfirmations.providerServicesForService')}
+                                                                            </AlertDialogDescription>
+                                                                        </AlertDialogHeader>
+                                                                        <AlertDialogFooter>
+                                                                            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                                                                            <AlertDialogAction
+                                                                                onClick={() => handleServiceDelete(service.id)}
+                                                                                className="bg-red-600 hover:bg-red-700"
+                                                                            >
+                                                                                {t('categories.deleteService')}
+                                                                            </AlertDialogAction>
+                                                                        </AlertDialogFooter>
+                                                                    </AlertDialogContent>
+                                                                </AlertDialog>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
                                 </Card>
                             )}
                         </TabsContent>
@@ -1031,6 +1063,7 @@ export default function CategoriesServicesPage() {
                         }}
                         onSubmit={handleServiceSubmit}
                         selectedService={selectedService}
+                        categories={categories}
                         isLoading={createServiceMutation.isPending || updateServiceMutation.isPending}
                     />
                 </div>
