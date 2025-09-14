@@ -587,29 +587,7 @@ export default function CategoriesServicesPage() {
                         {/* Categories Tab */}
                         <TabsContent value="categories" className="space-y-6">
                             {/* Enhanced Stats Display */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <StatCard
-                                    title={t('categories.totalCategories')}
-                                    value={categoryStats.total}
-                                    icon={Package}
-                                    color="bg-gradient-to-br from-blue-500 to-indigo-600"
-                                    description={`${categoryStats.statePercentage}% ${t('categories.haveStateInfo')}`}
-                                />
-                                <StatCard
-                                    title={t('categories.withState')}
-                                    value={categoryStats.withState}
-                                    icon={CheckCircle}
-                                    color="bg-gradient-to-br from-green-500 to-emerald-600"
-                                    description={t('categories.categoriesWithLocation')}
-                                />
-                                <StatCard
-                                    title={t('categories.withoutState')}
-                                    value={categoryStats.withoutState}
-                                    icon={XCircle}
-                                    color="bg-gradient-to-br from-orange-500 to-red-600"
-                                    description={t('categories.missingLocationInfo')}
-                                />
-                            </div>
+
 
                             {/* Categories Display */}
                             {categoriesLoading ? (
