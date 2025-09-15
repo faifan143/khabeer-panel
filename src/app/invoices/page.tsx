@@ -295,15 +295,6 @@ export default function InvoicesPage() {
                   <p className="text-xs text-teal-700">{t('invoices.paidCommission')}</p>
                 </div>
               </div>
-
-              {/* Pending Provider Amount */}
-              <div className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
-                <AlertCircle className="h-5 w-5 text-yellow-600" />
-                <div>
-                  <p className="text-sm font-medium text-yellow-900">{formatCurrency(stats.pendingProviderAmount, i18n.language)}</p>
-                  <p className="text-xs text-yellow-700">{t('invoices.pendingProviderAmount')}</p>
-                </div>
-              </div>
             </div>
           )}
 
@@ -464,7 +455,7 @@ export default function InvoicesPage() {
         {/* Mark as Paid Confirmation Dialog */}
         <Dialog open={isMarkPaidDialogOpen} onOpenChange={setIsMarkPaidDialogOpen}>
           <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader>
+            <DialogHeader className={`rtl:text-right`}>
               <DialogTitle>{t('invoices.confirmMarkAsPaid')}</DialogTitle>
               <DialogDescription>
                 {t('invoices.confirmMarkAsPaidDescription', { id: selectedInvoice?.id })}
@@ -501,7 +492,7 @@ export default function InvoicesPage() {
         {/* Mark as Failed Confirmation Dialog */}
         <Dialog open={isMarkFailedDialogOpen} onOpenChange={setIsMarkFailedDialogOpen}>
           <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader>
+            <DialogHeader className={`rtl:text-right`}>
               <DialogTitle>{t('invoices.confirmMarkAsFailed')}</DialogTitle>
               <DialogDescription>
                 {t('invoices.confirmMarkAsFailedDescription', { id: selectedInvoice?.id })}
@@ -538,7 +529,7 @@ export default function InvoicesPage() {
         {/* Refund Confirmation Dialog */}
         <Dialog open={isRefundDialogOpen} onOpenChange={setIsRefundDialogOpen}>
           <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader>
+            <DialogHeader className={`rtl:text-right`}>
               <DialogTitle>{t('invoices.confirmRefund')}</DialogTitle>
               <DialogDescription>
                 {t('invoices.confirmRefundDescription', { id: selectedInvoice?.id })}
@@ -576,7 +567,7 @@ export default function InvoicesPage() {
         {/* Delete Confirmation Dialog */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <DialogContent>
-            <DialogHeader>
+            <DialogHeader className={`rtl:text-right`}>
               <DialogTitle>{t('invoices.deleteInvoice')}</DialogTitle>
               <DialogDescription>
                 {t('invoices.deleteInvoiceDescription', { id: selectedInvoice?.id })}
@@ -612,7 +603,7 @@ export default function InvoicesPage() {
         {/* Compact Actions Dialog */}
         <Dialog open={isActionsDialogOpen} onOpenChange={setIsActionsDialogOpen}>
           <DialogContent className="sm:max-w-[400px]">
-            <DialogHeader className="rtl:text-right">
+            <DialogHeader className={`rtl:text-right`}>
               <DialogTitle className="text-lg">{t('invoices.actionsTitle', { id: selectedInvoice?.id })}</DialogTitle>
               {selectedInvoice && (
                 <div className="text-sm text-muted-foreground">
@@ -694,7 +685,7 @@ export default function InvoicesPage() {
               )}
 
               {/* Delete Action - Available for all statuses */}
-              <Button
+              {/* <Button
                 variant="outline"
                 className="w-full justify-start h-12 bg-red-50 border-red-200 hover:bg-red-100"
                 onClick={() => {
@@ -709,7 +700,7 @@ export default function InvoicesPage() {
                     {selectedInvoice?.paymentStatus === 'paid' ? t('invoices.reverseFinancialCommitments') : t('invoices.noFinancialImpact')}
                   </div>
                 </div>
-              </Button>
+              </Button> */}
             </div>
           </DialogContent>
         </Dialog>

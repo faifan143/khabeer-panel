@@ -297,8 +297,8 @@ export default function RatingsPage() {
                                                                     <Eye className="h-4 w-4" />
                                                                 </Button>
                                                             </DialogTrigger>
-                                                            <DialogContent className="max-w-2xl">
-                                                                <DialogHeader>
+                                                            <DialogContent className="max-w-2xl ">
+                                                                <DialogHeader className={`rtl:text-right`}>
                                                                     <DialogTitle>{t('ratings.ratingDetails')}</DialogTitle>
                                                                     <DialogDescription>
                                                                         {t('ratings.detailedView')}

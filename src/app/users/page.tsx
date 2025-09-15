@@ -38,7 +38,6 @@ export default function UsersManagementPage() {
         const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.phone.includes(searchQuery) ||
-            (user.address && user.address.toLowerCase().includes(searchQuery.toLowerCase())) ||
             (user.state && user.state.toLowerCase().includes(searchQuery.toLowerCase())) ||
             (user.state && getLocalizedState(user.state, language).toLowerCase().includes(searchQuery.toLowerCase()))
 
@@ -196,11 +195,10 @@ export default function UsersManagementPage() {
                                             <TableRow>
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('users.tableHeaders.name')}</TableHead>
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('users.tableHeaders.phone')}</TableHead>
-                                                <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('users.tableHeaders.address')}</TableHead>
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('users.tableHeaders.state')}</TableHead>
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('users.tableHeaders.orders')}</TableHead>
                                                 <TableHead className={`font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{t('users.tableHeaders.payments')}</TableHead>
-                                                <TableHead className={`font-semibold ${isRTL ? 'text-left' : 'text-right'}`}>{t('users.tableHeaders.actions')}</TableHead>
+                                                <TableHead className={`font-semibold ${isRTL ? 'text-right  ' : 'text-left'}`}>{t('users.tableHeaders.actions')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -226,11 +224,7 @@ export default function UsersManagementPage() {
                                                     <TableCell>
                                                         <div className="text-sm">{user.phone}</div>
                                                     </TableCell>
-                                                    <TableCell>
-                                                        <div className="text-sm text-muted-foreground max-w-32 truncate">
-                                                            {user.address || t('users.notApplicable')}
-                                                        </div>
-                                                    </TableCell>
+
                                                     <TableCell>
                                                         <div className="text-sm">{user.state ? getLocalizedState(user.state, language) : t('users.notApplicable')}</div>
                                                     </TableCell>
@@ -247,7 +241,7 @@ export default function UsersManagementPage() {
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <div className={`flex items-center ${isRTL ? 'justify-start space-x-reverse gap-2' : 'justify-end gap-2'}`}>
+                                                        <div className={`flex items-center gap-2 `}>
                                                             <Dialog>
                                                                 <DialogTrigger asChild>
                                                                     <Button
@@ -258,7 +252,7 @@ export default function UsersManagementPage() {
                                                                     </Button>
                                                                 </DialogTrigger>
                                                                 <DialogContent className="max-w-md">
-                                                                    <DialogHeader>
+                                                                    <DialogHeader className={`rtl:text-right`}>
                                                                         <DialogTitle>{t('users.userDetails')}</DialogTitle>
                                                                         <DialogDescription>
                                                                             {t('users.detailedInformation', { name: user.name })}
@@ -281,10 +275,7 @@ export default function UsersManagementPage() {
                                                                                 <div className="font-medium">{t('users.phone')}</div>
                                                                                 <div className="text-muted-foreground">{user.phone}</div>
                                                                             </div>
-                                                                            <div>
-                                                                                <div className="font-medium">{t('users.address')}</div>
-                                                                                <div className="text-muted-foreground">{user.address || t('users.notApplicable')}</div>
-                                                                            </div>
+
                                                                             <div>
                                                                                 <div className="font-medium">{t('users.state')}</div>
                                                                                 <div className="text-muted-foreground">{user.state ? getLocalizedState(user.state, language) : t('users.notApplicable')}</div>
