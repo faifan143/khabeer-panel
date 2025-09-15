@@ -391,7 +391,7 @@ export default function InvoicesPage() {
                             <TableCell className="px-6">
                               <div >
                                 <p className="font-medium">{invoice.order?.user.name}</p>
-                                <p dir="ltr" className="text-sm text-muted-foreground">{invoice.order?.user.email ?? invoice.order?.user.phone}</p>
+                                <p dir="ltr" className="text-sm text-muted-foreground">{invoice.order?.user.phone}</p>
                               </div>
                             </TableCell>
                             <TableCell className="px-6">

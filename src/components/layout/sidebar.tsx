@@ -123,7 +123,7 @@ export function Sidebar({ isCollapsed, onCollapse, className }: SidebarProps) {
                     {/* Header */}
                     <div className="flex items-center justify-between h-16 px-4 border-b border-slate-700">
                         {!isCollapsed && (
-                            <div className={`flex items-center ${isRTL ? 'flex-row-reverse space-x-reverse' : 'flex-row'} space-x-2`}>
+                            <div className={`flex items-center ${isRTL ? ' space-x-reverse' : 'flex-row'} gap-2`}>
                                 <button
                                     onClick={() => onCollapse?.(!isCollapsed)}
                                     className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"

@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useAdminActivateUser, useAdminDeactivateUser, useUserReport, useUserStats } from "@/lib/api/hooks/useAdmin"
 import { UserReport } from "@/lib/types/admin"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, getLocalizedState } from "@/lib/utils"
 import { Calendar, DollarSign, Eye, Package, Search, Star, UserCheck, Users, UserX } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -32,14 +32,15 @@ export default function UsersManagementPage() {
     const { data: userReport, isLoading: reportLoading } = useUserReport(startDate || undefined, endDate || undefined)
     const activateUserMutation = useAdminActivateUser()
     const deactivateUserMutation = useAdminDeactivateUser()
-
+    const language = i18n.language as "en" | "ar"
     // Filter users based on search and status
     const filteredUsers = userReport?.filter((user: UserReport) => {
         const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
             user.phone.includes(searchQuery) ||
             (user.address && user.address.toLowerCase().includes(searchQuery.toLowerCase())) ||
-            (user.state && user.state.toLowerCase().includes(searchQuery.toLowerCase()))
+            (user.state && user.state.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (user.state && getLocalizedState(user.state, language).toLowerCase().includes(searchQuery.toLowerCase()))
 
         const matchesStatus = statusFilter === "all" ||
             (statusFilter === "active" && user.isActive) ||
@@ -231,7 +232,7 @@ export default function UsersManagementPage() {
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <div className="text-sm">{user.state || t('users.notApplicable')}</div>
+                                                        <div className="text-sm">{user.state ? getLocalizedState(user.state, language) : t('users.notApplicable')}</div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className={`flex items-center ${isRTL ? 'space-x-reverse gap-1' : 'gap-1'}`}>
@@ -275,10 +276,7 @@ export default function UsersManagementPage() {
                                                                             </div>
                                                                         </div>
                                                                         <div className="grid grid-cols-2 gap-4 text-sm">
-                                                                            <div>
-                                                                                <div className="font-medium">{t('users.email')}</div>
-                                                                                <div className="text-muted-foreground">{user.email}</div>
-                                                                            </div>
+
                                                                             <div>
                                                                                 <div className="font-medium">{t('users.phone')}</div>
                                                                                 <div className="text-muted-foreground">{user.phone}</div>
@@ -289,7 +287,7 @@ export default function UsersManagementPage() {
                                                                             </div>
                                                                             <div>
                                                                                 <div className="font-medium">{t('users.state')}</div>
-                                                                                <div className="text-muted-foreground">{user.state || t('users.notApplicable')}</div>
+                                                                                <div className="text-muted-foreground">{user.state ? getLocalizedState(user.state, language) : t('users.notApplicable')}</div>
                                                                             </div>
                                                                             <div>
                                                                                 <div className="font-medium">{t('users.orders')}</div>

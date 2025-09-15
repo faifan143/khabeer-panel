@@ -258,7 +258,6 @@ export default function RatingsPage() {
                                                             </Avatar>
                                                             <div>
                                                                 <div className="font-medium">{rating.provider?.name || t('ratings.unknown')}</div>
-                                                                <div className="text-sm text-muted-foreground">{rating.provider?.email || t('ratings.notApplicable')}</div>
                                                             </div>
                                                         </div>
                                                     </TableCell>

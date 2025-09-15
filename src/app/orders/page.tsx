@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useAdminAcceptOrder, useAdminCancelOrder, useAdminCompleteOrder, useAdminOrders, useAdminRejectOrder, useAdminUpdateOrderStatus } from "@/lib/api/hooks/useAdmin"
 import { adminService } from "@/lib/api/services/admin.service"
 import { Order } from "@/lib/api/types"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, getLocalizedState } from "@/lib/utils"
 import { SearchBox } from "@/components/ui/search-box"
 import {
     CheckCircle,
@@ -404,14 +404,7 @@ export default function OrdersManagementPage() {
                             description={t('orders.awaitingConfirmation')}
                             isRTL={isRTL}
                         />
-                        <StatCard
-                            title={t('orders.inProgress')}
-                            value={orderStats.inProgress}
-                            icon={Truck}
-                            color="bg-gradient-to-br from-orange-500 to-red-600"
-                            description={t('orders.beingProcessed')}
-                            isRTL={isRTL}
-                        />
+
                         <StatCard
                             title={t('orders.completed')}
                             value={orderStats.completed}
@@ -754,7 +747,7 @@ export default function OrdersManagementPage() {
                                                     <TableCell className={isRTL ? 'text-right' : 'text-left'}>
                                                         <div className="space-y-1">
                                                             <div className="text-sm font-medium text-gray-900">
-                                                                {order.service?.category?.state || t('orders.notApplicable')}
+                                                                {order.service?.category?.state ? getLocalizedState(order.service.category.state, i18n.language as 'en' | 'ar') : t('orders.notApplicable')}
                                                             </div>
                                                             {order.locationDetails && (
                                                                 <div className="text-xs text-muted-foreground truncate max-w-32">
@@ -923,7 +916,6 @@ export default function OrdersManagementPage() {
                                                 <div className="mt-1 p-3 bg-gray-50 rounded-lg">
                                                     <div className="font-semibold">{selectedOrder.user?.name}</div>
                                                     <div className="text-sm text-muted-foreground">{selectedOrder.user?.phone}</div>
-                                                    <div className="text-sm text-muted-foreground break-all">{selectedOrder.user?.email}</div>
                                                 </div>
                                             </div>
                                             <div>
@@ -931,7 +923,6 @@ export default function OrdersManagementPage() {
                                                 <div className="mt-1 p-3 bg-gray-50 rounded-lg">
                                                     <div className="font-semibold">{selectedOrder.provider?.name}</div>
                                                     <div className="text-sm text-muted-foreground">{selectedOrder.provider?.phone}</div>
-                                                    <div className="text-sm text-muted-foreground break-all">{selectedOrder.provider?.email}</div>
                                                 </div>
                                             </div>
                                         </div>

@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useAdminActivateProvider, useAdminDeactivateProvider, useAdminPendingJoinRequests, useAdminApproveJoinRequest, useAdminRejectJoinRequest, useAdminProviders, useAdminUnverifiedProviders } from "@/lib/api/hooks/useAdmin"
 import { AdminProvider, AdminProviderJoinRequest } from "@/lib/types/admin"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, getLocalizedState } from "@/lib/utils"
 import { DocumentManagementDialog } from "@/components/documents/document-management-dialog"
 import { SearchBox } from "@/components/ui/search-box"
 import {
@@ -78,17 +78,12 @@ const StatCard = ({
 }) => (
     <Card className="group hover:shadow-md transition-all duration-300 border-0 bg-gradient-to-br from-white to-gray-50/50">
         <CardContent className="px-4">
-            <div className={`flex items-center ${isRTL ? 'flex-row-reverse' : 'flex-row'} justify-between`}>
+            <div className={`flex items-center ${isRTL ? '' : 'flex-row'} justify-between`}>
                 <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                     <p className="text-xs font-medium text-muted-foreground">{title}</p>
-                    <div className={`flex items-baseline ${isRTL ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
+                    <div className={`flex items-baseline gap-2`}>
                         <p className="text-base font-bold text-gray-900">{value}</p>
-                        {trend && (
-                            <div className={`flex items-center text-xs font-medium ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                                {trend.isPositive ? <Zap className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'}`} /> : <Zap className={`h-3 w-3 ${isRTL ? 'ml-1' : 'mr-1'} rotate-180`} />}
-                                {Math.abs(trend.value)}%
-                            </div>
-                        )}
+
                     </div>
                     {description && (
                         <p className="text-xs text-muted-foreground">{description}</p>
@@ -290,7 +285,7 @@ export default function ProviderVerificationPage() {
     }
 
     console.log('Processed joinRequests:', joinRequests)
-
+    const language = i18n.language as "en" | "ar"
     // Admin provider management hooks
     const activateProviderMutation = useAdminActivateProvider()
     const deactivateProviderMutation = useAdminDeactivateProvider()
@@ -331,7 +326,8 @@ export default function ProviderVerificationPage() {
             provider.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             provider.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             provider.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            provider.state.toLowerCase().includes(searchTerm.toLowerCase())
+            provider.state.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            getLocalizedState(provider.state, language).toLowerCase().includes(searchTerm.toLowerCase())
         )
 
         if (statusFilter !== "all") {
@@ -606,7 +602,7 @@ export default function ProviderVerificationPage() {
                                                         </div>
                                                         <div className="flex items-center space-x-2 text-sm">
                                                             <MapPin className="h-4 w-4 text-muted-foreground" />
-                                                            <span className="text-muted-foreground">{provider.state}</span>
+                                                            <span className="text-muted-foreground">{getLocalizedState(provider.state, language)}</span>
                                                         </div>
                                                         <div className="flex items-center space-x-2 text-sm">
                                                             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -722,9 +718,8 @@ export default function ProviderVerificationPage() {
                                                         </TableCell>
                                                         <TableCell>
                                                             <div className="space-y-1">
-                                                                <div className="text-sm font-medium">{provider.email}</div>
                                                                 <div className="text-sm font-medium">{provider.phone}</div>
-                                                                <div className="text-sm text-muted-foreground">{provider.state}</div>
+                                                                <div className="text-sm text-muted-foreground">{getLocalizedState(provider.state, language)}</div>
                                                             </div>
                                                         </TableCell>
                                                         <TableCell>
@@ -924,12 +919,6 @@ export default function ProviderVerificationPage() {
                                                             <div className="text-sm font-medium">
                                                                 {request.provider?.phone || t('providers.noPhone')}
                                                             </div>
-                                                            {request.provider?.email && (
-                                                                <div className="text-sm text-muted-foreground">{request.provider.email}</div>
-                                                            )}
-                                                            {!request.provider?.email && (
-                                                                <div className="text-sm text-muted-foreground">{t('providers.noEmail')}</div>
-                                                            )}
                                                         </div>
                                                     </TableCell>
                                                     {/* <TableCell>
@@ -947,13 +936,13 @@ export default function ProviderVerificationPage() {
                                                         </div>
                                                     </TableCell> */}
                                                     <TableCell>
-                                                        <div className="text-sm text-muted-foreground">{request.provider.state}</div>
+                                                        <div className="text-sm text-muted-foreground">{getLocalizedState(request.provider.state, language)}</div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="text-sm">{formatDate(request.requestDate)}</div>
                                                     </TableCell>
                                                     <TableCell className={isRTL ? 'text-left' : 'text-right'}>
-                                                        <div className={`flex items-center ${isRTL ? 'justify-start  space-x-2' : 'justify-end space-x-2'}`}>
+                                                        <div className={`flex items-center gap-2`}>
                                                             <RTLConfirmationDialog
                                                                 trigger={
                                                                     <Button
@@ -1038,9 +1027,9 @@ export default function ProviderVerificationPage() {
 
                     {/* Provider Details Dialog */}
                     <Dialog open={isProviderDialogOpen} onOpenChange={setIsProviderDialogOpen}>
-                        <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] max-h-[90vh] w-full overflow-hidden">
+                        <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] max-h-[95vh] w-full overflow-hidden">
                             <DialogHeader className="flex-shrink-0">
-                                <DialogTitle className="text-xl">{t('providers.providerDetails')}</DialogTitle>
+                                <DialogTitle className="text-xl rtl:text-right">{t('providers.providerDetails')}</DialogTitle>
                                 <DialogDescription>
                                     {t('providers.completeInformation')}
                                 </DialogDescription>
@@ -1078,15 +1067,9 @@ export default function ProviderVerificationPage() {
                                                         <Phone className="h-4 w-4 text-muted-foreground" />
                                                         <span className="text-sm">{selectedProvider.phone}</span>
                                                     </div>
-                                                    {selectedProvider.email && (
-                                                        <div className="flex items-center space-x-2">
-                                                            <User className="h-4 w-4 text-muted-foreground" />
-                                                            <span className="text-sm break-all">{selectedProvider.email}</span>
-                                                        </div>
-                                                    )}
                                                     <div className="flex items-center space-x-2">
                                                         <MapPin className="h-4 w-4 text-muted-foreground" />
-                                                        <span className="text-sm">{selectedProvider.state}</span>
+                                                        <span className="text-sm">{getLocalizedState(selectedProvider.state, language)}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1121,8 +1104,9 @@ export default function ProviderVerificationPage() {
                                                         <div key={index} className="p-3 bg-gray-50 rounded-lg">
                                                             <div className="font-semibold">{service.service?.titleEn}</div>
                                                             <div className="text-sm text-muted-foreground">{service.service?.description}</div>
-                                                            <div className="text-sm font-medium text-green-600 mt-1">
+                                                            <div className="text-sm font-medium text-green-600 mt-1 flex flex-col">
                                                                 {t('providers.price')} {formatCurrency(service.price, i18n.language)}
+                                                                <span>{t('providers.commission')} {formatCurrency(service.service.commission, i18n.language)}</span>
                                                             </div>
                                                             {service.service?.category && (
                                                                 <div className="text-xs text-muted-foreground mt-1">
@@ -1141,14 +1125,51 @@ export default function ProviderVerificationPage() {
                                                 <div className="mt-1 space-y-2">
                                                     {selectedProvider.orders.slice(0, 5).map((order, index: number) => (
                                                         <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                                                            <div className="flex items-center justify-between">
-                                                                <div>
-                                                                    <div className="font-semibold">{t('providers.orderNumber')} {order.id}</div>
-                                                                    <div className="text-sm text-muted-foreground">{t('providers.total')}: {formatCurrency(order.totalAmount, i18n.language)}</div>
+                                                            <div className="space-y-2">
+                                                                <div className="flex justify-between items-center">
+                                                                    <span className="font-semibold">{t('providers.orderNumber')} {order.id}</span>
+                                                                    {order.status && (
+                                                                        <span className={`px-2 py-1 text-xs rounded-full ${order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                                                            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                                                order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                                                                    'bg-blue-100 text-blue-800'
+                                                                            }`}>
+                                                                            {t(`providers.status.${order.status}`)}
+                                                                        </span>
+                                                                    )}
                                                                 </div>
-                                                                <div className="text-right">
-                                                                    <div className="font-semibold text-green-600">{formatCurrency(order.providerAmount, i18n.language)}</div>
-                                                                    <div className="text-sm text-muted-foreground">{t('providers.commission')} {formatCurrency(order.commissionAmount, i18n.language)}</div>
+
+                                                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                                                    {order.totalAmount && (
+                                                                        <div className="flex justify-start items-center gap-2">
+                                                                            <span className="text-muted-foreground">{t('providers.total')}</span>
+                                                                            <span className="font-medium">{formatCurrency(order.totalAmount, i18n.language)}</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {order.providerAmount && (
+                                                                        <div className="flex justify-start items-center gap-2">
+                                                                            <span className="text-muted-foreground">{t('providers.providerAmount')}:</span>
+                                                                            <span className="font-medium text-blue-600">{formatCurrency(order.providerAmount, i18n.language)}</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {order.providerNetAmount && (
+                                                                        <div className="flex justify-start items-center gap-2">
+                                                                            <span className="text-muted-foreground">{t('providers.providerNetAmount')}</span>
+                                                                            <span className="font-medium text-green-600">{formatCurrency(order.providerNetAmount, i18n.language)}</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {order.commissionAmount && (
+                                                                        <div className="flex justify-start items-center gap-2">
+                                                                            <span className="text-muted-foreground">{t('providers.commission')}</span>
+                                                                            <span className="font-medium text-orange-600">{formatCurrency(order.commissionAmount, i18n.language)}</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {order.orderDate && (
+                                                                        <div className="flex justify-start items-center gap-2 col-span-2">
+                                                                            <span className="text-muted-foreground">{t('providers.orderDate')}:</span>
+                                                                            <span className="font-medium">{new Date(order.orderDate).toLocaleDateString()}</span>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -1312,8 +1333,8 @@ export default function ProviderVerificationPage() {
 
                     {/* Services & Categories Dialog */}
                     <Dialog open={isServicesDialogOpen} onOpenChange={setIsServicesDialogOpen}>
-                        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-hidden">
-                            <DialogHeader>
+                        <DialogContent className="sm:max-w-[800px] max-h-[85vh] overflow-hidden ">
+                            <DialogHeader className="rtl:text-right">
                                 <DialogTitle>{t('providers.servicesCategories')}</DialogTitle>
                                 <DialogDescription>
                                     {t('providers.allServicesCategories').replace('{name}', selectedProvider?.name || '')}
@@ -1348,8 +1369,8 @@ export default function ProviderVerificationPage() {
                                                                 )
 
                                                                 // Calculate commission amount
-                                                                const commissionAmount = (ps.price * (ps.service?.commission || 0)) / 100
-                                                                const totalWithCommission = ps.price + commissionAmount
+                                                                const commissionAmount = ((ps.service?.commission || 0))
+                                                                const totalWithCommission = ps.price - commissionAmount
 
                                                                 return (
                                                                     <div key={index} className="bg-gray-50 rounded-lg p-3">
@@ -1381,7 +1402,7 @@ export default function ProviderVerificationPage() {
                                                                                         </span>
                                                                                     </div>
                                                                                     <div className="flex items-center justify-between border-t pt-2">
-                                                                                        <span className="text-sm font-medium text-gray-700">{t('providers.total')}</span>
+                                                                                        <span className="text-sm font-medium text-gray-700">{t('providers.providerNetAmount')}</span>
                                                                                         <span className="text-sm font-bold text-green-700">
                                                                                             {formatCurrency(totalWithCommission, i18n.language)}
                                                                                         </span>

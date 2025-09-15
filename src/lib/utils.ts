@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { getLocalizedStateName } from "./constants/oman-states"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -23,4 +24,9 @@ export function getCurrencySymbol(locale: string = 'en'): string {
     return 'ر.ع.'
   }
   return 'OMR'
+}
+
+// Helper function to get localized state name
+export function getLocalizedState(stateValue: string, language: 'en' | 'ar' = 'en'): string {
+  return getLocalizedStateName(stateValue, language)
 }

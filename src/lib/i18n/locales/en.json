@@ -407,6 +407,7 @@
       "state": "State",
       "actions": "Actions",
       "service": "Service",
+      "type": "Type",
       "commission": "Commission",
       "whatsapp": "WhatsApp"
     },
@@ -578,6 +579,7 @@
     "basePrice": "Base Price:",
     "commission": "Commission ({percentage}%):",
     "total": "Total:",
+    "providerNetAmount": "Provider Net Amount:",
     "noOffers": "No offers",
     "providerActivated": "Provider activated successfully",
     "providerDeactivated": "Provider deactivated successfully",
@@ -648,7 +650,15 @@
     "category": "Category:",
     "recentOrders": "Recent Orders",
     "orderNumber": "Order #",
+    "orderDate": "Order Date",
     "commission": "Commission:",
+    "status": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
     "noVerifiedProvidersFound": "No verified providers found",
     "noProvidersMatchSearch": "No providers match your search \"{searchTerm}\"",
     "noVerifiedProvidersAvailable": "No verified providers available",

@@ -119,7 +119,7 @@ export default function CategoriesServicesPage() {
     const isRTL = i18n.language === 'ar'
     const [activeTab, setActiveTab] = useState("categories")
     const [searchTerm, setSearchTerm] = useState("")
-    const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
+    const [viewMode, setViewMode] = useState<"grid" | "list">("list")
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
     const [selectedService, setSelectedService] = useState<Service | null>(null)
     const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
@@ -941,6 +941,7 @@ export default function CategoriesServicesPage() {
                                             <TableHeader>
                                                 <TableRow className="bg-gray-50">
                                                     <TableHead className="font-semibold rtl:text-right min-w-[250px]">{t('categories.tableHeaders.service')}</TableHead>
+                                                    <TableHead className="font-semibold rtl:text-right min-w-[100px]">{t('categories.tableHeaders.type')}</TableHead>
                                                     <TableHead className="font-semibold rtl:text-right min-w-[150px]">{t('categories.tableHeaders.category')}</TableHead>
                                                     <TableHead className="font-semibold rtl:text-right min-w-[100px]">{t('categories.tableHeaders.commission')}</TableHead>
                                                     <TableHead className="font-semibold rtl:text-right min-w-[120px]">{t('categories.tableHeaders.whatsapp')}</TableHead>
@@ -969,6 +970,17 @@ export default function CategoriesServicesPage() {
                                                                     )}
                                                                 </div>
                                                             </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={`text-xs px-2 py-1 ${service.serviceType === 'NORMAL'
+                                                                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                                                    : 'bg-purple-50 text-purple-700 border-purple-200'
+                                                                    }`}
+                                                            >
+                                                                {service.serviceType === 'NORMAL' ? t('categories.normalServices') : t('categories.khabeerServices')}
+                                                            </Badge>
                                                         </TableCell>
                                                         <TableCell>
                                                             {service.category ? (

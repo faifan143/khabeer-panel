@@ -186,10 +186,13 @@ export interface AdminProvider {
     }
   }>
   orders: Array<{
-    id: number
-    totalAmount: number
-    providerAmount: number
-    commissionAmount: number
+    id: number;
+    status: string; // 'pending', 'accepted', 'completed', 'cancelled'
+    orderDate: Date;
+    commissionAmount: number;
+    providerAmount: number;
+    providerNetAmount: number;
+    totalAmount: number;
   }>
   offers: Array<{
     id: number
