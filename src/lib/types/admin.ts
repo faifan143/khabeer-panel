@@ -278,4 +278,24 @@ export interface UpdateAdBannerDto {
   externalLink?: string
   providerId?: number
   isActive?: boolean
+}
+
+export interface AppVersion {
+  id: number
+  version: string
+  requiresUpdate: boolean
+  description: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateVersionDto {
+  version: string
+  requiresUpdate: boolean
+  description: string
+}
+
+export interface UpdateVersionDto {
+  requiresUpdate?: boolean
+  description?: string
 } 

@@ -1,5 +1,5 @@
 import { api } from '../axios'
-import type { DashboardStats, OverviewStats, ServiceStats, ProviderStats, OrderStats } from '@/lib/types/admin'
+import type { DashboardStats, OverviewStats, ServiceStats, ProviderStats, OrderStats, AppVersion, CreateVersionDto, UpdateVersionDto } from '@/lib/types/admin'
 import { InvoiceService } from './invoice.service'
 import type { InvoiceFilters, CreateInvoiceDto, UpdateInvoiceDto } from '@/lib/types/invoice'
 
@@ -381,5 +381,35 @@ export const adminService = {
 
   deleteInvoice: async (id: number) => {
     return await InvoiceService.deleteInvoice(id)
+  },
+
+  // Version Management
+  getVersions: async (): Promise<AppVersion[]> => {
+    const response = await api.get('/update-audit')
+    return response.data
+  },
+
+  getVersionById: async (id: number): Promise<AppVersion> => {
+    const response = await api.get(`/update-audit/${id}`)
+    return response.data
+  },
+
+  createVersion: async (data: CreateVersionDto): Promise<AppVersion> => {
+    const response = await api.post('/update-audit', data)
+    return response.data
+  },
+
+  updateVersion: async (id: number, data: UpdateVersionDto): Promise<AppVersion> => {
+    const response = await api.patch(`/update-audit/${id}`, data)
+    return response.data
+  },
+
+  deleteVersion: async (id: number): Promise<void> => {
+    await api.delete(`/update-audit/${id}`)
+  },
+
+  checkVersionUpdate: async (version: string): Promise<{ requiresUpdate: boolean; latestVersion?: AppVersion }> => {
+    const response = await api.get(`/update-audit/check/${version}`)
+    return response.data
   }
 }

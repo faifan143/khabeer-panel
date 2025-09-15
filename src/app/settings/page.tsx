@@ -12,10 +12,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useAdBanners, useCreateAdBanner, useCreateSubAdmin, useDeleteSubAdmin, useSubAdmins, useSystemSettings, useUpdateAdBanner, useUpdateSystemSetting, useUploadBannerImage, useUploadLegalDocuments, useDeleteAdBanner, useAdminProviders } from "@/lib/api/hooks/useAdmin"
+import { useAdBanners, useCreateAdBanner, useCreateSubAdmin, useDeleteSubAdmin, useSubAdmins, useSystemSettings, useUpdateAdBanner, useUpdateSystemSetting, useUploadBannerImage, useUploadLegalDocuments, useDeleteAdBanner, useAdminProviders, useVersions, useCreateVersion, useUpdateVersion, useDeleteVersion } from "@/lib/api/hooks/useAdmin"
 import { getImageUrl } from "@/lib/utils/image"
-import { AdBanner } from "@/lib/types/admin"
+import { AdBanner, AppVersion, CreateVersionDto, UpdateVersionDto } from "@/lib/types/admin"
 import {
+    Edit,
     Eye,
     FileText,
     HeadphonesIcon,
@@ -61,6 +62,12 @@ export default function SettingsPage() {
 
     // Get active and verified providers for banner selection
     const { data: providers, isLoading: providersLoading } = useAdminProviders()
+
+    // Version Management hooks
+    const { data: versions, isLoading: versionsLoading } = useVersions()
+    const createVersionMutation = useCreateVersion()
+    const updateVersionMutation = useUpdateVersion()
+    const deleteVersionMutation = useDeleteVersion()
 
     // Terms & Conditions state
     const [termsEn, setTermsEn] = useState<File | null>(null)
@@ -111,6 +118,15 @@ export default function SettingsPage() {
         externalLink: "",
         providerId: "",
         isActive: false
+    })
+
+    // Version Management state
+    const [isAddVersionOpen, setIsAddVersionOpen] = useState(false)
+    const [editingVersionIndex, setEditingVersionIndex] = useState<number | null>(null)
+    const [newVersion, setNewVersion] = useState<CreateVersionDto>({
+        version: "",
+        requiresUpdate: false,
+        description: ""
     })
 
     // Active tab state
@@ -462,6 +478,68 @@ export default function SettingsPage() {
         setNewBanner({ title: "", description: "", image: null, imagePreview: "", linkType: "external", externalLink: "", providerId: "", isActive: false })
     }
 
+    // Version Management handlers
+    const handleSaveVersion = async () => {
+        if (!newVersion.version.trim() || !newVersion.description.trim()) {
+            toast.error(t('settings.pleaseFillAllRequiredFields'))
+            return
+        }
+
+        try {
+            if (editingVersionIndex !== null && versions) {
+                // Update existing version
+                await updateVersionMutation.mutateAsync({
+                    id: versions[editingVersionIndex].id,
+                    data: newVersion as UpdateVersionDto
+                })
+            } else {
+                // Create new version
+                await createVersionMutation.mutateAsync(newVersion)
+            }
+
+            setIsAddVersionOpen(false)
+            setEditingVersionIndex(null)
+            setNewVersion({ version: "", requiresUpdate: false, description: "" })
+        } catch (error) {
+            console.error("Error saving version:", error)
+        }
+    }
+
+    const handleEditVersion = (index: number) => {
+        if (versions) {
+            const version = versions[index]
+            setNewVersion({
+                version: version.version,
+                requiresUpdate: version.requiresUpdate,
+                description: version.description
+            })
+            setEditingVersionIndex(index)
+            setIsAddVersionOpen(true)
+        }
+    }
+
+    const handleDeleteVersion = async (id: number) => {
+        if (confirm(t('settings.areYouSureDeleteVersion'))) {
+            try {
+                await deleteVersionMutation.mutateAsync(id)
+            } catch (error) {
+                console.error("Error deleting version:", error)
+            }
+        }
+    }
+
+    const handleCreateVersion = () => {
+        setNewVersion({ version: "", requiresUpdate: false, description: "" })
+        setEditingVersionIndex(null)
+        setIsAddVersionOpen(true)
+    }
+
+    const handleCancelVersionEdit = () => {
+        setIsAddVersionOpen(false)
+        setEditingVersionIndex(null)
+        setNewVersion({ version: "", requiresUpdate: false, description: "" })
+    }
+
     const handlePermissionToggle = (permissionId: string) => {
         setNewSubAdmin(prev => ({
             ...prev,
@@ -486,12 +564,13 @@ export default function SettingsPage() {
 
 
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                        <TabsList className="grid w-full grid-cols-5">
+                        <TabsList className="grid w-full grid-cols-6">
                             <TabsTrigger value="legal">{t('settings.legal')}</TabsTrigger>
                             <TabsTrigger value="social">{t('settings.social')}</TabsTrigger>
                             <TabsTrigger value="support">{t('settings.support')}</TabsTrigger>
                             <TabsTrigger value="subadmins">{t('settings.subadmins')}</TabsTrigger>
                             <TabsTrigger value="ads">{t('settings.ads')}</TabsTrigger>
+                            <TabsTrigger value="versions">{t('settings.versions')}</TabsTrigger>
                         </TabsList>
 
                         {/* Legal Documents */}
@@ -1334,6 +1413,145 @@ export default function SettingsPage() {
                                             <Button onClick={handleSaveAdBanner}>
                                                 <Save className="h-4 w-4 mr-2" />
                                                 {editingBannerIndex !== null ? t('settings.updateBanner') : t('settings.createBanner')}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        </TabsContent>
+
+                        {/* Version Management */}
+                        <TabsContent value="versions" className="space-y-6">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <FileText className="h-5 w-5" />
+                                        {t('settings.versionManagement')}
+                                    </CardTitle>
+                                    <p className="text-sm text-muted-foreground">
+                                        {t('settings.manageAppVersions')}
+                                    </p>
+                                    <Button onClick={handleCreateVersion} className="mt-2">
+                                        <UserPlus className="h-4 w-4 mr-2" />
+                                        {t('settings.addNewVersion')}
+                                    </Button>
+                                </CardHeader>
+                                <CardContent>
+                                    {versionsLoading ? (
+                                        <div className="text-center py-8">
+                                            <div className="text-muted-foreground">{t('settings.loadingVersions')}</div>
+                                        </div>
+                                    ) : versions && versions.length > 0 ? (
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>{t('settings.version')}</TableHead>
+                                                    <TableHead>{t('settings.description')}</TableHead>
+                                                    <TableHead>{t('settings.updateRequired')}</TableHead>
+                                                    <TableHead>{t('settings.created')}</TableHead>
+                                                    <TableHead className="text-right">{t('settings.actions')}</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {versions.map((version, index) => (
+                                                    <TableRow key={version.id}>
+                                                        <TableCell className="font-medium">{version.version}</TableCell>
+                                                        <TableCell className="max-w-xs truncate">{version.description}</TableCell>
+                                                        <TableCell>
+                                                            <Badge variant={version.requiresUpdate ? "destructive" : "secondary"}>
+                                                                {version.requiresUpdate ? t('settings.yes') : t('settings.no')}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {new Date(version.createdAt).toLocaleDateString()}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => handleEditVersion(index)}
+                                                                >
+                                                                    <Edit className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => handleDeleteVersion(version.id)}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    ) : (
+                                        <div className="text-center py-8">
+                                            <div className="text-muted-foreground">{t('settings.noVersionsFound')}</div>
+                                            <Button onClick={handleCreateVersion} className="mt-2">
+                                                {t('settings.createVersion')}
+                                            </Button>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+
+                            {/* Add/Edit Version Dialog */}
+                            <Dialog open={isAddVersionOpen} onOpenChange={setIsAddVersionOpen}>
+                                <DialogContent className="max-w-2xl">
+                                    <DialogHeader>
+                                        <DialogTitle>
+                                            {editingVersionIndex !== null ? t('settings.editVersion') : t('settings.addNewVersion')}
+                                        </DialogTitle>
+                                        <DialogDescription>
+                                            {editingVersionIndex !== null
+                                                ? t('settings.updateVersionInformation')
+                                                : t('settings.fillVersionInformation')
+                                            }
+                                        </DialogDescription>
+                                    </DialogHeader>
+
+                                    <div className="space-y-4">
+                                        <div>
+                                            <Label className="text-sm font-medium">{t('settings.versionNumber')} *</Label>
+                                            <Input
+                                                placeholder={t('settings.enterVersionNumber')}
+                                                value={newVersion.version}
+                                                onChange={(e) => setNewVersion(prev => ({ ...prev, version: e.target.value }))}
+                                                className="mt-1"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <Label className="text-sm font-medium">{t('settings.versionDescription')} *</Label>
+                                            <Input
+                                                placeholder={t('settings.enterVersionDescription')}
+                                                value={newVersion.description}
+                                                onChange={(e) => setNewVersion(prev => ({ ...prev, description: e.target.value }))}
+                                                className="mt-1"
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id="version-requires-update"
+                                                checked={newVersion.requiresUpdate}
+                                                onCheckedChange={(checked) => setNewVersion(prev => ({ ...prev, requiresUpdate: checked as boolean }))}
+                                            />
+                                            <Label htmlFor="version-requires-update" className="text-sm font-medium">
+                                                {t('settings.requiresUpdate')}
+                                            </Label>
+                                        </div>
+
+                                        <div className="flex justify-end gap-2">
+                                            <Button variant="outline" onClick={handleCancelVersionEdit}>
+                                                {t('settings.cancel')}
+                                            </Button>
+                                            <Button onClick={handleSaveVersion}>
+                                                <Save className="h-4 w-4 mr-2" />
+                                                {editingVersionIndex !== null ? t('settings.updateVersion') : t('settings.createVersion')}
                                             </Button>
                                         </div>
                                     </div>

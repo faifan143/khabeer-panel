@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminService } from '../services/admin.service'
 import type { InvoiceFilters, UpdateInvoiceDto } from '@/lib/types/invoice'
+import type { UpdateVersionDto } from '@/lib/types/admin'
 import toast from 'react-hot-toast'
 
 export const useDashboardStats = () => {
@@ -645,5 +646,77 @@ export const useAdminDeleteInvoice = () => {
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete invoice')
     },
+  })
+}
+
+// Version Management Hooks
+export const useVersions = () => {
+  return useQuery({
+    queryKey: ['admin', 'versions'],
+    queryFn: adminService.getVersions,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+export const useVersionById = (id: number) => {
+  return useQuery({
+    queryKey: ['admin', 'version', id],
+    queryFn: () => adminService.getVersionById(id),
+    enabled: !!id,
+  })
+}
+
+export const useCreateVersion = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: adminService.createVersion,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'versions'] })
+      toast.success('Version created successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create version')
+    },
+  })
+}
+
+export const useUpdateVersion = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateVersionDto }) =>
+      adminService.updateVersion(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'versions'] })
+      toast.success('Version updated successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update version')
+    },
+  })
+}
+
+export const useDeleteVersion = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: adminService.deleteVersion,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'versions'] })
+      toast.success('Version deleted successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete version')
+    },
+  })
+}
+
+export const useCheckVersionUpdate = (version: string) => {
+  return useQuery({
+    queryKey: ['admin', 'version-check', version],
+    queryFn: () => adminService.checkVersionUpdate(version),
+    enabled: !!version,
+    staleTime: 10 * 60 * 1000, // 10 minutes
   })
 }
