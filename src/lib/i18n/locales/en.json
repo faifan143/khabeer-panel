@@ -659,6 +659,11 @@
       "completed": "Completed",
       "cancelled": "Cancelled"
     },
+    "offers": "Special Offers",
+    "specialOffer": "Special Offer!",
+    "originalPrice": "Original Price",
+    "offerPrice": "Offer Price",
+    "youSave": "You Save",
     "noVerifiedProvidersFound": "No verified providers found",
     "noProvidersMatchSearch": "No providers match your search \"{searchTerm}\"",
     "noVerifiedProvidersAvailable": "No verified providers available",

@@ -625,6 +625,11 @@
       "completed": "مكتمل",
       "cancelled": "ملغي"
     },
+    "offers": "العروض الخاصة",
+    "specialOffer": "عرض خاص!",
+    "originalPrice": "السعر الأصلي",
+    "offerPrice": "سعر العرض",
+    "youSave": "أنت توفر",
     "noVerifiedProvidersFound": "لم يتم العثور على مزودين موثقين",
     "noProvidersMatchSearch": "لا يوجد مزودون يطابقون بحثك \"{searchTerm}\"",
     "noVerifiedProvidersAvailable": "لا توجد مزودون موثقون متاحون",

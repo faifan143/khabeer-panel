@@ -1028,8 +1028,8 @@ export default function ProviderVerificationPage() {
                     {/* Provider Details Dialog */}
                     <Dialog open={isProviderDialogOpen} onOpenChange={setIsProviderDialogOpen}>
                         <DialogContent className="sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] max-h-[95vh] w-full overflow-hidden">
-                            <DialogHeader className="flex-shrink-0">
-                                <DialogTitle className="text-xl rtl:text-right">{t('providers.providerDetails')}</DialogTitle>
+                            <DialogHeader className="flex-shrink-0 rtl:text-right">
+                                <DialogTitle className="text-xl ">{t('providers.providerDetails')}</DialogTitle>
                                 <DialogDescription>
                                     {t('providers.completeInformation')}
                                 </DialogDescription>
@@ -1041,13 +1041,7 @@ export default function ProviderVerificationPage() {
                                             <Label className="text-sm font-medium">{t('providers.providerId')}</Label>
                                             <div className="text-sm font-mono bg-gray-100 p-2 rounded">#{selectedProvider.id}</div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label className="text-sm font-medium">{t('providers.status')}</Label>
-                                            <Badge variant="outline" className={`${getStatusColor(selectedProvider.isActive)}`}>
-                                                {getStatusIcon(selectedProvider.isActive)}
-                                                <span className="ml-1">{getStatusText(selectedProvider.isActive)}</span>
-                                            </Badge>
-                                        </div>
+
                                     </div>
 
                                     <div className="space-y-4">
@@ -1100,21 +1094,74 @@ export default function ProviderVerificationPage() {
                                             <div>
                                                 <Label className="text-sm font-medium">{t('providers.servicesOffered')}</Label>
                                                 <div className="mt-1 space-y-2">
-                                                    {selectedProvider.providerServices.map((service, index: number) => (
-                                                        <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                                                            <div className="font-semibold">{service.service?.titleEn}</div>
-                                                            <div className="text-sm text-muted-foreground">{service.service?.description}</div>
-                                                            <div className="text-sm font-medium text-green-600 mt-1 flex flex-col">
-                                                                {t('providers.price')} {formatCurrency(service.price, i18n.language)}
-                                                                <span>{t('providers.commission')} {formatCurrency(service.service.commission, i18n.language)}</span>
-                                                            </div>
-                                                            {service.service?.category && (
-                                                                <div className="text-xs text-muted-foreground mt-1">
-                                                                    {t('providers.category')} {service.service.category.titleEn}
+                                                    {selectedProvider.providerServices.map((service, index: number) => {
+                                                        // Find matching offer for this service based on price
+                                                        const matchingOffer = selectedProvider.offers?.find(offer => offer.originalPrice === service.price);
+                                                        const hasOffer = !!matchingOffer;
+                                                        const savings = hasOffer ? matchingOffer.originalPrice - matchingOffer.offerPrice : 0;
+                                                        const savingsPercentage = hasOffer ? Math.round((savings / matchingOffer.originalPrice) * 100) : 0;
+
+                                                        return (
+                                                            <div key={index} className={`p-3 rounded-lg ${hasOffer ? 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200' : 'bg-gray-50'}`}>
+                                                                <div className="font-semibold">{service.service?.titleEn}</div>
+                                                                <div className="text-sm text-muted-foreground">{service.service?.description}</div>
+
+                                                                {/* Offer Badge */}
+                                                                {hasOffer && (
+                                                                    <div className="flex items-center gap-2 mt-2 mb-2">
+                                                                        <span className="px-2 py-1 text-xs font-bold bg-orange-500 text-white rounded">
+                                                                            {savingsPercentage}% OFF
+                                                                        </span>
+                                                                        <span className="text-sm font-medium text-orange-600">
+                                                                            {t('providers.specialOffer')}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Pricing Information */}
+                                                                <div className="text-sm font-medium mt-1 flex flex-col space-y-1">
+                                                                    {hasOffer ? (
+                                                                        <>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className="text-muted-foreground line-through">
+                                                                                    {t('providers.originalPrice')}: {formatCurrency(matchingOffer.originalPrice, i18n.language)}
+                                                                                </span>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className="text-muted-foreground">
+                                                                                    {t('providers.offerPrice')}:
+                                                                                </span>
+                                                                                <span className="font-bold text-green-600 text-lg">
+                                                                                    {formatCurrency(matchingOffer.offerPrice, i18n.language)}
+                                                                                </span>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <span className="text-muted-foreground">
+                                                                                    {t('providers.youSave')}:
+                                                                                </span>
+                                                                                <span className="font-semibold text-red-600">
+                                                                                    {formatCurrency(savings, i18n.language)}
+                                                                                </span>
+                                                                            </div>
+                                                                        </>
+                                                                    ) : (
+                                                                        <div className="text-green-600">
+                                                                            {t('providers.price')} {formatCurrency(service.price, i18n.language)}
+                                                                        </div>
+                                                                    )}
+                                                                    <span className="text-muted-foreground">
+                                                                        {t('providers.commission')} {formatCurrency(service.service.commission, i18n.language)}
+                                                                    </span>
                                                                 </div>
-                                                            )}
-                                                        </div>
-                                                    ))}
+
+                                                                {service.service?.category && (
+                                                                    <div className="text-xs text-muted-foreground mt-1">
+                                                                        {t('providers.category')} {service.service.category.titleEn + "-" + service.service.category.titleAr}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         )}
