@@ -909,6 +909,8 @@
     "configureSupportContact": "تكوين معلومات الاتصال للدعم",
     "whatsappSupport": "دعم الواتساب",
     "supportLinkDescription": "سيتم استخدام هذا الرابط لاستفسارات دعم العملاء",
+    "supportPhoneDescription": "أدخل رقم هاتف عماني مكون من 9 أرقام (مثل: 9XXXXXXXX)",
+    "invalidPhoneNumber": "يرجى إدخال رقم هاتف عماني صحيح مكون من 9 أرقام",
     "saveSupportLinks": "حفظ روابط الدعم",
     "subAdministrators": "المدراء المساعدون",
     "manageSubAdmins": "إدارة المدراء المساعدين بصلاحيات محدودة",

@@ -943,6 +943,8 @@
     "configureSupportContact": "Configure support contact information",
     "whatsappSupport": "WhatsApp Support",
     "supportLinkDescription": "This link will be used for customer support inquiries",
+    "supportPhoneDescription": "Enter 9-digit Omani phone number (e.g., 9XXXXXXXX)",
+    "invalidPhoneNumber": "Please enter a valid 9-digit Omani phone number",
     "saveSupportLinks": "Save Support Links",
     "subAdministrators": "Sub-Administrators",
     "manageSubAdmins": "Manage sub-administrators with limited permissions",
