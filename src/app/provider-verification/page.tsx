@@ -1923,7 +1923,7 @@ export default function ProviderVerificationPage() {
                                 {t("providers.providerAmount")}
                               </span>
                               <span className="text-lg font-bold text-blue-800">
-                                {renderCurrency(income.providerAmount)}
+                                {renderCurrency(income.providerAmount || 0)}
                               </span>
                             </div>
                           </div>

@@ -19,7 +19,7 @@ export function hasPermission(
  */
 export function hasAnyPermission(
   userPermissions: string[],
-  requiredPermissions: string[]
+  requiredPermissions: readonly string[]
 ): boolean {
   return requiredPermissions.some((permission) =>
     userPermissions.includes(permission)
@@ -31,7 +31,7 @@ export function hasAnyPermission(
  */
 export function hasAllPermissions(
   userPermissions: string[],
-  requiredPermissions: string[]
+  requiredPermissions: readonly string[]
 ): boolean {
   return requiredPermissions.every((permission) =>
     userPermissions.includes(permission)
