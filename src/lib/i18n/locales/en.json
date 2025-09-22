@@ -1003,6 +1003,7 @@
     "chooseProvider": "Choose a provider",
     "loadingProviders": "Loading providers...",
     "noActiveProviders": "No active providers available",
+    "noActiveVerifiedProviders": "No active and verified providers available",
     "activateThisBanner": "Activate this banner",
     "updateBanner": "Update Banner",
     "createBanner": "Create Banner",

@@ -56,6 +56,8 @@ import {
   UpdateVersionDto,
 } from "@/lib/types/admin";
 import { getImageUrl } from "@/lib/utils/image";
+import { getLocalizedStateName } from "@/lib/constants/oman-states";
+import { useLanguage } from "@/lib/hooks/useLanguage";
 import {
   Edit,
   Eye,
@@ -77,6 +79,7 @@ import { useTranslation } from "react-i18next";
 
 export default function SettingsPage() {
   const { t } = useTranslation();
+  const { currentLanguage } = useLanguage();
 
   const availablePermissions = [
     {
@@ -1773,25 +1776,44 @@ export default function SettingsPage() {
                           </SelectTrigger>
                           <SelectContent>
                             {providersLoading ? (
-                              <SelectItem value="" disabled>
+                              <SelectItem value="loading" disabled>
                                 {t("settings.loadingProviders")}
                               </SelectItem>
-                            ) : providers && providers.length > 0 ? (
-                              providers
-                                .filter(
+                            ) : providers && providers.total > 0 ? (
+                              (() => {
+                                const fetchedProviders = providers.providers;
+                                const activeProviders = fetchedProviders.filter(
                                   (provider) =>
                                     provider.isActive && provider.isVerified
-                                )
-                                .map((provider) => (
+                                );
+
+                                return activeProviders.length > 0 ? (
+                                  activeProviders.map((provider) => {
+                                    const localizedState =
+                                      getLocalizedStateName(
+                                        provider.state,
+                                        currentLanguage as "en" | "ar"
+                                      );
+                                    return (
+                                      <SelectItem
+                                        key={provider.id}
+                                        value={provider.id.toString()}
+                                      >
+                                        {provider.name} - {localizedState}
+                                      </SelectItem>
+                                    );
+                                  })
+                                ) : (
                                   <SelectItem
-                                    key={provider.id}
-                                    value={provider.id.toString()}
+                                    value="no-active-verified"
+                                    disabled
                                   >
-                                    {provider.name} - {provider.state}
+                                    {t("settings.noActiveVerifiedProviders")}
                                   </SelectItem>
-                                ))
+                                );
+                              })()
                             ) : (
-                              <SelectItem value="" disabled>
+                              <SelectItem value="no-providers" disabled>
                                 {t("settings.noActiveProviders")}
                               </SelectItem>
                             )}

@@ -969,6 +969,7 @@
     "chooseProvider": "اختر مزود",
     "loadingProviders": "جاري تحميل المزودين...",
     "noActiveProviders": "لا توجد مزودين نشطين متاحين",
+    "noActiveVerifiedProviders": "لا توجد مزودين نشطين ومتحققين متاحين",
     "activateThisBanner": "تفعيل هذه اللافتة",
     "updateBanner": "تحديث اللافتة",
     "createBanner": "إنشاء اللافتة",
