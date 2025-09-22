@@ -1413,11 +1413,21 @@ export default function SettingsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{t("settings.name")}</TableHead>
-                        <TableHead>{t("settings.email")}</TableHead>
-                        <TableHead>{t("settings.permissions")}</TableHead>
-                        <TableHead>{t("settings.status")}</TableHead>
-                        <TableHead>{t("settings.created")}</TableHead>
+                        <TableHead className="rtl:text-right">
+                          {t("settings.name")}
+                        </TableHead>
+                        <TableHead className="rtl:text-right">
+                          {t("settings.email")}
+                        </TableHead>
+                        <TableHead className="rtl:text-right">
+                          {t("settings.permissions")}
+                        </TableHead>
+                        <TableHead className="rtl:text-right">
+                          {t("settings.status")}
+                        </TableHead>
+                        <TableHead className="rtl:text-right">
+                          {t("settings.created")}
+                        </TableHead>
                         <TableHead className="text-right">
                           {t("settings.actions")}
                         </TableHead>
