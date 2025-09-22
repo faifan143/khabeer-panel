@@ -76,69 +76,6 @@ export default function DashboardPage() {
     <PermissionRoute requiredPermissions={[PERMISSIONS.DASHBOARD_VIEW]}>
       <AdminLayout>
         <div className="space-y-6">
-          {/* Admin Status Indicator */}
-          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {isSuperAdmin ? (
-                    <Crown className="h-6 w-6 text-yellow-500" />
-                  ) : (
-                    <Shield className="h-6 w-6 text-blue-500" />
-                  )}
-                  <div>
-                    <h3 className="font-semibold text-lg">
-                      {isSuperAdmin ? "Super Admin" : "Sub Admin"}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {user?.email} •{" "}
-                      {isSuperAdmin
-                        ? "Full Access"
-                        : `${permissions.length} Permissions`}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-medium text-blue-600">
-                    {isSuperAdmin ? "All Permissions" : "Limited Access"}
-                  </div>
-                  {!isSuperAdmin && permissions.length > 0 && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {permissions.slice(0, 3).join(", ")}
-                      {permissions.length > 3 &&
-                        ` +${permissions.length - 3} more`}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Permission Demo - Only show for development/demo purposes */}
-          {process.env.NODE_ENV === "development" && <PermissionDemo />}
-
-          {/* Permission Test - Only show for development */}
-          {process.env.NODE_ENV === "development" && <PermissionTest />}
-
-          {/* Debug Info - Only show for development */}
-          {process.env.NODE_ENV === "development" && (
-            <Card className="bg-yellow-50 border-yellow-200">
-              <CardHeader>
-                <CardTitle className="text-sm text-yellow-800">
-                  Debug Info
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-xs text-yellow-700">
-                <div className="space-y-1">
-                  <div>isSuperAdmin: {isSuperAdmin ? "true" : "false"}</div>
-                  <div>permissions: {JSON.stringify(permissions)}</div>
-                  <div>permissions.length: {permissions.length}</div>
-                  <div>user: {JSON.stringify(user)}</div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Metrics Cards */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <Card>
