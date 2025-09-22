@@ -1,115 +1,158 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AuthService } from '../services/auth.service'
-import { LoginDto, PhoneLoginDto, RegisterDto, User } from '../types'
-import { useAuthStore } from '@/lib/stores/auth.store'
-import toast from 'react-hot-toast'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AuthService } from "../services/auth.service";
+import { LoginDto, PhoneLoginDto, RegisterDto, User } from "../types";
+import { useAuthStore } from "@/lib/stores/auth.store";
+import { getFirstAvailablePage } from "@/lib/utils/permissions";
+import toast from "react-hot-toast";
 
 export const useLogin = () => {
-  const queryClient = useQueryClient()
-  const { login } = useAuthStore()
+  const queryClient = useQueryClient();
+  const { login } = useAuthStore();
 
   return useMutation({
     mutationFn: (credentials: LoginDto) => AuthService.login(credentials),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       // Store in Zustand store (which persists to localStorage)
       // Backend returns access_token, not token
-      login(data.user, data.access_token)
+      login(data.user, data.access_token, data.isSuperAdmin, data.permissions);
 
       // Invalidate and refetch user profile
-      queryClient.invalidateQueries({ queryKey: ['profile'] })
-      toast.success('Login successful!')
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast.success("Login successful!");
 
-      // Navigate to dashboard using window.location for full page reload
-      // This ensures the auth state is properly updated
-      window.location.href = '/dashboard'
+      // Navigate to first available page based on permissions
+      const firstAvailablePage = getFirstAvailablePage(
+        data.permissions,
+        data.isSuperAdmin
+      );
+      window.location.href = firstAvailablePage;
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Login failed')
+      toast.error(error.response?.data?.message || "Login failed");
     },
-  })
-}
+  });
+};
+
+export const useCheckMe = () => {
+  const { updateAdminStatus } = useAuthStore();
+
+  return useMutation({
+    mutationFn: () => AuthService.checkMe(),
+    onSuccess: (data) => {
+      updateAdminStatus(data.isSuperAdmin, data.permissions);
+    },
+    onError: (error: any) => {
+      console.error("Check me error:", error);
+    },
+  });
+};
 
 export const usePhoneLogin = () => {
-  const queryClient = useQueryClient()
-  const { login } = useAuthStore()
+  const queryClient = useQueryClient();
+  const { login } = useAuthStore();
 
   return useMutation({
     mutationFn: (phoneData: PhoneLoginDto) => AuthService.phoneLogin(phoneData),
-    onSuccess: (data) => {
-      login(data.user, data.access_token)
-      queryClient.invalidateQueries({ queryKey: ['profile'] })
+    onSuccess: async (data) => {
+      login(data.user, data.access_token, data.isSuperAdmin, data.permissions);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast.success("Phone login successful!");
+
+      // Navigate to first available page based on permissions
+      const firstAvailablePage = getFirstAvailablePage(
+        data.permissions,
+        data.isSuperAdmin
+      );
+      window.location.href = firstAvailablePage;
     },
-  })
-}
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Phone login failed");
+    },
+  });
+};
 
 export const useRegister = () => {
-  const queryClient = useQueryClient()
-  const { login } = useAuthStore()
+  const queryClient = useQueryClient();
+  const { login } = useAuthStore();
 
   return useMutation({
     mutationFn: (userData: RegisterDto) => AuthService.register(userData),
-    onSuccess: (data) => {
-      login(data.user, data.access_token)
-      queryClient.invalidateQueries({ queryKey: ['profile'] })
+    onSuccess: async (data) => {
+      login(data.user, data.access_token, data.isSuperAdmin, data.permissions);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast.success("Registration successful!");
+
+      // Navigate to first available page based on permissions
+      const firstAvailablePage = getFirstAvailablePage(
+        data.permissions,
+        data.isSuperAdmin
+      );
+      window.location.href = firstAvailablePage;
     },
-  })
-}
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Registration failed");
+    },
+  });
+};
 
 export const useSendOtp = () => {
   return useMutation({
     mutationFn: (phone: string) => AuthService.sendOtp(phone),
-  })
-}
+  });
+};
 
 export const useProfile = () => {
-  const { token } = useAuthStore()
+  const { token } = useAuthStore();
 
   return useQuery({
-    queryKey: ['profile'],
+    queryKey: ["profile"],
     queryFn: () => AuthService.getProfile(),
     enabled: !!token,
-  })
-}
+  });
+};
 
 export const useLogout = () => {
-  const queryClient = useQueryClient()
-  const { logout } = useAuthStore()
+  const queryClient = useQueryClient();
+  const { logout } = useAuthStore();
 
   return useMutation({
     mutationFn: async () => {
       // No backend logout endpoint, just return success
-      return { message: 'Logged out successfully' }
+      return { message: "Logged out successfully" };
     },
     onSuccess: () => {
-      logout()
-      queryClient.clear()
-      toast.success('Logged out successfully')
+      logout();
+      queryClient.clear();
+      toast.success("Logged out successfully");
       // Redirect to login page using window.location for full page reload
-      window.location.href = '/login'
+      window.location.href = "/login";
     },
     onError: () => {
       // Even if logout fails, clear local state
-      logout()
-      queryClient.clear()
-      toast.success('Logged out successfully')
+      logout();
+      queryClient.clear();
+      toast.success("Logged out successfully");
       // Redirect to login page using window.location for full page reload
-      window.location.href = '/login'
+      window.location.href = "/login";
     },
-  })
-}
+  });
+};
 
 export const useRefreshToken = () => {
-  const { login } = useAuthStore()
+  const { login } = useAuthStore();
 
   return useMutation({
     mutationFn: () => AuthService.refreshToken(),
     onSuccess: (data) => {
       // Note: This would need the user data as well
       // For now, just update the token
-      localStorage.setItem('auth-storage', JSON.stringify({
-        state: { token: data.token },
-        version: 0
-      }))
+      localStorage.setItem(
+        "auth-storage",
+        JSON.stringify({
+          state: { token: data.token },
+          version: 0,
+        })
+      );
     },
-  })
-}
+  });
+};

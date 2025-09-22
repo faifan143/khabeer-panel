@@ -35,7 +35,13 @@
     "info": "معلومات",
     "loading": "جاري التحميل...",
     "accessDenied": "تم رفض الوصول",
-    "noPermission": "ليس لديك صلاحية للوصول إلى هذه الصفحة."
+    "noPermission": "ليس لديك صلاحية للوصول إلى هذه الصفحة.",
+    "noAdminAccess": "ليس لديك صلاحية للوصول إلى لوحة الإدارة.",
+    "backToLogin": "العودة لتسجيل الدخول",
+    "insufficientPermissions": "صلاحيات غير كافية",
+    "noPermissionForThisPage": "ليس لديك صلاحية للوصول إلى هذه الصفحة.",
+    "goToDashboard": "الذهاب للوحة التحكم",
+    "goBack": "العودة"
   },
   "navigation": {
     "dashboard": "لوحة التحكم",
@@ -48,6 +54,12 @@
     "ratingsReviews": "التقييمات والمراجعات",
     "notifications": "الإشعارات",
     "settings": "الإعدادات"
+  },
+  "user": {
+    "adminUser": "مستخدم إداري"
+  },
+  "khabeer": {
+    "name": "خبير"
   },
   "dashboard": {
     "title": "لوحة التحكم",
@@ -1002,6 +1014,15 @@
     "failedToAddSubAdmin": "فشل في إضافة المدير المساعد",
     "subAdminRemovedSuccessfully": "تمت إزالة المدير المساعد بنجاح!",
     "failedToRemoveSubAdmin": "فشل في إزالة المدير المساعد",
+    "permissionDashboard": "لوحة التحكم",
+    "permissionOrders": "الطلبات",
+    "permissionUsers": "المستخدمين",
+    "permissionProviders": "المزودين",
+    "permissionIncome": "الدخل",
+    "permissionInvoices": "الفواتير",
+    "permissionRatings": "التقييمات",
+    "permissionNotifications": "الإشعارات",
+    "permissionSettings": "الإعدادات",
     "versions": "الإصدارات",
     "versionManagement": "إدارة الإصدارات",
     "manageAppVersions": "إدارة إصدارات التطبيق والتحديثات",

@@ -35,7 +35,13 @@
     "info": "Information",
     "loading": "Loading...",
     "accessDenied": "Access Denied",
-    "noPermission": "You don't have permission to access this page."
+    "noPermission": "You don't have permission to access this page.",
+    "noAdminAccess": "You don't have admin access to this panel.",
+    "backToLogin": "Back to Login",
+    "insufficientPermissions": "Insufficient Permissions",
+    "noPermissionForThisPage": "You don't have permission to access this page.",
+    "goToDashboard": "Go to Dashboard",
+    "goBack": "Go Back"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -48,6 +54,12 @@
     "ratingsReviews": "Ratings & Reviews",
     "notifications": "Notifications",
     "settings": "Settings"
+  },
+  "user": {
+    "adminUser": "Admin User"
+  },
+  "khabeer": {
+    "name": "Khabeer"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1036,6 +1048,15 @@
     "failedToAddSubAdmin": "Failed to add sub-admin",
     "subAdminRemovedSuccessfully": "Sub-admin removed successfully!",
     "failedToRemoveSubAdmin": "Failed to remove sub-admin",
+    "permissionDashboard": "Dashboard",
+    "permissionOrders": "Orders",
+    "permissionUsers": "Users",
+    "permissionProviders": "Providers",
+    "permissionIncome": "Income",
+    "permissionInvoices": "Invoices",
+    "permissionRatings": "Ratings",
+    "permissionNotifications": "Notifications",
+    "permissionSettings": "Settings",
     "versions": "Versions",
     "versionManagement": "Version Management",
     "manageAppVersions": "Manage app versions and updates",

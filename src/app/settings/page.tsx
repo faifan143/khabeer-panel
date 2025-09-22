@@ -1,6 +1,7 @@
 "use client";
 
-import { ProtectedRoute } from "@/components/auth/protected-route";
+import { PermissionRoute } from "@/components/auth/permission-route";
+import { PERMISSIONS } from "@/lib/constants/permissions";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -698,8 +699,18 @@ export default function SettingsPage() {
     });
   };
 
+  // Function to translate permissions
+  const translatePermission = (permission: string) => {
+    const translationKey = `settings.permission${
+      permission.charAt(0).toUpperCase() + permission.slice(1)
+    }`;
+    const translation = t(translationKey);
+    // If translation returns the key itself (meaning no translation found), return the original permission
+    return translation === translationKey ? permission : translation;
+  };
+
   return (
-    <ProtectedRoute>
+    <PermissionRoute requiredPermissions={[PERMISSIONS.SETTINGS_VIEW]}>
       <AdminLayout>
         <div className="space-y-6">
           <Tabs
@@ -1457,7 +1468,7 @@ export default function SettingsPage() {
                                     variant="secondary"
                                     className="text-xs"
                                   >
-                                    {permission}
+                                    {translatePermission(permission)}
                                   </Badge>
                                 ))}
                               </div>
@@ -2059,6 +2070,6 @@ export default function SettingsPage() {
           </Tabs>
         </div>
       </AdminLayout>
-    </ProtectedRoute>
+    </PermissionRoute>
   );
 }

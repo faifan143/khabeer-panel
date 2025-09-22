@@ -1,30 +1,40 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 // Minimal user interface matching backend response
 interface AuthUser {
-  id: number
-  email: string
-  role: string
+  id: number;
+  email: string;
+  role: string;
+  isSuperAdmin?: boolean;
+  permissions?: string[];
 }
 
 interface AuthState {
-  user: AuthUser | null
-  token: string | null
-  isAuthenticated: boolean
-  isLoading: boolean
-  isInitialized: boolean
+  user: AuthUser | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  isInitialized: boolean;
+  isSuperAdmin: boolean;
+  permissions: string[];
 }
 
 interface AuthActions {
-  login: (user: AuthUser, token: string) => void
-  logout: () => void
-  setLoading: (loading: boolean) => void
-  updateUser: (user: AuthUser) => void
-  initialize: () => void
+  login: (
+    user: AuthUser,
+    token: string,
+    isSuperAdmin?: boolean,
+    permissions?: string[]
+  ) => void;
+  logout: () => void;
+  setLoading: (loading: boolean) => void;
+  updateUser: (user: AuthUser) => void;
+  updateAdminStatus: (isSuperAdmin: boolean, permissions: string[]) => void;
+  initialize: () => void;
 }
 
-type AuthStore = AuthState & AuthActions
+type AuthStore = AuthState & AuthActions;
 
 export const useAuthStore = create<AuthStore>()(
   persist(
@@ -35,16 +45,25 @@ export const useAuthStore = create<AuthStore>()(
       isAuthenticated: false,
       isLoading: true, // Start with loading true
       isInitialized: false,
+      isSuperAdmin: false,
+      permissions: [],
 
       // Actions
-      login: (user: AuthUser, token: string) => {
+      login: (
+        user: AuthUser,
+        token: string,
+        isSuperAdmin = false,
+        permissions = []
+      ) => {
         set({
           user,
           token,
           isAuthenticated: true,
           isLoading: false,
           isInitialized: true,
-        })
+          isSuperAdmin,
+          permissions,
+        });
       },
 
       logout: () =>
@@ -54,6 +73,8 @@ export const useAuthStore = create<AuthStore>()(
           isAuthenticated: false,
           isLoading: false,
           isInitialized: true,
+          isSuperAdmin: false,
+          permissions: [],
         }),
 
       setLoading: (loading: boolean) =>
@@ -66,37 +87,47 @@ export const useAuthStore = create<AuthStore>()(
           user,
         }),
 
+      updateAdminStatus: (isSuperAdmin: boolean, permissions: string[]) =>
+        set({
+          isSuperAdmin,
+          permissions,
+        }),
+
       initialize: () => {
-        const state = get()
+        const state = get();
         // If we have user and token, we're authenticated
         if (state.user && state.token) {
           set({
             isAuthenticated: true,
             isLoading: false,
             isInitialized: true,
-          })
+          });
         } else {
           set({
             isAuthenticated: false,
             isLoading: false,
             isInitialized: true,
-          })
+            isSuperAdmin: false,
+            permissions: [],
+          });
         }
       },
     }),
     {
-      name: 'auth-storage',
+      name: "auth-storage",
       partialize: (state) => ({
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated,
+        isSuperAdmin: state.isSuperAdmin,
+        permissions: state.permissions,
       }),
       onRehydrateStorage: () => (state) => {
         // When store is rehydrated from localStorage, initialize it
         if (state) {
-          state.initialize()
+          state.initialize();
         }
       },
     }
   )
-)
+);
