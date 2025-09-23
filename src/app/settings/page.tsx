@@ -447,11 +447,6 @@ export default function SettingsPage() {
   };
 
   const handleSaveSupport = async () => {
-    if (supportWhatsapp.length !== 9) {
-      toast.error(t("settings.invalidPhoneNumber"));
-      return;
-    }
-
     try {
       await updateSettingMutation.mutateAsync({
         key: "whatsapp_support",
@@ -1269,25 +1264,16 @@ export default function SettingsPage() {
                       {t("settings.whatsappSupport")}
                     </Label>
                     <Input
-                      placeholder="9XXXXXXXX"
+                      placeholder="Enter phone number"
                       value={supportWhatsapp}
                       onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, ""); // Remove non-digits
-                        if (value.length <= 9) {
-                          setSupportWhatsapp(value);
-                        }
+                        setSupportWhatsapp(e.target.value);
                       }}
                       className="mt-1"
-                      maxLength={9}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       {t("settings.supportPhoneDescription")}
                     </p>
-                    {supportWhatsapp && supportWhatsapp.length !== 9 && (
-                      <p className="text-xs text-red-500 mt-1">
-                        {t("settings.invalidPhoneNumber")}
-                      </p>
-                    )}
                   </div>
                   <Button onClick={handleSaveSupport} className="w-full">
                     <Save className="h-4 w-4 mr-2" />
