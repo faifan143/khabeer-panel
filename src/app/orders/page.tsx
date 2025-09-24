@@ -146,8 +146,6 @@ const getStatusColor = (status: string) => {
       return "bg-yellow-100 text-yellow-800 border-yellow-200";
     case "accepted":
       return "bg-blue-100 text-blue-800 border-blue-200";
-    case "in_progress":
-      return "bg-orange-100 text-orange-800 border-orange-200";
     case "completed":
       return "bg-green-100 text-green-800 border-green-200";
     case "cancelled":
@@ -163,8 +161,6 @@ const getStatusIcon = (status: string) => {
       return <Clock className="h-4 w-4" />;
     case "accepted":
       return <CheckCircle className="h-4 w-4" />;
-    case "in_progress":
-      return <Truck className="h-4 w-4" />;
     case "completed":
       return <CheckCircle className="h-4 w-4" />;
     case "cancelled":
@@ -182,8 +178,6 @@ const getTabLabel = (tabValue: string, t: any) => {
       return t("orders.pending");
     case "accepted":
       return t("orders.accepted");
-    case "in_progress":
-      return t("orders.inProgress");
     case "completed":
       return t("orders.completed");
     case "cancelled":
@@ -236,9 +230,7 @@ export default function OrdersManagementPage() {
   // Filter orders by status on frontend
   const pendingOrders = orders.filter((order) => order.status === "pending");
   const acceptedOrders = orders.filter((order) => order.status === "accepted");
-  const inProgressOrders = orders.filter(
-    (order) => order.status === "in_progress"
-  );
+
   const completedOrders = orders.filter(
     (order) => order.status === "completed"
   );
@@ -266,7 +258,6 @@ export default function OrdersManagementPage() {
     return {
       total: orders.length,
       pending: orders.filter((o) => o.status === "pending").length,
-      inProgress: orders.filter((o) => o.status === "in_progress").length,
       completed: orders.filter((o) => o.status === "completed").length,
       cancelled: orders.filter((o) => o.status === "cancelled").length,
       totalRevenue: Math.round(totalRevenue * 100) / 100,
@@ -329,8 +320,6 @@ export default function OrdersManagementPage() {
         return getFilteredOrders(pendingOrders);
       case "accepted":
         return getFilteredOrders(acceptedOrders);
-      case "in_progress":
-        return getFilteredOrders(inProgressOrders);
       case "completed":
         return getFilteredOrders(completedOrders);
       case "cancelled":
@@ -580,14 +569,7 @@ export default function OrdersManagementPage() {
                     >
                       {t("orders.accepted")}
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => setActiveTab("in_progress")}
-                      className={`cursor-pointer ${
-                        activeTab === "in_progress" ? "bg-gray-100" : ""
-                      }`}
-                    >
-                      {t("orders.inProgress")}
-                    </DropdownMenuItem>
+
                     <DropdownMenuItem
                       onClick={() => setActiveTab("completed")}
                       className={`cursor-pointer ${
@@ -628,12 +610,7 @@ export default function OrdersManagementPage() {
                 >
                   {t("orders.accepted")}
                 </TabsTrigger>
-                <TabsTrigger
-                  value="in_progress"
-                  className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-sm font-medium transition-all duration-200"
-                >
-                  {t("orders.inProgress")}
-                </TabsTrigger>
+
                 <TabsTrigger
                   value="completed"
                   className="px-4 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-sm font-medium transition-all duration-200"
@@ -676,9 +653,6 @@ export default function OrdersManagementPage() {
                       </SelectItem>
                       <SelectItem value="accepted">
                         {t("orders.accepted")}
-                      </SelectItem>
-                      <SelectItem value="in_progress">
-                        {t("orders.in_progress")}
                       </SelectItem>
                       <SelectItem value="completed">
                         {t("orders.completed")}
@@ -1421,7 +1395,7 @@ export default function OrdersManagementPage() {
                   <Button
                     variant="outline"
                     onClick={() =>
-                      handleStatusUpdate(selectedOrder!.id, "in_progress")
+                      handleStatusUpdate(selectedOrder!.id, "accepted")
                     }
                     disabled={updateStatusMutation.isPending}
                     className="h-12"
