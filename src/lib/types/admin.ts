@@ -18,12 +18,14 @@ export interface DashboardStats {
   // Additional data included in the consolidated response
   popularServices: Array<{
     id: number;
-    name: string;
+    titleEn: string;
+    titleAr: string;
     description: string | null;
     price: number | null;
     category: {
       id: number;
-      name: string;
+      titleEn: string;
+      titleAr: string;
     } | null;
     orderCount: number;
   }>;
@@ -62,12 +64,14 @@ export interface DashboardStats {
       state: string;
       services: Array<{
         id: number;
-        name: string;
+        titleEn: string;
+        titleAr: string;
         description: string | null;
         price: number | null;
         category: {
           id: number;
-          name: string;
+          titleEn: string;
+          titleAr: string;
         } | null;
         orderCount: number;
       }>;

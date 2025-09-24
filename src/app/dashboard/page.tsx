@@ -251,7 +251,9 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <h4 className="font-medium text-sm truncate text-right rtl:text-right ltr:text-left">
-                                    {service.name}
+                                    {i18n.language === "ar"
+                                      ? service.titleAr || service.titleEn
+                                      : service.titleEn || service.titleAr}
                                   </h4>
                                   <div className="flex items-center gap-2 text-xs text-muted-foreground rtl:gap-2 ltr:gap-2 rtl:flex-row-reverse">
                                     <span className="flex items-center gap-1 rtl:flex-row-reverse">
@@ -272,8 +274,13 @@ export default function DashboardPage() {
                                       <>
                                         <span>•</span>
                                         <span className="text-blue-600">
-                                          {service.category.name}
+                                          {i18n.language === "ar"
+                                            ? service.category.titleAr ||
+                                              service.category.titleEn
+                                            : service.category.titleEn ||
+                                              service.category.titleAr}
                                         </span>
+                                        <span className="text-sm text-muted-foreground"></span>
                                       </>
                                     )}
                                   </div>
@@ -326,7 +333,9 @@ export default function DashboardPage() {
                           </div>
                           <div>
                             <p className="font-medium text-sm">
-                              {service.name}
+                              {i18n.language === "ar"
+                                ? service.titleAr || service.titleEn
+                                : service.titleEn || service.titleAr}
                             </p>
                             <p className="text-sm text-muted-foreground">
                               {service.orderCount} {t("dashboard.orders")}
