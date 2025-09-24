@@ -1053,7 +1053,10 @@
     "editVersion": "تعديل الإصدار",
     "versionDetails": "تفاصيل الإصدار",
     "updateVersionInformation": "تحديث معلومات الإصدار",
-    "fillVersionInformation": "املأ معلومات الإصدار"
+    "fillVersionInformation": "املأ معلومات الإصدار",
+    "current": "الحالي",
+    "uploadNewFileToReplaceCurrent": "رفع ملف جديد لاستبدال الحالي",
+    "chooseNewFile": "اختر ملف جديد"
   },
   "user": {
     "profile": "الملف الشخصي",

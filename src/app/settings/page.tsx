@@ -773,7 +773,7 @@ export default function SettingsPage() {
                                   {t("settings.englishVersion")})
                                 </span>
                                 <span className="text-xs text-muted-foreground">
-                                  (Current)
+                                  {t("settings.current")}
                                 </span>
                               </div>
                               <div className="flex items-center space-x-2">
@@ -866,7 +866,7 @@ export default function SettingsPage() {
                                   {t("settings.arabicVersion")})
                                 </span>
                                 <span className="text-xs text-muted-foreground">
-                                  (Current)
+                                  {t("settings.current")}
                                 </span>
                               </div>
                               <div className="flex items-center space-x-2">
@@ -975,7 +975,7 @@ export default function SettingsPage() {
                                   {t("settings.englishVersion")})
                                 </span>
                                 <span className="text-xs text-muted-foreground">
-                                  (Current)
+                                  {t("settings.current")}
                                 </span>
                               </div>
                               <div className="flex items-center space-x-2">
@@ -997,7 +997,7 @@ export default function SettingsPage() {
                             <div className="border-2 border-dashed rounded-lg p-4 text-center">
                               <Upload className="h-6 w-6 text-gray-400 mx-auto mb-2" />
                               <p className="text-sm text-gray-600 mb-2">
-                                Upload new file to replace current
+                                {t("settings.uploadNewFileToReplaceCurrent")}
                               </p>
                               <Button
                                 variant="outline"
@@ -1006,7 +1006,7 @@ export default function SettingsPage() {
                                   privacyEnInputRef.current?.click()
                                 }
                               >
-                                Choose New File
+                                {t("settings.chooseNewFile")}
                               </Button>
                             </div>
                           </div>
@@ -1072,7 +1072,7 @@ export default function SettingsPage() {
                                   {t("settings.arabicVersion")})
                                 </span>
                                 <span className="text-xs text-muted-foreground">
-                                  (Current)
+                                  {t("settings.current")}
                                 </span>
                               </div>
                               <div className="flex items-center space-x-2">

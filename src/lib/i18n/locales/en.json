@@ -1087,7 +1087,10 @@
     "editVersion": "Edit Version",
     "versionDetails": "Version Details",
     "updateVersionInformation": "Update version information",
-    "fillVersionInformation": "Fill in the version information"
+    "fillVersionInformation": "Fill in the version information",
+    "current": "Current",
+    "uploadNewFileToReplaceCurrent": "Upload new file to replace current",
+    "chooseNewFile": "Choose New File"
   },
   "user": {
     "profile": "Profile",
