@@ -631,7 +631,7 @@ export default function InvoicesPage() {
                       <p>
                         <strong>{t("invoices.amountLabel")}</strong>{" "}
                         {formatCurrency(
-                          selectedInvoice.totalAmount,
+                          selectedInvoice.commission,
                           i18n.language
                         )}
                       </p>
