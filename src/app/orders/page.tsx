@@ -1123,22 +1123,6 @@ export default function OrdersManagementPage() {
                                     />
                                     {t("orders.accept")}
                                   </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedOrder(order);
-                                      setIsRejectDialogOpen(true);
-                                    }}
-                                    className="h-8 px-2 text-xs hover:bg-red-50 text-red-700 border-red-200"
-                                  >
-                                    <XCircle
-                                      className={`h-3 w-3 ${
-                                        isRTL ? "ml-1" : "mr-1"
-                                      }`}
-                                    />
-                                    {t("orders.reject")}
-                                  </Button>
                                 </div>
                               )}
                               {order.status === "in_progress" && (
