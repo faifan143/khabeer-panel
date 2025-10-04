@@ -309,7 +309,9 @@ export default function CategoriesServicesPage() {
         service.titleAr.toLowerCase().includes(searchTerm.toLowerCase()) ||
         service.titleEn.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (service.serviceType === "KHABEER" &&
-          service.description.toLowerCase().includes(searchTerm.toLowerCase()))
+          service.descriptionAr
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()))
     );
 
     // Apply service type filter
@@ -345,7 +347,8 @@ export default function CategoriesServicesPage() {
   const [serviceForm, setServiceForm] = useState<CreateServiceDto>({
     titleAr: "",
     titleEn: "",
-    description: "",
+    descriptionAr: "",
+    descriptionEn: "",
     commission: 0,
     whatsapp: "",
     categoryId: undefined,
@@ -502,8 +505,10 @@ export default function CategoriesServicesPage() {
     setServiceForm({
       titleAr: service.titleAr,
       titleEn: service.titleEn,
-      description:
-        service.serviceType === "KHABEER" ? service.description : undefined,
+      descriptionAr:
+        service.serviceType === "KHABEER" ? service.descriptionAr : undefined,
+      descriptionEn:
+        service.serviceType === "KHABEER" ? service.descriptionEn : undefined,
       commission:
         service.serviceType === "NORMAL" ? service.commission || 0 : undefined,
       whatsapp:
@@ -896,12 +901,15 @@ export default function CategoriesServicesPage() {
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-gray-900 truncate text-xs xs:text-sm sm:text-base">
-                                  {category.titleEn}
-                                </h3>
-                                <p className="text-xs text-muted-foreground truncate">
-                                  {category.titleAr}
-                                </p>
+                                {!isRTL ? (
+                                  <h3 className="font-semibold text-gray-900 truncate text-xs xs:text-sm sm:text-base">
+                                    {category.titleEn}
+                                  </h3>
+                                ) : (
+                                  <h3 className="font-semibold text-gray-900 truncate text-xs xs:text-sm sm:text-base">
+                                    {category.titleAr}
+                                  </h3>
+                                )}
                                 <div className="flex items-center mt-1">
                                   {category.state &&
                                   category.state.trim() !== "" ? (
@@ -1036,12 +1044,15 @@ export default function CategoriesServicesPage() {
                                     )}
                                   </div>
                                   <div>
-                                    <div className="font-semibold text-gray-900">
-                                      {category.titleEn}
-                                    </div>
-                                    <div className="text-sm text-muted-foreground">
-                                      {category.titleAr}
-                                    </div>
+                                    {!isRTL ? (
+                                      <div className="font-semibold text-gray-900">
+                                        {category.titleEn}
+                                      </div>
+                                    ) : (
+                                      <div className="font-semibold text-gray-900">
+                                        {category.titleAr}
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </TableCell>
@@ -1215,15 +1226,20 @@ export default function CategoriesServicesPage() {
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-gray-900 truncate text-xs xs:text-sm sm:text-base">
-                                {service.titleEn}
-                              </h3>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {service.titleAr}
-                              </p>
+                              {!isRTL ? (
+                                <h3 className="font-semibold text-gray-900 truncate text-xs xs:text-sm sm:text-base">
+                                  {service.titleEn}
+                                </h3>
+                              ) : (
+                                <h3 className="font-semibold text-gray-900 truncate text-xs xs:text-sm sm:text-base">
+                                  {service.titleAr}
+                                </h3>
+                              )}
                               {service.serviceType === "KHABEER" && (
                                 <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-                                  {service.description}
+                                  {isRTL
+                                    ? service.descriptionAr
+                                    : service.descriptionEn}
                                 </p>
                               )}
                               <div className="flex flex-wrap items-center gap-1 mt-1">
@@ -1381,15 +1397,20 @@ export default function CategoriesServicesPage() {
                                   )}
                                 </div>
                                 <div className="max-w-[300px]">
-                                  <div className="font-semibold text-gray-900 truncate">
-                                    {service.titleEn}
-                                  </div>
-                                  <div className="text-sm text-muted-foreground truncate">
-                                    {service.titleAr}
-                                  </div>
+                                  {!isRTL ? (
+                                    <div className="font-semibold text-gray-900 truncate">
+                                      {service.titleEn}
+                                    </div>
+                                  ) : (
+                                    <div className="font-semibold text-gray-900 truncate">
+                                      {service.titleAr}
+                                    </div>
+                                  )}
                                   {service.serviceType === "KHABEER" && (
                                     <div className="text-sm text-muted-foreground line-clamp-1">
-                                      {service.description}
+                                      {isRTL
+                                        ? service.descriptionAr
+                                        : service.descriptionEn}
                                     </div>
                                   )}
                                 </div>

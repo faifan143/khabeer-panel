@@ -48,6 +48,8 @@ export function NormalServiceForm({
   const [serviceForm, setServiceForm] = useState<CreateServiceDto>({
     titleAr: selectedService?.titleAr || "",
     titleEn: selectedService?.titleEn || "",
+    descriptionAr: selectedService?.descriptionAr || "",
+    descriptionEn: selectedService?.descriptionEn || "",
     commission: selectedService?.commission || 0,
     categoryId: selectedService?.categoryId || undefined,
     serviceType: "NORMAL",
@@ -63,6 +65,8 @@ export function NormalServiceForm({
       setServiceForm({
         titleAr: selectedService.titleAr || "",
         titleEn: selectedService.titleEn || "",
+        descriptionAr: selectedService.descriptionAr || "",
+        descriptionEn: selectedService.descriptionEn || "",
         commission: selectedService.commission || 0,
         categoryId: selectedService.categoryId || undefined,
         serviceType: "NORMAL",
@@ -75,6 +79,8 @@ export function NormalServiceForm({
       setServiceForm({
         titleAr: "",
         titleEn: "",
+        descriptionAr: "",
+        descriptionEn: "",
         commission: 0,
         categoryId: undefined,
         serviceType: "NORMAL",
@@ -105,7 +111,8 @@ export function NormalServiceForm({
         const bulkServiceData = {
           titleAr: serviceForm.titleAr,
           titleEn: serviceForm.titleEn,
-          description: serviceForm.description || "",
+          descriptionAr: serviceForm.descriptionAr || "",
+          descriptionEn: serviceForm.descriptionEn || "",
           commission: serviceForm.commission,
           serviceType: "NORMAL" as const,
           categoryIds: selectedCategories,
@@ -214,6 +221,75 @@ export function NormalServiceForm({
                     ? "text-right rtl:text-right rtl:placeholder:text-right"
                     : "text-left"
                 }`}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={`space-y-2 ${isRTL ? "rtl:space-y-2" : ""}`}>
+              <Label
+                htmlFor="descriptionAr"
+                className={`text-sm font-medium ${
+                  isRTL ? "text-right rtl:text-right rtl:block" : "text-left"
+                }`}
+              >
+                {t("categories.normalServiceForm.arabicDescription")}{" "}
+                <span className={`text-red-500 ${isRTL ? "rtl:mr-1" : "ml-1"}`}>
+                  *
+                </span>
+              </Label>
+              <Textarea
+                id="descriptionAr"
+                value={serviceForm.descriptionAr}
+                onChange={(e) =>
+                  setServiceForm({
+                    ...serviceForm,
+                    descriptionAr: e.target.value,
+                  })
+                }
+                placeholder={t(
+                  "categories.normalServiceForm.enterArabicDescription"
+                )}
+                rows={3}
+                required
+                className={`${
+                  isRTL
+                    ? "text-right rtl:text-right rtl:placeholder:text-right"
+                    : "text-left"
+                } resize-none`}
+              />
+            </div>
+            <div className={`space-y-2 ${isRTL ? "rtl:space-y-2" : ""}`}>
+              <Label
+                htmlFor="descriptionEn"
+                className={`text-sm font-medium ${
+                  isRTL ? "text-right rtl:text-right rtl:block" : "text-left"
+                }`}
+              >
+                {t("categories.normalServiceForm.englishDescription")}{" "}
+                <span className={`text-red-500 ${isRTL ? "rtl:mr-1" : "ml-1"}`}>
+                  *
+                </span>
+              </Label>
+              <Textarea
+                id="descriptionEn"
+                value={serviceForm.descriptionEn}
+                onChange={(e) =>
+                  setServiceForm({
+                    ...serviceForm,
+                    descriptionEn: e.target.value,
+                  })
+                }
+                placeholder={t(
+                  "categories.normalServiceForm.enterEnglishDescription"
+                )}
+                rows={3}
+                required
+                className={`${
+                  isRTL
+                    ? "text-right rtl:text-right rtl:placeholder:text-right"
+                    : "text-left"
+                } resize-none`}
               />
             </div>
           </div>

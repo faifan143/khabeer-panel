@@ -703,7 +703,10 @@ export default function IncomePage() {
                         Description
                       </Label>
                       <p className="text-sm text-muted-foreground">
-                        {selectedInvoice.order?.service?.description || "N/A"}
+                        {i18n.language === "ar"
+                          ? selectedInvoice.order?.service?.descriptionAr
+                          : selectedInvoice.order?.service?.descriptionEn ||
+                            "N/A"}
                       </p>
                     </div>
                   </div>

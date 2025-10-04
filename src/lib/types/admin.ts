@@ -20,7 +20,8 @@ export interface DashboardStats {
     id: number;
     titleEn: string;
     titleAr: string;
-    description: string | null;
+    descriptionAr: string | null;
+    descriptionEn: string | null;
     price: number | null;
     category: {
       id: number;
@@ -66,7 +67,8 @@ export interface DashboardStats {
         id: number;
         titleEn: string;
         titleAr: string;
-        description: string | null;
+        descriptionAr: string | null;
+        descriptionEn: string | null;
         price: number | null;
         category: {
           id: number;
@@ -93,7 +95,8 @@ export interface ServiceStats {
     id: number;
     nameAr: string;
     nameEn: string;
-    description: string;
+    descriptionAr: string;
+    descriptionEn: string;
     price: number;
     category: {
       id: number;
@@ -179,7 +182,8 @@ export interface AdminProvider {
       id: number;
       titleAr: string;
       titleEn: string;
-      description: string;
+      descriptionAr: string;
+      descriptionEn: string;
       commission: number;
       whatsapp: string;
       category: {
@@ -240,7 +244,8 @@ export interface AdminProviderJoinRequest {
         id: number;
         titleAr: string;
         titleEn: string;
-        description: string;
+        descriptionAr: string;
+        descriptionEn: string;
         commission: number;
         whatsapp: string;
         category: {

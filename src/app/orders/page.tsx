@@ -757,7 +757,9 @@ export default function OrdersManagementPage() {
                                 isRTL ? "text-right" : "text-left"
                               }`}
                             >
-                              {order.service?.description}
+                              {i18n.language === "ar"
+                                ? order.service?.descriptionAr
+                                : order.service?.descriptionEn}
                             </p>
                           </div>
                         </div>
@@ -1233,7 +1235,9 @@ export default function OrdersManagementPage() {
                           {selectedOrder.service?.titleEn}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {selectedOrder.service?.description}
+                          {i18n.language === "ar"
+                            ? selectedOrder.service?.descriptionAr
+                            : selectedOrder.service?.descriptionEn}
                         </div>
                       </div>
                     </div>

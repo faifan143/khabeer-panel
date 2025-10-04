@@ -116,7 +116,8 @@ export interface BulkCreateCategoryDto {
 export interface BulkCreateServiceDto {
   titleAr: string;
   titleEn: string;
-  description: string;
+  descriptionAr: string;
+  descriptionEn: string;
   commission: number;
   serviceType: ServiceType;
   categoryIds: number[];
@@ -129,7 +130,8 @@ export interface Service extends BaseEntity {
   image: string;
   titleAr: string;
   titleEn: string;
-  description: string;
+  descriptionAr: string;
+  descriptionEn: string;
   commission: number | null;
   whatsapp: string;
   categoryId?: number | null;
@@ -141,7 +143,8 @@ export interface Service extends BaseEntity {
 export interface CreateServiceDto {
   titleAr: string;
   titleEn: string;
-  description?: string;
+  descriptionAr?: string;
+  descriptionEn?: string;
   commission?: number;
   whatsapp?: string;
   categoryId?: number;
@@ -152,7 +155,8 @@ export interface CreateServiceDto {
 export interface UpdateServiceDto {
   titleAr?: string;
   titleEn?: string;
-  description?: string;
+  descriptionAr?: string;
+  descriptionEn?: string;
   commission?: number;
   whatsapp?: string;
   categoryId?: number;

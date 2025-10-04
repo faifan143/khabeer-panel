@@ -1568,7 +1568,9 @@ export default function ProviderVerificationPage() {
                                       {service.service?.titleEn}
                                     </div>
                                     <div className="text-sm text-muted-foreground">
-                                      {service.service?.description}
+                                      {i18n.language === "ar"
+                                        ? service.service?.descriptionAr
+                                        : service.service?.descriptionEn}
                                     </div>
 
                                     {/* Offer Badge */}
@@ -2050,10 +2052,12 @@ export default function ProviderVerificationPage() {
                                               {ps.service?.titleEn}
                                             </h4>
                                             <p className="text-sm text-muted-foreground mt-1">
-                                              {ps.service?.description ||
-                                                t(
-                                                  "providers.noDescriptionAvailable"
-                                                )}
+                                              {i18n.language === "ar"
+                                                ? ps.service?.descriptionAr
+                                                : ps.service?.descriptionEn ||
+                                                  t(
+                                                    "providers.noDescriptionAvailable"
+                                                  )}
                                             </p>
                                           </div>
                                         </div>

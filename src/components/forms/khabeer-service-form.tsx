@@ -1,27 +1,26 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MultiCategorySelector } from "@/components/ui/multi-category-selector";
 import { Textarea } from "@/components/ui/textarea";
-import { useTranslation } from "react-i18next";
 import {
-  CreateServiceDto,
-  UpdateServiceDto,
-  Service,
   Category,
+  CreateServiceDto,
+  Service,
+  UpdateServiceDto,
 } from "@/lib/api/types";
 import { Upload } from "lucide-react";
-import { MultiCategorySelector } from "@/components/ui/multi-category-selector";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface KhabeerServiceFormProps {
   isOpen: boolean;
@@ -48,7 +47,8 @@ export function KhabeerServiceForm({
   const [serviceForm, setServiceForm] = useState<CreateServiceDto>({
     titleAr: selectedService?.titleAr || "",
     titleEn: selectedService?.titleEn || "",
-    description: selectedService?.description || "",
+    descriptionAr: selectedService?.descriptionAr || "",
+    descriptionEn: selectedService?.descriptionEn || "",
     whatsapp: selectedService?.whatsapp || "",
     categoryId: selectedService?.categoryId || undefined,
     serviceType: "KHABEER",
@@ -64,7 +64,8 @@ export function KhabeerServiceForm({
       setServiceForm({
         titleAr: selectedService.titleAr || "",
         titleEn: selectedService.titleEn || "",
-        description: selectedService.description || "",
+        descriptionAr: selectedService.descriptionAr || "",
+        descriptionEn: selectedService.descriptionEn || "",
         whatsapp: selectedService.whatsapp || "",
         categoryId: selectedService.categoryId || undefined,
         serviceType: "KHABEER",
@@ -77,7 +78,8 @@ export function KhabeerServiceForm({
       setServiceForm({
         titleAr: "",
         titleEn: "",
-        description: "",
+        descriptionAr: "",
+        descriptionEn: "",
         whatsapp: "",
         categoryId: undefined,
         serviceType: "KHABEER",
@@ -103,7 +105,8 @@ export function KhabeerServiceForm({
         const bulkServiceData = {
           titleAr: serviceForm.titleAr,
           titleEn: serviceForm.titleEn,
-          description: serviceForm.description || "",
+          descriptionAr: serviceForm.descriptionAr || "",
+          descriptionEn: serviceForm.descriptionEn || "",
           commission: 0, // KHABEER services don't have commission
           serviceType: "KHABEER" as const,
           categoryIds: selectedCategories,
@@ -218,33 +221,73 @@ export function KhabeerServiceForm({
             </div>
           </div>
 
-          <div className={`space-y-2 ${isRTL ? "rtl:space-y-2" : ""}`}>
-            <Label
-              htmlFor="description"
-              className={`text-sm font-medium ${
-                isRTL ? "text-right rtl:text-right rtl:block" : "text-left"
-              }`}
-            >
-              {t("categories.khabeerServiceForm.description")}{" "}
-              <span className={`text-red-500 ${isRTL ? "rtl:mr-1" : "ml-1"}`}>
-                *
-              </span>
-            </Label>
-            <Textarea
-              id="description"
-              value={serviceForm.description}
-              onChange={(e) =>
-                setServiceForm({ ...serviceForm, description: e.target.value })
-              }
-              placeholder={t("categories.khabeerServiceForm.enterDescription")}
-              rows={3}
-              required
-              className={`${
-                isRTL
-                  ? "text-right rtl:text-right rtl:placeholder:text-right"
-                  : "text-left"
-              } resize-none`}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={`space-y-2 ${isRTL ? "rtl:space-y-2" : ""}`}>
+              <Label
+                htmlFor="descriptionAr"
+                className={`text-sm font-medium ${
+                  isRTL ? "text-right rtl:text-right rtl:block" : "text-left"
+                }`}
+              >
+                {t("categories.khabeerServiceForm.arabicDescription")}{" "}
+                <span className={`text-red-500 ${isRTL ? "rtl:mr-1" : "ml-1"}`}>
+                  *
+                </span>
+              </Label>
+              <Textarea
+                id="descriptionAr"
+                value={serviceForm.descriptionAr}
+                onChange={(e) =>
+                  setServiceForm({
+                    ...serviceForm,
+                    descriptionAr: e.target.value,
+                  })
+                }
+                placeholder={t(
+                  "categories.khabeerServiceForm.enterArabicDescription"
+                )}
+                rows={3}
+                required
+                className={`${
+                  isRTL
+                    ? "text-right rtl:text-right rtl:placeholder:text-right"
+                    : "text-left"
+                } resize-none`}
+              />
+            </div>
+            <div className={`space-y-2 ${isRTL ? "rtl:space-y-2" : ""}`}>
+              <Label
+                htmlFor="descriptionEn"
+                className={`text-sm font-medium ${
+                  isRTL ? "text-right rtl:text-right rtl:block" : "text-left"
+                }`}
+              >
+                {t("categories.khabeerServiceForm.englishDescription")}{" "}
+                <span className={`text-red-500 ${isRTL ? "rtl:mr-1" : "ml-1"}`}>
+                  *
+                </span>
+              </Label>
+              <Textarea
+                id="descriptionEn"
+                value={serviceForm.descriptionEn}
+                onChange={(e) =>
+                  setServiceForm({
+                    ...serviceForm,
+                    descriptionEn: e.target.value,
+                  })
+                }
+                placeholder={t(
+                  "categories.khabeerServiceForm.enterEnglishDescription"
+                )}
+                rows={3}
+                required
+                className={`${
+                  isRTL
+                    ? "text-right rtl:text-right rtl:placeholder:text-right"
+                    : "text-left"
+                } resize-none`}
+              />
+            </div>
           </div>
 
           <div className={`space-y-2 ${isRTL ? "rtl:space-y-2" : ""}`}>
