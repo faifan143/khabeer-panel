@@ -106,6 +106,22 @@ export interface UpdateCategoryDto {
   state?: string;
 }
 
+// Bulk creation types
+export interface BulkCreateCategoryDto {
+  titleAr: string;
+  titleEn: string;
+  states: string[];
+}
+
+export interface BulkCreateServiceDto {
+  titleAr: string;
+  titleEn: string;
+  description: string;
+  commission: number;
+  serviceType: ServiceType;
+  categoryIds: number[];
+}
+
 // Service types
 export type ServiceType = "NORMAL" | "KHABEER";
 

@@ -12,13 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "react-i18next";
 import {
@@ -28,7 +21,7 @@ import {
   Category,
 } from "@/lib/api/types";
 import { Upload } from "lucide-react";
-import { getLocalizedStateName } from "@/lib/constants/oman-states";
+import { MultiCategorySelector } from "@/components/ui/multi-category-selector";
 
 interface NormalServiceFormProps {
   isOpen: boolean;
@@ -59,6 +52,7 @@ export function NormalServiceForm({
     categoryId: selectedService?.categoryId || undefined,
     serviceType: "NORMAL",
   });
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [serviceImageFile, setServiceImageFile] = useState<File | null>(null);
 
   // Keep form values in sync when editing different services or when dialog opens
@@ -73,6 +67,10 @@ export function NormalServiceForm({
         categoryId: selectedService.categoryId || undefined,
         serviceType: "NORMAL",
       });
+      // Set selected categories - for now, use single categoryId if available
+      setSelectedCategories(
+        selectedService.categoryId ? [selectedService.categoryId] : []
+      );
     } else {
       setServiceForm({
         titleAr: "",
@@ -81,31 +79,17 @@ export function NormalServiceForm({
         categoryId: undefined,
         serviceType: "NORMAL",
       });
+      setSelectedCategories([]);
     }
 
     setServiceImageFile(null);
   }, [selectedService, isOpen]);
 
-  // Group categories by state
-  const groupedCategories = useMemo(() => {
-    const groups: { [key: string]: Category[] } = {};
-
-    categories.forEach((category) => {
-      const state = category.state || t("common.noState");
-      if (!groups[state]) {
-        groups[state] = [];
-      }
-      groups[state].push(category);
-    });
-
-    return groups;
-  }, [categories, t]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validation for NORMAL services
-    if (!serviceForm.categoryId) {
+    if (selectedCategories.length === 0) {
       // Show error toast
       return;
     }
@@ -116,7 +100,25 @@ export function NormalServiceForm({
     }
 
     try {
-      await onSubmit(serviceForm, serviceImageFile || undefined);
+      // If multiple categories selected, use bulk creation
+      if (selectedCategories.length > 1) {
+        const bulkServiceData = {
+          titleAr: serviceForm.titleAr,
+          titleEn: serviceForm.titleEn,
+          description: serviceForm.description || "",
+          commission: serviceForm.commission,
+          serviceType: "NORMAL" as const,
+          categoryIds: selectedCategories,
+        };
+        await onSubmit(bulkServiceData, serviceImageFile || undefined);
+      } else {
+        // Single category, use regular creation
+        const singleServiceData = {
+          ...serviceForm,
+          categoryId: selectedCategories[0],
+        };
+        await onSubmit(singleServiceData, serviceImageFile || undefined);
+      }
       onClose();
     } catch (error) {
       // Error handling is done in parent component
@@ -249,76 +251,15 @@ export function NormalServiceForm({
               }`}
             />
           </div>
-          <div
-            className={`flex items-center gap-2 ${isRTL ? "rtl:gap-2 " : ""}`}
-          >
-            <div className={`space-y-2 ${isRTL ? "rtl:space-y-2" : ""}`}>
-              <Label
-                htmlFor="categoryId"
-                className={`text-sm font-medium ${
-                  isRTL ? "text-right rtl:text-right rtl:block" : "text-left"
-                }`}
-              >
-                {t("categories.normalServiceForm.category")}{" "}
-                <span className={`text-red-500 ${isRTL ? "rtl:mr-1" : "ml-1"}`}>
-                  *
-                </span>
-              </Label>
-              <Select
-                value={serviceForm.categoryId?.toString() || ""}
-                onValueChange={(value) => {
-                  if (value) {
-                    setServiceForm({
-                      ...serviceForm,
-                      categoryId: parseInt(value),
-                    });
-                  }
-                }}
-                required
-              >
-                <SelectTrigger
-                  className={`${
-                    isRTL
-                      ? "text-right rtl:text-right rtl:justify-end"
-                      : "text-left"
-                  }`}
-                >
-                  <SelectValue
-                    placeholder={t(
-                      "categories.normalServiceForm.selectCategory"
-                    )}
-                  />
-                </SelectTrigger>
-                <SelectContent className={isRTL ? "rtl:text-right" : ""}>
-                  {Object.entries(groupedCategories).map(
-                    ([state, stateCategories]) => (
-                      <div key={state}>
-                        <div
-                          className={`px-2 py-1.5 text-xs font-semibold text-muted-foreground ${
-                            isRTL ? "rtl:text-right" : ""
-                          }`}
-                        >
-                          {getLocalizedStateName(
-                            state,
-                            i18n.language as "en" | "ar"
-                          )}
-                        </div>
-                        {stateCategories.map((category) => (
-                          <SelectItem
-                            key={category.id}
-                            value={category.id.toString()}
-                            className={`pl-6 ${isRTL ? "rtl:text-right" : ""}`}
-                          >
-                            {category.titleAr} - {category.titleEn}
-                          </SelectItem>
-                        ))}
-                      </div>
-                    )
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <MultiCategorySelector
+            value={selectedCategories}
+            onChange={setSelectedCategories}
+            categories={categories}
+            placeholder={t("categories.normalServiceForm.selectCategory")}
+            label={t("categories.normalServiceForm.category")}
+            required
+            isMulti={true}
+          />
 
           <div className={`space-y-2 ${isRTL ? "rtl:space-y-2" : ""}`}>
             <Label

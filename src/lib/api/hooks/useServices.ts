@@ -1,5 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ServicesService } from '../services/services.service'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ServicesService } from "../services/services.service";
 import {
   Service,
   CreateServiceDto,
@@ -7,154 +7,230 @@ import {
   Category,
   CreateCategoryDto,
   UpdateCategoryDto,
-  PaginatedResponse
-} from '../types'
+  PaginatedResponse,
+  BulkCreateCategoryDto,
+  BulkCreateServiceDto,
+} from "../types";
 
 // Services hooks
-export const useServices = (page: number = 1, limit: number = 10, serviceType?: 'NORMAL' | 'KHABEER') => {
+export const useServices = (
+  page: number = 1,
+  limit: number = 10,
+  serviceType?: "NORMAL" | "KHABEER"
+) => {
   return useQuery({
-    queryKey: ['services', page, limit, serviceType],
+    queryKey: ["services", page, limit, serviceType],
     queryFn: () => ServicesService.getAllServices(page, limit, serviceType),
-  })
-}
+  });
+};
 
 export const useNormalServices = (page: number = 1, limit: number = 10) => {
   return useQuery({
-    queryKey: ['services', 'normal', page, limit],
+    queryKey: ["services", "normal", page, limit],
     queryFn: () => ServicesService.getNormalServices(page, limit),
-  })
-}
+  });
+};
 
 export const useKhabeerServices = (page: number = 1, limit: number = 10) => {
   return useQuery({
-    queryKey: ['services', 'khabeer', page, limit],
+    queryKey: ["services", "khabeer", page, limit],
     queryFn: () => ServicesService.getKhabeerServices(page, limit),
-  })
-}
+  });
+};
 
 export const useService = (id: number) => {
   return useQuery({
-    queryKey: ['services', id],
+    queryKey: ["services", id],
     queryFn: () => ServicesService.getServiceById(id),
     enabled: !!id,
-  })
-}
+  });
+};
 
 export const useCreateService = () => {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ serviceData, imageFile }: { serviceData: CreateServiceDto; imageFile?: File }) =>
-      ServicesService.createService(serviceData, imageFile),
+    mutationFn: ({
+      serviceData,
+      imageFile,
+    }: {
+      serviceData: CreateServiceDto;
+      imageFile?: File;
+    }) => ServicesService.createService(serviceData, imageFile),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['services'] })
+      queryClient.invalidateQueries({ queryKey: ["services"] });
     },
-  })
-}
+  });
+};
 
 export const useUpdateService = () => {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, serviceData, imageFile }: { id: number; serviceData: UpdateServiceDto; imageFile?: File }) =>
-      ServicesService.updateService(id, serviceData, imageFile),
+    mutationFn: ({
+      id,
+      serviceData,
+      imageFile,
+    }: {
+      id: number;
+      serviceData: UpdateServiceDto;
+      imageFile?: File;
+    }) => ServicesService.updateService(id, serviceData, imageFile),
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ['services'] })
-      queryClient.invalidateQueries({ queryKey: ['services', id] })
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+      queryClient.invalidateQueries({ queryKey: ["services", id] });
     },
-  })
-}
+  });
+};
 
 export const useDeleteService = () => {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: number) => ServicesService.deleteService(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['services'] })
+      queryClient.invalidateQueries({ queryKey: ["services"] });
     },
-  })
-}
+  });
+};
 
-export const useServicesByCategory = (categoryId: number, page: number = 1, limit: number = 10) => {
+export const useServicesByCategory = (
+  categoryId: number,
+  page: number = 1,
+  limit: number = 10
+) => {
   return useQuery({
-    queryKey: ['services', 'category', categoryId, page, limit],
-    queryFn: () => ServicesService.getServicesByCategory(categoryId, page, limit),
+    queryKey: ["services", "category", categoryId, page, limit],
+    queryFn: () =>
+      ServicesService.getServicesByCategory(categoryId, page, limit),
     enabled: !!categoryId,
-  })
-}
+  });
+};
 
-export const useSearchServices = (query: string, page: number = 1, limit: number = 10) => {
+export const useSearchServices = (
+  query: string,
+  page: number = 1,
+  limit: number = 10
+) => {
   return useQuery({
-    queryKey: ['services', 'search', query, page, limit],
+    queryKey: ["services", "search", query, page, limit],
     queryFn: () => ServicesService.searchServices(query, page, limit),
     enabled: !!query,
-  })
-}
+  });
+};
 
 export const useTopServices = (limit: number = 5) => {
   return useQuery({
-    queryKey: ['services', 'top', limit],
+    queryKey: ["services", "top", limit],
     queryFn: () => ServicesService.getTopServices(limit),
-  })
-}
+  });
+};
 
 // Categories hooks
 export const useCategories = () => {
   return useQuery({
-    queryKey: ['categories'],
+    queryKey: ["categories"],
     queryFn: () => ServicesService.getAllCategories(),
-  })
-}
+  });
+};
 
 export const useCategory = (id: number) => {
   return useQuery({
-    queryKey: ['categories', id],
+    queryKey: ["categories", id],
     queryFn: () => ServicesService.getCategoryById(id),
     enabled: !!id,
-  })
-}
+  });
+};
 
 export const useCreateCategory = () => {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ categoryData, imageFile }: { categoryData: CreateCategoryDto; imageFile?: File }) =>
-      ServicesService.createCategory(categoryData, imageFile),
+    mutationFn: ({
+      categoryData,
+      imageFile,
+    }: {
+      categoryData: CreateCategoryDto;
+      imageFile?: File;
+    }) => ServicesService.createCategory(categoryData, imageFile),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] })
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
-  })
-}
+  });
+};
 
 export const useUpdateCategory = () => {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, categoryData, imageFile }: { id: number; categoryData: UpdateCategoryDto; imageFile?: File }) =>
-      ServicesService.updateCategory(id, categoryData, imageFile),
+    mutationFn: ({
+      id,
+      categoryData,
+      imageFile,
+    }: {
+      id: number;
+      categoryData: UpdateCategoryDto;
+      imageFile?: File;
+    }) => ServicesService.updateCategory(id, categoryData, imageFile),
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] })
-      queryClient.invalidateQueries({ queryKey: ['categories', id] })
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: ["categories", id] });
     },
-  })
-}
+  });
+};
 
 export const useDeleteCategory = () => {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (id: number) => ServicesService.deleteCategory(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] })
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
     },
-  })
-}
+  });
+};
 
 export const useSearchCategories = (query: string) => {
   return useQuery({
-    queryKey: ['categories', 'search', query],
+    queryKey: ["categories", "search", query],
     queryFn: () => ServicesService.searchCategories(query),
     enabled: !!query,
-  })
-}
+  });
+};
+
+// Bulk creation hooks
+export const useBulkCreateCategories = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      categoryData,
+      imageFile,
+    }: {
+      categoryData: BulkCreateCategoryDto;
+      imageFile?: File;
+    }) => ServicesService.bulkCreateCategories(categoryData, imageFile),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+    },
+  });
+};
+
+export const useBulkCreateServices = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      serviceData,
+      imageFile,
+    }: {
+      serviceData: BulkCreateServiceDto;
+      imageFile?: File;
+    }) => ServicesService.bulkCreateServices(serviceData, imageFile),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
+  });
+};

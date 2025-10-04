@@ -7,16 +7,16 @@ import { NormalServiceForm } from "@/components/forms/normal-service-form";
 import { ServiceTypeSelectionDialog } from "@/components/forms/service-type-selection-dialog";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  RTLAlertDialog,
+  RTLAlertDialogAction,
+  RTLAlertDialogCancel,
+  RTLAlertDialogContent,
+  RTLAlertDialogDescription,
+  RTLAlertDialogFooter,
+  RTLAlertDialogHeader,
+  RTLAlertDialogTitle,
+  RTLAlertDialogTrigger,
+} from "@/components/ui/rtl-alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,6 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StateSelector } from "@/components/ui/state-selector";
+import { MultiStateSelector } from "@/components/ui/multi-state-selector";
 import {
   Table,
   TableBody,
@@ -58,6 +59,7 @@ import {
   useServices,
   useUpdateCategory,
   useUpdateService,
+  useBulkCreateServices,
 } from "@/lib/api/hooks/useServices";
 import {
   Category,
@@ -67,10 +69,14 @@ import {
   ServiceType,
   UpdateCategoryDto,
   UpdateServiceDto,
+  BulkCreateServiceDto,
 } from "@/lib/api/types";
 import { formatCurrency } from "@/lib/utils";
 import { getCategoryImageUrl, getServiceImageUrl } from "@/lib/utils/image";
-import { getLocalizedStateName } from "@/lib/constants/oman-states";
+import {
+  getLocalizedStateName,
+  getGovernorateByState,
+} from "@/lib/constants/oman-states";
 import {
   DollarSign,
   Edit,
@@ -85,6 +91,7 @@ import {
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/lib/hooks/useLanguage";
 
 // Loading Skeleton Components
 const CategoryCardSkeleton = () => (
@@ -219,6 +226,7 @@ export default function CategoriesServicesPage() {
   const createServiceMutation = useCreateService();
   const updateServiceMutation = useUpdateService();
   const deleteServiceMutation = useDeleteService();
+  const bulkCreateServicesMutation = useBulkCreateServices();
 
   // Extract data from responses
   const services = useMemo(() => {
@@ -328,6 +336,10 @@ export default function CategoriesServicesPage() {
     titleAr: "",
     state: "",
   });
+  const [selectedStates, setSelectedStates] = useState<string[]>([]);
+  const [selectedGovernorates, setSelectedGovernorates] = useState<string[]>(
+    []
+  );
 
   // Service form state
   const [serviceForm, setServiceForm] = useState<CreateServiceDto>({
@@ -346,6 +358,8 @@ export default function CategoriesServicesPage() {
       titleAr: "",
       state: "",
     });
+    setSelectedStates([]);
+    setSelectedGovernorates([]);
     setSelectedCategory(null);
     setCategoryImageFile(null);
   };
@@ -374,18 +388,38 @@ export default function CategoriesServicesPage() {
     e.preventDefault();
     try {
       if (selectedCategory) {
+        // For editing, use the first selected state or the original state
+        const stateToUse =
+          selectedStates.length > 0
+            ? selectedStates[0]
+            : selectedCategory.state;
         await updateCategoryMutation.mutateAsync({
           id: selectedCategory.id,
-          categoryData: categoryForm as UpdateCategoryDto,
+          categoryData: {
+            ...categoryForm,
+            state: stateToUse,
+          } as UpdateCategoryDto,
           imageFile: categoryImageFile || undefined,
         });
         toast.success(t("categories.categoryUpdated"));
       } else {
-        await createCategoryMutation.mutateAsync({
-          categoryData: categoryForm,
-          imageFile: categoryImageFile || undefined,
-        });
-        toast.success(t("categories.categoryCreated"));
+        // For creating, create categories for all selected states
+        if (selectedStates.length === 0) {
+          toast.error(t("categories.selectAtLeastOneState"));
+          return;
+        }
+
+        const createPromises = selectedStates.map((state) =>
+          createCategoryMutation.mutateAsync({
+            categoryData: { ...categoryForm, state },
+            imageFile: categoryImageFile || undefined,
+          })
+        );
+
+        await Promise.all(createPromises);
+        toast.success(
+          t("categories.categoriesCreated", { count: selectedStates.length })
+        );
       }
       setIsCategoryDialogOpen(false);
       resetCategoryForm();
@@ -400,11 +434,12 @@ export default function CategoriesServicesPage() {
   };
 
   const handleServiceSubmit = async (
-    serviceData: CreateServiceDto | UpdateServiceDto,
+    serviceData: CreateServiceDto | UpdateServiceDto | BulkCreateServiceDto,
     imageFile?: File
   ) => {
     try {
       if (selectedService) {
+        // For editing, always use regular update
         await updateServiceMutation.mutateAsync({
           id: selectedService.id,
           serviceData: serviceData as UpdateServiceDto,
@@ -412,11 +447,26 @@ export default function CategoriesServicesPage() {
         });
         toast.success(t("categories.serviceUpdated"));
       } else {
-        await createServiceMutation.mutateAsync({
-          serviceData: serviceData as CreateServiceDto,
-          imageFile: imageFile,
-        });
-        toast.success(t("categories.serviceCreated"));
+        // For creating, check if it's bulk creation
+        if (
+          "categoryIds" in serviceData &&
+          Array.isArray(serviceData.categoryIds) &&
+          serviceData.categoryIds.length > 1
+        ) {
+          // Bulk creation
+          await bulkCreateServicesMutation.mutateAsync({
+            serviceData: serviceData as BulkCreateServiceDto,
+            imageFile: imageFile,
+          });
+          toast.success(t("categories.bulkServicesCreated"));
+        } else {
+          // Regular creation
+          await createServiceMutation.mutateAsync({
+            serviceData: serviceData as CreateServiceDto,
+            imageFile: imageFile,
+          });
+          toast.success(t("categories.serviceCreated"));
+        }
       }
       resetServiceForm();
       refetchServices();
@@ -437,6 +487,12 @@ export default function CategoriesServicesPage() {
       titleAr: category.titleAr,
       state: category.state,
     });
+    setSelectedStates(category.state ? [category.state] : []);
+    // Set governorate based on the category's state
+    const governorate = category.state
+      ? getGovernorateByState(category.state)
+      : null;
+    setSelectedGovernorates(governorate ? [governorate] : []);
     setCategoryImageFile(null);
     setIsCategoryDialogOpen(true);
   };
@@ -752,13 +808,15 @@ export default function CategoriesServicesPage() {
                               </p>
                             )}
                           </div>
-                          <StateSelector
-                            value={categoryForm.state}
-                            onChange={(state) =>
-                              setCategoryForm({ ...categoryForm, state })
-                            }
-                            placeholder={t("categories.selectState")}
-                            label={t("categories.state")}
+                          <MultiStateSelector
+                            value={selectedStates}
+                            onChange={setSelectedStates}
+                            selectedGovernorates={selectedGovernorates}
+                            onGovernorateChange={setSelectedGovernorates}
+                            placeholder={t("categories.selectStates")}
+                            label={t("categories.states")}
+                            required
+                            isMulti={true}
                           />
                           <DialogFooter className="flex flex-col sm:flex-row gap-1.5 sm:gap-2 sm:justify-end">
                             <Button
@@ -878,8 +936,8 @@ export default function CategoriesServicesPage() {
                               >
                                 <Edit className="h-3 w-3" />
                               </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
+                              <RTLAlertDialog>
+                                <RTLAlertDialogTrigger asChild>
                                   <Button
                                     variant="ghost"
                                     size="sm"
@@ -888,15 +946,15 @@ export default function CategoriesServicesPage() {
                                   >
                                     <Trash2 className="h-3 w-3" />
                                   </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>
+                                </RTLAlertDialogTrigger>
+                                <RTLAlertDialogContent isRTL={isRTL}>
+                                  <RTLAlertDialogHeader isRTL={isRTL}>
+                                    <RTLAlertDialogTitle>
                                       {t(
                                         "categories.deleteConfirmations.categoryTitle"
                                       )}
-                                    </AlertDialogTitle>
-                                    <AlertDialogDescription>
+                                    </RTLAlertDialogTitle>
+                                    <RTLAlertDialogDescription>
                                       {t(
                                         "categories.deleteConfirmations.categoryDescription",
                                         { title: category.titleEn }
@@ -914,23 +972,23 @@ export default function CategoriesServicesPage() {
                                       {t(
                                         "categories.deleteConfirmations.allProviderServices"
                                       )}
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>
+                                    </RTLAlertDialogDescription>
+                                  </RTLAlertDialogHeader>
+                                  <RTLAlertDialogFooter isRTL={isRTL}>
+                                    <RTLAlertDialogCancel>
                                       {t("common.cancel")}
-                                    </AlertDialogCancel>
-                                    <AlertDialogAction
+                                    </RTLAlertDialogCancel>
+                                    <RTLAlertDialogAction
                                       onClick={() =>
                                         handleCategoryDelete(category.id)
                                       }
                                       className="bg-red-600 hover:bg-red-700"
                                     >
                                       {t("categories.deleteCategory")}
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
+                                    </RTLAlertDialogAction>
+                                  </RTLAlertDialogFooter>
+                                </RTLAlertDialogContent>
+                              </RTLAlertDialog>
                             </div>
                           </div>
                         </CardContent>
@@ -1019,8 +1077,8 @@ export default function CategoriesServicesPage() {
                                   >
                                     <Edit className="h-4 w-4" />
                                   </Button>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
+                                  <RTLAlertDialog>
+                                    <RTLAlertDialogTrigger asChild>
                                       <Button
                                         variant="ghost"
                                         size="sm"
@@ -1028,15 +1086,15 @@ export default function CategoriesServicesPage() {
                                       >
                                         <Trash2 className="h-4 w-4" />
                                       </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>
+                                    </RTLAlertDialogTrigger>
+                                    <RTLAlertDialogContent isRTL={isRTL}>
+                                      <RTLAlertDialogHeader isRTL={isRTL}>
+                                        <RTLAlertDialogTitle>
                                           {t(
                                             "categories.deleteConfirmations.categoryTitle"
                                           )}
-                                        </AlertDialogTitle>
-                                        <AlertDialogDescription>
+                                        </RTLAlertDialogTitle>
+                                        <RTLAlertDialogDescription>
                                           {t(
                                             "categories.deleteConfirmations.categoryDescription",
                                             { title: category.titleEn }
@@ -1054,23 +1112,23 @@ export default function CategoriesServicesPage() {
                                           {t(
                                             "categories.deleteConfirmations.allProviderServices"
                                           )}
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>
+                                        </RTLAlertDialogDescription>
+                                      </RTLAlertDialogHeader>
+                                      <RTLAlertDialogFooter isRTL={isRTL}>
+                                        <RTLAlertDialogCancel>
                                           {t("common.cancel")}
-                                        </AlertDialogCancel>
-                                        <AlertDialogAction
+                                        </RTLAlertDialogCancel>
+                                        <RTLAlertDialogAction
                                           onClick={() =>
                                             handleCategoryDelete(category.id)
                                           }
                                           className="bg-red-600 hover:bg-red-700"
                                         >
                                           {t("categories.deleteCategory")}
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
+                                        </RTLAlertDialogAction>
+                                      </RTLAlertDialogFooter>
+                                    </RTLAlertDialogContent>
+                                  </RTLAlertDialog>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -1222,8 +1280,8 @@ export default function CategoriesServicesPage() {
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
+                            <RTLAlertDialog>
+                              <RTLAlertDialogTrigger asChild>
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -1232,15 +1290,15 @@ export default function CategoriesServicesPage() {
                                 >
                                   <Trash2 className="h-3 w-3" />
                                 </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
+                              </RTLAlertDialogTrigger>
+                              <RTLAlertDialogContent isRTL={isRTL}>
+                                <RTLAlertDialogHeader isRTL={isRTL}>
+                                  <RTLAlertDialogTitle>
                                     {t(
                                       "categories.deleteConfirmations.serviceTitle"
                                     )}
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
+                                  </RTLAlertDialogTitle>
+                                  <RTLAlertDialogDescription>
                                     {t(
                                       "categories.deleteConfirmations.serviceDescription",
                                       { title: service.titleEn }
@@ -1254,23 +1312,23 @@ export default function CategoriesServicesPage() {
                                     {t(
                                       "categories.deleteConfirmations.providerServicesForService"
                                     )}
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>
+                                  </RTLAlertDialogDescription>
+                                </RTLAlertDialogHeader>
+                                <RTLAlertDialogFooter isRTL={isRTL}>
+                                  <RTLAlertDialogCancel>
                                     {t("common.cancel")}
-                                  </AlertDialogCancel>
-                                  <AlertDialogAction
+                                  </RTLAlertDialogCancel>
+                                  <RTLAlertDialogAction
                                     onClick={() =>
                                       handleServiceDelete(service.id)
                                     }
                                     className="bg-red-600 hover:bg-red-700"
                                   >
                                     {t("categories.deleteService")}
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                                  </RTLAlertDialogAction>
+                                </RTLAlertDialogFooter>
+                              </RTLAlertDialogContent>
+                            </RTLAlertDialog>
                           </div>
                         </div>
                       </CardContent>
@@ -1397,8 +1455,8 @@ export default function CategoriesServicesPage() {
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
+                                <RTLAlertDialog>
+                                  <RTLAlertDialogTrigger asChild>
                                     <Button
                                       variant="ghost"
                                       size="sm"
@@ -1406,15 +1464,15 @@ export default function CategoriesServicesPage() {
                                     >
                                       <Trash2 className="h-4 w-4" />
                                     </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>
+                                  </RTLAlertDialogTrigger>
+                                  <RTLAlertDialogContent isRTL={isRTL}>
+                                    <RTLAlertDialogHeader isRTL={isRTL}>
+                                      <RTLAlertDialogTitle>
                                         {t(
                                           "categories.deleteConfirmations.serviceTitle"
                                         )}
-                                      </AlertDialogTitle>
-                                      <AlertDialogDescription>
+                                      </RTLAlertDialogTitle>
+                                      <RTLAlertDialogDescription>
                                         {t(
                                           "categories.deleteConfirmations.serviceDescription",
                                           { title: service.titleEn }
@@ -1428,23 +1486,23 @@ export default function CategoriesServicesPage() {
                                         {t(
                                           "categories.deleteConfirmations.providerServicesForService"
                                         )}
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>
+                                      </RTLAlertDialogDescription>
+                                    </RTLAlertDialogHeader>
+                                    <RTLAlertDialogFooter isRTL={isRTL}>
+                                      <RTLAlertDialogCancel>
                                         {t("common.cancel")}
-                                      </AlertDialogCancel>
-                                      <AlertDialogAction
+                                      </RTLAlertDialogCancel>
+                                      <RTLAlertDialogAction
                                         onClick={() =>
                                           handleServiceDelete(service.id)
                                         }
                                         className="bg-red-600 hover:bg-red-700"
                                       >
                                         {t("categories.deleteService")}
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
+                                      </RTLAlertDialogAction>
+                                    </RTLAlertDialogFooter>
+                                  </RTLAlertDialogContent>
+                                </RTLAlertDialog>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -1468,7 +1526,9 @@ export default function CategoriesServicesPage() {
             selectedService={selectedService}
             categories={categories}
             isLoading={
-              createServiceMutation.isPending || updateServiceMutation.isPending
+              createServiceMutation.isPending ||
+              updateServiceMutation.isPending ||
+              bulkCreateServicesMutation.isPending
             }
           />
 
@@ -1482,7 +1542,9 @@ export default function CategoriesServicesPage() {
             selectedService={selectedService}
             categories={categories}
             isLoading={
-              createServiceMutation.isPending || updateServiceMutation.isPending
+              createServiceMutation.isPending ||
+              updateServiceMutation.isPending ||
+              bulkCreateServicesMutation.isPending
             }
           />
         </div>
