@@ -1524,12 +1524,24 @@ export default function SettingsPage() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>{t("settings.image")}</TableHead>
-                          <TableHead>{t("settings.title")}</TableHead>
-                          <TableHead>{t("settings.description")}</TableHead>
-                          <TableHead>{t("settings.linkType")}</TableHead>
-                          <TableHead>{t("settings.status")}</TableHead>
-                          <TableHead>{t("settings.created")}</TableHead>
+                          <TableHead className="rtl:text-right">
+                            {t("settings.image")}
+                          </TableHead>
+                          <TableHead className="rtl:text-right">
+                            {t("settings.title")}
+                          </TableHead>
+                          <TableHead className="rtl:text-right">
+                            {t("settings.description")}
+                          </TableHead>
+                          <TableHead className="rtl:text-right">
+                            {t("settings.linkType")}
+                          </TableHead>
+                          <TableHead className="rtl:text-right">
+                            {t("settings.status")}
+                          </TableHead>
+                          <TableHead className="rtl:text-right">
+                            {t("settings.created")}
+                          </TableHead>
                           <TableHead className="text-right">
                             {t("settings.actions")}
                           </TableHead>
@@ -1581,7 +1593,7 @@ export default function SettingsPage() {
                               {new Date(banner.createdAt).toLocaleDateString()}
                             </TableCell>
                             <TableCell className="text-right">
-                              <div className="flex items-center justify-end gap-2">
+                              <div className="flex items-center justify-end rtl:justify-start gap-2">
                                 <Button
                                   variant="ghost"
                                   size="sm"

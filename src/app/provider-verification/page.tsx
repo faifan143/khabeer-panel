@@ -164,6 +164,9 @@ export default function ProviderVerificationPage() {
   const [isServicesDialogOpen, setIsServicesDialogOpen] = useState(false);
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [isCategoriesDialogOpen, setIsCategoriesDialogOpen] = useState(false);
+  const [selectedProviderCategories, setSelectedProviderCategories] =
+    useState<AdminProviderJoinRequest | null>(null);
   const [approveNotes, setApproveNotes] = useState("");
   const [rejectReason, setRejectReason] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -179,25 +182,6 @@ export default function ProviderVerificationPage() {
     isLoading: joinRequestsLoading,
     error: joinRequestsError,
   } = useAdminPendingJoinRequests();
-
-  // NOTE: The API endpoint /admin/join-requests/pending might be returning provider data instead of join request data
-  // This is a workaround to handle the data structure mismatch
-  // In the future, the API should be updated to return proper join request objects
-  // Extract data from responses with debugging
-  console.log("Raw joinRequestsResponse:", joinRequestsResponse);
-  console.log("Join requests error:", joinRequestsError);
-  console.log("Response type:", typeof joinRequestsResponse);
-  console.log("Is array:", Array.isArray(joinRequestsResponse));
-  if (joinRequestsResponse && typeof joinRequestsResponse === "object") {
-    console.log("Response keys:", Object.keys(joinRequestsResponse));
-    if (
-      Array.isArray(joinRequestsResponse) &&
-      joinRequestsResponse.length > 0
-    ) {
-      console.log("First item type:", typeof joinRequestsResponse[0]);
-      console.log("First item keys:", Object.keys(joinRequestsResponse[0]));
-    }
-  }
 
   // Handle different response structures
   let joinRequests: AdminProviderJoinRequest[] = [];
@@ -1227,6 +1211,13 @@ export default function ProviderVerificationPage() {
                             isRTL ? "text-right" : "text-left"
                           }`}
                         >
+                          {t("providers.tableHeaders.categories")}
+                        </TableHead>
+                        <TableHead
+                          className={`font-semibold ${
+                            isRTL ? "text-right" : "text-left"
+                          }`}
+                        >
                           {t("providers.tableHeaders.actions")}
                         </TableHead>
                       </TableRow>
@@ -1278,20 +1269,7 @@ export default function ProviderVerificationPage() {
                               </div>
                             </div>
                           </TableCell>
-                          {/* <TableCell>
-                                                        <div className="space-y-1">
-                                                            <div className="text-sm">
-                                                                Categories: {request.provider?.providerServices?.length > 0 ?
-                                                                    request.provider.providerServices.map(ps => ps.service?.category?.titleEn).filter(Boolean).join(', ') :
-                                                                    'N/A'}
-                                                            </div>
-                                                            <div className="text-sm text-muted-foreground">
-                                                                Services: {request.provider?.providerServices?.length > 0 ?
-                                                                    request.provider.providerServices.map(ps => ps.service?.titleEn).filter(Boolean).join(', ') :
-                                                                    'N/A'}
-                                                            </div>
-                                                        </div>
-                                                    </TableCell> */}
+
                           <TableCell>
                             <div className="text-sm text-muted-foreground">
                               {getLocalizedState(
@@ -1305,6 +1283,26 @@ export default function ProviderVerificationPage() {
                               {formatDate(request.requestDate)}
                             </div>
                           </TableCell>
+
+                          <TableCell>
+                            {request.provider.providerServices.length > 0 ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedProviderCategories(request);
+                                  setIsCategoriesDialogOpen(true);
+                                }}
+                                className="h-8 px-3 text-xs"
+                              >
+                                {request.provider.providerServices.length}{" "}
+                                {t("providers.categories")}
+                              </Button>
+                            ) : (
+                              <span className="text-muted-foreground">N/A</span>
+                            )}
+                          </TableCell>
+
                           <TableCell
                             className={isRTL ? "text-left" : "text-right"}
                           >
@@ -2192,6 +2190,61 @@ export default function ProviderVerificationPage() {
                 <Button
                   variant="outline"
                   onClick={() => setIsServicesDialogOpen(false)}
+                >
+                  {t("providers.close")}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Categories Dialog */}
+          <Dialog
+            open={isCategoriesDialogOpen}
+            onOpenChange={setIsCategoriesDialogOpen}
+          >
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader className="rtl:text-right">
+                <DialogTitle>{t("providers.categories")}</DialogTitle>
+                <DialogDescription>
+                  {selectedProviderCategories?.provider.name &&
+                    t("providers.categoriesForProvider").replace(
+                      "{name}",
+                      selectedProviderCategories.provider.name
+                    )}
+                </DialogDescription>
+              </DialogHeader>
+              {selectedProviderCategories && (
+                <div className="space-y-4">
+                  {selectedProviderCategories.provider.providerServices &&
+                  selectedProviderCategories.provider.providerServices.length >
+                    0 ? (
+                    <div className="space-y-3">
+                      {selectedProviderCategories.provider.providerServices.map(
+                        (item, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-3 rtl:space-x-reverse"
+                          >
+                            <Badge variant="secondary" className="text-sm">
+                              {isRTL
+                                ? item.service.category?.titleAr || "N/A"
+                                : item.service.category?.titleEn || "N/A"}
+                            </Badge>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      {t("providers.noCategories")}
+                    </div>
+                  )}
+                </div>
+              )}
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCategoriesDialogOpen(false)}
                 >
                   {t("providers.close")}
                 </Button>
