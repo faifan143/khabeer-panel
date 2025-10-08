@@ -474,6 +474,8 @@ export default function OrdersManagementPage() {
     });
   };
 
+  console.log(" selectedOrder => ", selectedOrder);
+
   return (
     <PermissionRoute requiredPermissions={[PERMISSIONS.ORDERS_VIEW]}>
       <AdminLayout>
@@ -1286,11 +1288,11 @@ export default function OrdersManagementPage() {
                         </Label>
                         <div className="mt-1 p-3 bg-gray-50 rounded-lg">
                           <div className="flex items-center space-x-2">
-                            {/* <span>{selectedOrder.location}</span> */}
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <span>{selectedOrder.location}</span>
                           </div>
                           {selectedOrder.locationDetails && (
-                            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
-                              <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <div className="text-sm text-muted-foreground mt-1">
                               {selectedOrder.locationDetails}
                             </div>
                           )}

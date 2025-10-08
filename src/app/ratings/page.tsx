@@ -38,6 +38,7 @@ import { useTranslation } from "react-i18next";
 
 export default function RatingsPage() {
   const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
   const [searchQuery, setSearchQuery] = useState("");
   const [ratingFilter, setRatingFilter] = useState<string>("all");
   const [selectedRating, setSelectedRating] = useState<any>(null);
@@ -339,8 +340,10 @@ export default function RatingsPage() {
                           <TableCell>
                             <div>
                               <div className="font-medium">
-                                {rating.order?.service?.titleEn ||
-                                  t("ratings.notApplicable")}
+                                {isRTL
+                                  ? rating.order?.service?.titleAr
+                                  : rating.order?.service?.titleEn ||
+                                    t("ratings.notApplicable")}
                               </div>
 
                               {rating.order?.bookingId && (
@@ -460,9 +463,12 @@ export default function RatingsPage() {
                                               {t("ratings.serviceLabel")}
                                             </span>
                                             <div className="font-medium">
-                                              {selectedRating.order.service
-                                                ?.titleEn ||
-                                                t("ratings.unknown")}
+                                              {isRTL
+                                                ? selectedRating.order.service
+                                                    ?.titleAr
+                                                : selectedRating.order.service
+                                                    ?.titleEn ||
+                                                  t("ratings.unknown")}
                                             </div>
                                           </div>
                                           <div>
@@ -470,9 +476,12 @@ export default function RatingsPage() {
                                               {t("ratings.categoryLabel")}
                                             </span>
                                             <div className="font-medium">
-                                              {selectedRating.order.service
-                                                ?.category?.titleEn ||
-                                                t("ratings.unknown")}
+                                              {isRTL
+                                                ? selectedRating.order.service
+                                                    ?.category?.titleAr
+                                                : selectedRating.order.service
+                                                    ?.category?.titleEn ||
+                                                  t("ratings.unknown")}
                                             </div>
                                           </div>
                                           <div>
