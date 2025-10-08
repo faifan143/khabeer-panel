@@ -582,25 +582,25 @@ export default function NotificationsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-50">
-                      <TableHead className="font-semibold">
+                      <TableHead className="rtl:text-right font-semibold">
                         {t("notifications.tableHeaders.image")}
                       </TableHead>
-                      <TableHead className="font-semibold">
+                      <TableHead className="rtl:text-right font-semibold">
                         {t("notifications.tableHeaders.title")}
                       </TableHead>
-                      <TableHead className="font-semibold">
+                      <TableHead className="rtl:text-right font-semibold">
                         {t("notifications.tableHeaders.targetAudience")}
                       </TableHead>
-                      <TableHead className="font-semibold">
+                      <TableHead className="rtl:text-right font-semibold">
                         {t("notifications.tableHeaders.status")}
                       </TableHead>
-                      <TableHead className="font-semibold">
+                      <TableHead className="rtl:text-right font-semibold">
                         {t("notifications.tableHeaders.recipients")}
                       </TableHead>
-                      <TableHead className="font-semibold">
+                      <TableHead className="rtl:text-right font-semibold">
                         {t("notifications.tableHeaders.date")}
                       </TableHead>
-                      <TableHead className="font-semibold text-right">
+                      <TableHead className="rtl:text-right font-semibold ">
                         {t("notifications.tableHeaders.actions")}
                       </TableHead>
                     </TableRow>

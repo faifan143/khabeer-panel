@@ -119,6 +119,7 @@ const getStatusIcon = (status: string) => {
 
 export default function InvoicesPage() {
   const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -509,7 +510,9 @@ export default function InvoicesPage() {
                             <TableCell className="px-6">
                               <div>
                                 <p className="font-medium">
-                                  {invoice.order?.service.titleEn}
+                                  {isRTL
+                                    ? invoice.order?.service.titleAr
+                                    : invoice.order?.service.titleEn}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
                                   {t("invoices.basePrice")}{" "}

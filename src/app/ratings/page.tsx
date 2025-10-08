@@ -1,10 +1,8 @@
 "use client";
 
 import { PermissionRoute } from "@/components/auth/permission-route";
-import { PERMISSIONS } from "@/lib/constants/permissions";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -32,18 +30,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAdminRatings } from "@/lib/api/hooks/useAdmin";
+import { PERMISSIONS } from "@/lib/constants/permissions";
 import { formatCurrency } from "@/lib/utils";
+import { Award, Eye, Search, Star, TrendingUp } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Eye,
-  Search,
-  Star,
-  ThumbsUp,
-  ThumbsDown,
-  TrendingUp,
-  Award,
-} from "lucide-react";
-import { useState, useMemo } from "react";
 
 export default function RatingsPage() {
   const { t, i18n } = useTranslation();
@@ -258,25 +249,25 @@ export default function RatingsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-gray-50">
-                      <TableHead className="font-semibold">
+                      <TableHead className="rtl:text-right font-semibold">
                         {t("ratings.tableHeaders.customer")}
                       </TableHead>
-                      <TableHead className="font-semibold">
+                      <TableHead className="rtl:text-right font-semibold">
                         {t("ratings.tableHeaders.provider")}
                       </TableHead>
-                      <TableHead className="font-semibold">
+                      <TableHead className="rtl:text-right font-semibold">
                         {t("ratings.tableHeaders.service")}
                       </TableHead>
-                      <TableHead className="font-semibold">
+                      <TableHead className="rtl:text-right font-semibold">
                         {t("ratings.tableHeaders.rating")}
                       </TableHead>
-                      <TableHead className="font-semibold">
+                      <TableHead className="rtl:text-right font-semibold">
                         {t("ratings.tableHeaders.comment")}
                       </TableHead>
-                      <TableHead className="font-semibold">
+                      <TableHead className="rtl:text-right font-semibold">
                         {t("ratings.tableHeaders.date")}
                       </TableHead>
-                      <TableHead className="font-semibold text-right">
+                      <TableHead className="rtl:text-right font-semibold">
                         {t("ratings.tableHeaders.actions")}
                       </TableHead>
                     </TableRow>
@@ -351,13 +342,7 @@ export default function RatingsPage() {
                                 {rating.order?.service?.titleEn ||
                                   t("ratings.notApplicable")}
                               </div>
-                              <div className="text-sm text-muted-foreground">
-                                {rating.order?.service?.category?.titleEn ||
-                                  t("ratings.notApplicable")}
-                                -
-                                {rating.order?.service?.category?.titleAr ||
-                                  t("ratings.notApplicable")}
-                              </div>
+
                               {rating.order?.bookingId && (
                                 <div className="text-xs text-muted-foreground">
                                   #{rating.order.bookingId}
