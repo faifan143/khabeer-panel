@@ -750,7 +750,9 @@ export default function OrdersManagementPage() {
                                 isRTL ? "text-right" : "text-left"
                               }`}
                             >
-                              {order.service?.titleEn}
+                              {isRTL
+                                ? order.service?.titleAr
+                                : order.service?.titleEn}
                             </h3>
                             <p
                               className={`text-sm text-muted-foreground mb-3 ${
@@ -1050,11 +1052,15 @@ export default function OrdersManagementPage() {
                           >
                             <div className="space-y-1">
                               <div className="font-medium text-gray-900">
-                                {order.service?.titleEn}
+                                {isRTL
+                                  ? order.service?.titleAr
+                                  : order.service?.titleEn}
                               </div>
-                              {order.service?.category?.titleEn && (
+                              {order.service?.category && (
                                 <div className="text-sm text-muted-foreground">
-                                  {order.service.category.titleEn}
+                                  {isRTL
+                                    ? order.service.category.titleAr
+                                    : order.service.category.titleEn}
                                 </div>
                               )}
                             </div>
@@ -1232,7 +1238,9 @@ export default function OrdersManagementPage() {
                       </Label>
                       <div className="mt-1 p-3 bg-gray-50 rounded-lg">
                         <div className="font-semibold">
-                          {selectedOrder.service?.titleEn}
+                          {isRTL
+                            ? selectedOrder.service?.titleAr
+                            : selectedOrder.service?.titleEn}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {i18n.language === "ar"
@@ -1278,11 +1286,11 @@ export default function OrdersManagementPage() {
                         </Label>
                         <div className="mt-1 p-3 bg-gray-50 rounded-lg">
                           <div className="flex items-center space-x-2">
-                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                            <span>{selectedOrder.location}</span>
+                            {/* <span>{selectedOrder.location}</span> */}
                           </div>
                           {selectedOrder.locationDetails && (
-                            <div className="text-sm text-muted-foreground mt-1">
+                            <div className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-muted-foreground" />
                               {selectedOrder.locationDetails}
                             </div>
                           )}

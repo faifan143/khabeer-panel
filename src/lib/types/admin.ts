@@ -193,6 +193,20 @@ export interface AdminProvider {
       } | null;
     };
   }>;
+  providerCategories: Array<{
+    id: number;
+    providerId: number;
+    categoryId: number;
+    isActive: boolean;
+    createdAt: string;
+    category: {
+      id: number;
+      titleAr: string;
+      titleEn: string;
+      state: string;
+      image: string;
+    };
+  }>;
   orders: Array<{
     id: number;
     status: string; // 'pending', 'accepted', 'completed', 'cancelled'
@@ -210,6 +224,7 @@ export interface AdminProvider {
   _count: {
     orders: number;
     providerServices: number;
+    providerCategories: number;
     ratings: number;
   };
   totalCommission: number;
@@ -255,8 +270,23 @@ export interface AdminProviderJoinRequest {
         } | null;
       };
     }>;
+    providerCategories: Array<{
+      id: number;
+      providerId: number;
+      categoryId: number;
+      isActive: boolean;
+      createdAt: string;
+      category: {
+        id: number;
+        titleAr: string;
+        titleEn: string;
+        state: string;
+        image: string;
+      };
+    }>;
     _count: {
       providerServices: number;
+      providerCategories: number;
     };
   };
 }

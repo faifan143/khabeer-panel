@@ -217,8 +217,10 @@ export default function ProviderVerificationPage() {
               isActive: provider.isActive,
               officialDocuments: provider.officialDocuments,
               providerServices: provider.providerServices || [],
+              providerCategories: provider.providerCategories || [],
               _count: {
                 providerServices: provider._count?.providerServices || 0,
+                providerCategories: provider._count?.providerCategories || 0,
               },
             },
           }));
@@ -256,8 +258,10 @@ export default function ProviderVerificationPage() {
               isActive: provider.isActive,
               officialDocuments: provider.officialDocuments,
               providerServices: provider.providerServices || [],
+              providerCategories: provider.providerCategories || [],
               _count: {
                 providerServices: provider._count?.providerServices || 0,
+                providerCategories: provider._count?.providerCategories || 0,
               },
             },
           }));
@@ -297,8 +301,10 @@ export default function ProviderVerificationPage() {
               isActive: provider.isActive,
               officialDocuments: provider.officialDocuments,
               providerServices: provider.providerServices || [],
+              providerCategories: provider.providerCategories || [],
               _count: {
                 providerServices: provider._count?.providerServices || 0,
+                providerCategories: provider._count?.providerCategories || 0,
               },
             },
           },
@@ -336,8 +342,10 @@ export default function ProviderVerificationPage() {
           isActive: provider.isActive,
           officialDocuments: provider.officialDocuments,
           providerServices: provider.providerServices || [],
+          providerCategories: provider.providerCategories || [],
           _count: {
             providerServices: provider._count?.providerServices || 0,
+            providerCategories: provider._count?.providerCategories || 0,
           },
         },
       }));
@@ -1285,7 +1293,8 @@ export default function ProviderVerificationPage() {
                           </TableCell>
 
                           <TableCell>
-                            {request.provider.providerServices.length > 0 ? (
+                            {request.provider.providerCategories &&
+                            request.provider.providerCategories.length > 0 ? (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -1295,7 +1304,7 @@ export default function ProviderVerificationPage() {
                                 }}
                                 className="h-8 px-3 text-xs"
                               >
-                                {request.provider.providerServices.length}{" "}
+                                {request.provider.providerCategories.length}{" "}
                                 {t("providers.categories")}
                               </Button>
                             ) : (
@@ -2207,21 +2216,14 @@ export default function ProviderVerificationPage() {
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader className="rtl:text-right">
                 <DialogTitle>{t("providers.categories")}</DialogTitle>
-                <DialogDescription>
-                  {selectedProviderCategories?.provider.name &&
-                    t("providers.categoriesForProvider").replace(
-                      "{name}",
-                      selectedProviderCategories.provider.name
-                    )}
-                </DialogDescription>
               </DialogHeader>
               {selectedProviderCategories && (
                 <div className="space-y-4">
-                  {selectedProviderCategories.provider.providerServices &&
-                  selectedProviderCategories.provider.providerServices.length >
-                    0 ? (
-                    <div className="space-y-3">
-                      {selectedProviderCategories.provider.providerServices.map(
+                  {selectedProviderCategories.provider.providerCategories &&
+                  selectedProviderCategories.provider.providerCategories
+                    .length > 0 ? (
+                    <div className=" flex flex-wrap gap-2 items-center">
+                      {selectedProviderCategories.provider.providerCategories.map(
                         (item, index) => (
                           <div
                             key={index}
@@ -2229,8 +2231,8 @@ export default function ProviderVerificationPage() {
                           >
                             <Badge variant="secondary" className="text-sm">
                               {isRTL
-                                ? item.service.category?.titleAr || "N/A"
-                                : item.service.category?.titleEn || "N/A"}
+                                ? item.category?.titleAr || "N/A"
+                                : item.category?.titleEn || "N/A"}
                             </Badge>
                           </div>
                         )
