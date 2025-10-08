@@ -5,6 +5,7 @@ import { PERMISSIONS } from "@/lib/constants/permissions";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { RTLConfirmationDialog } from "@/components/ui/rtl-confirmation-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ClickableImage } from "@/components/ui/clickable-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -937,18 +938,15 @@ export default function ProviderVerificationPage() {
                                   isRTL ? " space-x-3" : "space-x-3"
                                 }`}
                               >
-                                <Avatar className="h-10 w-10">
-                                  <AvatarImage
-                                    src={
-                                      process.env.NEXT_PUBLIC_API_URL_IMAGE +
-                                      provider.image
-                                    }
-                                    alt={provider.name}
-                                  />
-                                  <AvatarFallback>
-                                    {provider.name.charAt(0)}
-                                  </AvatarFallback>
-                                </Avatar>
+                                <ClickableImage
+                                  src={
+                                    process.env.NEXT_PUBLIC_API_URL_IMAGE +
+                                    provider.image
+                                  }
+                                  alt={provider.name}
+                                  fallback={provider.name.charAt(0)}
+                                  size="md"
+                                />
                                 <div className="space-y-1">
                                   <div className="font-medium text-gray-900">
                                     {provider.name}
@@ -1242,21 +1240,20 @@ export default function ProviderVerificationPage() {
                                 isRTL ? " space-x-3" : "space-x-3"
                               }`}
                             >
-                              <Avatar className="h-10 w-10">
-                                <AvatarImage
-                                  src={
-                                    process.env.NEXT_PUBLIC_API_URL_IMAGE +
-                                    request.provider?.image
-                                  }
-                                  alt={
-                                    request.provider?.name ||
-                                    t("providers.provider")
-                                  }
-                                />
-                                <AvatarFallback>
-                                  {request.provider?.name?.charAt(0) || "P"}
-                                </AvatarFallback>
-                              </Avatar>
+                              <ClickableImage
+                                src={
+                                  process.env.NEXT_PUBLIC_API_URL_IMAGE +
+                                  request.provider?.image
+                                }
+                                alt={
+                                  request.provider?.name ||
+                                  t("providers.provider")
+                                }
+                                fallback={
+                                  request.provider?.name?.charAt(0) || "P"
+                                }
+                                size="md"
+                              />
                               <div className="space-y-1">
                                 <div className="font-medium text-gray-900">
                                   {request.provider?.name ||

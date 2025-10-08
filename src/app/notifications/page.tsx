@@ -4,6 +4,7 @@ import { PermissionRoute } from "@/components/auth/permission-route";
 import { PERMISSIONS } from "@/lib/constants/permissions";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ClickableImage } from "@/components/ui/clickable-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -626,15 +627,12 @@ export default function NotificationsPage() {
                         >
                           <TableCell>
                             {notification.imageUrl ? (
-                              <Avatar className="h-12 w-12">
-                                <AvatarImage
-                                  src={getImageUrl(notification.imageUrl)}
-                                  alt={notification.title}
-                                />
-                                <AvatarFallback>
-                                  <ImageIcon className="h-4 w-4" />
-                                </AvatarFallback>
-                              </Avatar>
+                              <ClickableImage
+                                src={getImageUrl(notification.imageUrl)}
+                                alt={notification.title}
+                                fallback="N"
+                                size="lg"
+                              />
                             ) : (
                               <div className="h-12 w-12 bg-gray-100 rounded-lg flex items-center justify-center">
                                 <ImageIcon className="h-4 w-4 text-gray-400" />

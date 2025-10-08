@@ -3,6 +3,7 @@
 import { PermissionRoute } from "@/components/auth/permission-route";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ClickableImage } from "@/components/ui/clickable-image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -292,18 +293,15 @@ export default function RatingsPage() {
                         >
                           <TableCell>
                             <div className="flex items-center space-x-3">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage
-                                  src={
-                                    process.env.NEXT_PUBLIC_API_URL_IMAGE +
-                                    rating.user?.image
-                                  }
-                                  alt={rating.user?.name}
-                                />
-                                <AvatarFallback>
-                                  {getInitials(rating.user?.name || "U")}
-                                </AvatarFallback>
-                              </Avatar>
+                              <ClickableImage
+                                src={
+                                  process.env.NEXT_PUBLIC_API_URL_IMAGE +
+                                  rating.user?.image
+                                }
+                                alt={rating.user?.name || "User"}
+                                fallback={getInitials(rating.user?.name || "U")}
+                                size="sm"
+                              />
                               <div>
                                 <div className="font-medium">
                                   {rating.user?.name || t("ratings.unknown")}
@@ -317,18 +315,17 @@ export default function RatingsPage() {
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-3">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage
-                                  src={
-                                    process.env.NEXT_PUBLIC_API_URL_IMAGE +
-                                    rating.provider?.image
-                                  }
-                                  alt={rating.provider?.name}
-                                />
-                                <AvatarFallback>
-                                  {getInitials(rating.provider?.name || "P")}
-                                </AvatarFallback>
-                              </Avatar>
+                              <ClickableImage
+                                src={
+                                  process.env.NEXT_PUBLIC_API_URL_IMAGE +
+                                  rating.provider?.image
+                                }
+                                alt={rating.provider?.name || "Provider"}
+                                fallback={getInitials(
+                                  rating.provider?.name || "P"
+                                )}
+                                size="sm"
+                              />
                               <div>
                                 <div className="font-medium">
                                   {rating.provider?.name ||

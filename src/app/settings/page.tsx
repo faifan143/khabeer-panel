@@ -4,6 +4,7 @@ import { PermissionRoute } from "@/components/auth/permission-route";
 import { PERMISSIONS } from "@/lib/constants/permissions";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Badge } from "@/components/ui/badge";
+import { ClickableImage } from "@/components/ui/clickable-image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -1552,10 +1553,10 @@ export default function SettingsPage() {
                           <TableRow key={banner.id}>
                             <TableCell>
                               {banner.imageUrl ? (
-                                <img
+                                <ClickableImage
                                   src={getImageUrl(banner.imageUrl)}
                                   alt={banner.title}
-                                  className="h-16 w-auto rounded object-cover"
+                                  type="image"
                                 />
                               ) : (
                                 <div className="h-16 w-24 bg-gray-100 rounded flex items-center justify-center">

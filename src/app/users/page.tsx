@@ -15,6 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ClickableImage } from "@/components/ui/clickable-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -332,21 +333,18 @@ export default function UsersManagementPage() {
                                 isRTL ? "space-x-reverse gap-3" : "gap-3"
                               }`}
                             >
-                              <Avatar className="h-10 w-10">
-                                <AvatarImage
-                                  src={
-                                    user.image &&
-                                    process.env.NEXT_PUBLIC_API_URL_IMAGE
-                                      ? process.env.NEXT_PUBLIC_API_URL_IMAGE +
-                                        user.image
-                                      : ""
-                                  }
-                                  alt={user.name}
-                                />
-                                <AvatarFallback>
-                                  {getInitials(user.name)}
-                                </AvatarFallback>
-                              </Avatar>
+                              <ClickableImage
+                                src={
+                                  user.image &&
+                                  process.env.NEXT_PUBLIC_API_URL_IMAGE
+                                    ? process.env.NEXT_PUBLIC_API_URL_IMAGE +
+                                      user.image
+                                    : ""
+                                }
+                                alt={user.name}
+                                fallback={getInitials(user.name)}
+                                size="md"
+                              />
                               <div className="flex flex-col">
                                 <div className="font-medium">{user.name}</div>
                                 <div
