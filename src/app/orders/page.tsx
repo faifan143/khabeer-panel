@@ -68,6 +68,29 @@ import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/lib/hooks/useLanguage";
 
+// Utility function to open Google Maps with coordinates
+const openGoogleMaps = (
+  latitude: string | number,
+  longitude: string | number,
+  address?: string
+) => {
+  const lat = typeof latitude === "string" ? parseFloat(latitude) : latitude;
+  const lng = typeof longitude === "string" ? parseFloat(longitude) : longitude;
+
+  if (isNaN(lat) || isNaN(lng)) {
+    toast.error("Invalid coordinates");
+    return;
+  }
+
+  // Create Google Maps URL with coordinates and optional address
+  const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}${
+    address ? `&query=${encodeURIComponent(address)}` : ""
+  }`;
+
+  // Open in new tab
+  window.open(mapsUrl, "_blank", "noopener,noreferrer");
+};
+
 // Loading Skeleton Components
 const OrderCardSkeleton = () => (
   <Card className="animate-pulse">
@@ -1035,6 +1058,25 @@ export default function OrdersManagementPage() {
                                   {order.locationDetails}
                                 </div>
                               )}
+                              {order.user?.latitude &&
+                                order.user?.longitude && (
+                                  <div
+                                    className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-800 cursor-pointer transition-colors"
+                                    onClick={() =>
+                                      openGoogleMaps(
+                                        order.user!.latitude!,
+                                        order.user!.longitude!,
+                                        order.user!.address || order.location
+                                      )
+                                    }
+                                    title={t("orders.clickToOpenMaps")}
+                                  >
+                                    <MapPin className="h-3 w-3" />
+                                    <span className="hover:underline">
+                                      {t("orders.viewOnMap")}
+                                    </span>
+                                  </div>
+                                )}
                             </div>
                           </TableCell>
                           <TableCell
@@ -1289,7 +1331,25 @@ export default function OrdersManagementPage() {
                         <div className="mt-1 p-3 bg-gray-50 rounded-lg">
                           <div className="flex items-center space-x-2">
                             <MapPin className="h-4 w-4 text-muted-foreground" />
-                            <span>{selectedOrder.location}</span>
+                            {selectedOrder.providerLocation?.latitude &&
+                            selectedOrder.providerLocation?.longitude ? (
+                              <span
+                                className="text-blue-600 hover:text-blue-800 cursor-pointer hover:underline transition-colors"
+                                onClick={() =>
+                                  openGoogleMaps(
+                                    selectedOrder.providerLocation!.latitude,
+                                    selectedOrder.providerLocation!.longitude,
+                                    selectedOrder.locationDetails ||
+                                      selectedOrder.location
+                                  )
+                                }
+                                title={t("orders.clickToOpenMaps")}
+                              >
+                                {selectedOrder.location}
+                              </span>
+                            ) : (
+                              <span>{selectedOrder.location}</span>
+                            )}
                           </div>
                           {selectedOrder.locationDetails && (
                             <div className="text-sm text-muted-foreground mt-1">

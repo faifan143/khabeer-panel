@@ -16,6 +16,8 @@ export interface User extends BaseEntity {
   state: string;
   isActive: boolean;
   officialDocuments?: string;
+  latitude?: string;
+  longitude?: string;
 }
 
 export interface CreateUserDto {
@@ -176,8 +178,8 @@ export interface Order extends BaseEntity {
   location?: string;
   locationDetails?: string;
   providerLocation?: {
-    lat: number;
-    lng: number;
+    latitude: number;
+    longitude: number;
   };
   quantity: number;
   totalAmount: number;
