@@ -105,9 +105,9 @@ export default function SettingsPage() {
       description: t("settings.manageServiceProviders"),
     },
     {
-      id: "income",
-      label: t("settings.incomeFinance"),
-      description: t("settings.viewFinancialReports"),
+      id: "invoices",
+      label: t("settings.invoiceManagement"),
+      description: t("settings.manageInvoicesAndPayments"),
     },
     {
       id: "ratings",
