@@ -1563,7 +1563,9 @@ export default function ProviderVerificationPage() {
                                     }`}
                                   >
                                     <div className="font-semibold">
-                                      {service.service?.titleEn}
+                                      {i18n.language === "ar"
+                                        ? service.service?.titleAr
+                                        : service.service?.titleEn}
                                     </div>
                                     <div className="text-sm text-muted-foreground">
                                       {i18n.language === "ar"
