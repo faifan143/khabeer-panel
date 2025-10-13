@@ -566,7 +566,7 @@ export default function ProviderVerificationPage() {
     return (
       <span className="font-semibold">
         {parts[0]}
-        <span className="text-sm text-muted-foreground ml-1 font-normal">
+        <span className="text-sm text-muted-foreground mx-1 font-normal">
           {currencySymbol}
         </span>
       </span>
@@ -734,7 +734,7 @@ export default function ProviderVerificationPage() {
                                   )}`}
                                 >
                                   {getStatusIcon(provider.isActive)}
-                                  <span className="ml-1">
+                                  <span className="mx-1">
                                     {getStatusText(provider.isActive)}
                                   </span>
                                 </Badge>
@@ -1648,9 +1648,9 @@ export default function ProviderVerificationPage() {
                                     {service.service?.category && (
                                       <div className="text-xs text-muted-foreground mt-1">
                                         {t("providers.category")}{" "}
-                                        {service.service.category.titleEn +
-                                          "-" +
-                                          service.service.category.titleAr}
+                                        {i18n.language == "ar"
+                                          ? service.service.category.titleAr
+                                          : service.service.category.titleEn}
                                       </div>
                                     )}
                                   </div>
@@ -2008,7 +2008,9 @@ export default function ProviderVerificationPage() {
                           selectedProvider.providerServices.reduce(
                             (acc, ps) => {
                               const categoryTitle =
-                                ps.service?.category?.titleEn ||
+                                (i18n.language == "ar"
+                                  ? ps.service?.category?.titleAr
+                                  : ps.service?.category?.titleEn) ||
                                 t("providers.uncategorized");
                               if (!acc[categoryTitle]) {
                                 acc[categoryTitle] = [];
@@ -2029,7 +2031,7 @@ export default function ProviderVerificationPage() {
                               className="border rounded-lg p-4"
                             >
                               <h3 className="font-semibold text-lg text-gray-900 mb-3 flex items-center">
-                                <Package className="h-5 w-5 mr-2 text-blue-600" />
+                                <Package className="h-5 w-5 mx-2 text-blue-600" />
                                 {category}
                               </h3>
                               <div className="grid gap-3">
@@ -2055,7 +2057,9 @@ export default function ProviderVerificationPage() {
                                         <div className="flex items-center justify-between">
                                           <div className="flex-1">
                                             <h4 className="font-medium text-gray-900">
-                                              {ps.service?.titleEn}
+                                              {i18n.language === "ar"
+                                                ? ps.service?.titleAr
+                                                : ps.service?.titleEn}
                                             </h4>
                                             <p className="text-sm text-muted-foreground mt-1">
                                               {i18n.language === "ar"

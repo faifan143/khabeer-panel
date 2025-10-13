@@ -145,7 +145,10 @@ export function KhabeerServiceForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[700px]" dir={isRTL ? "rtl" : "ltr"}>
+      <DialogContent
+        className="sm:max-w-[700px] max-h-[95vh] overflow-auto"
+        dir={isRTL ? "rtl" : "ltr"}
+      >
         <DialogHeader className={isRTL ? "rtl:text-right" : ""}>
           <DialogTitle
             className={`${isRTL ? "rtl:text-right rtl:font-semibold" : ""}`}

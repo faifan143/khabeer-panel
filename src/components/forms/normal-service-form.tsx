@@ -151,7 +151,7 @@ export function NormalServiceForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[95vh] overflow-auto">
         <DialogHeader className={isRTL ? "rtl:text-right" : ""}>
           <DialogTitle
             className={`${isRTL ? "rtl:text-right rtl:font-semibold" : ""}`}
